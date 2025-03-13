@@ -1,5 +1,5 @@
 import Keycloak from "keycloak-js";
-import ConstantsList from '../appConfig';
+import {ConstantsList} from '../appConfig';
 import JwtAuthService from './jwtAuthService';
 const _kc = new Keycloak(ConstantsList.ROOT_PATH+'keycloak.json');
 

@@ -1,9 +1,9 @@
 import axios from "axios";
 import localStorageService from "./localStorageService";
-import ConstantList from "../appConfig";
+import {ConstantsList} from "../appConfig";
 import UserService from "../services/UserService";
 import MenuService from "../services/MenuService";
-import history from "../../history";
+import history from "../history";
 // import history from "../../../history.js";
 const config = {
   headers: {
@@ -19,18 +19,18 @@ class JwtAuthService {
     role: 'ADMIN',
     displayName: "Watson Joyce",
     email: "watsonjoyce@gmail.com",
-    photoURL:  ConstantList.ROOT_PATH+"assets/images/avatar.jpg",
+    photoURL:  ConstantsList.ROOT_PATH+"assets/images/avatar.jpg",
     age: 25,
     token: "faslkhfh423oiu4h4kj432rkj23h432u49ufjaklj423h4jkhkjh"
   }
   async getCurrentUser (){
-    let url = ConstantList.API_ENPOINT + "/api/users/getCurrentUser";
+    let url = ConstantsList.API_ENPOINT + "/api/users/getCurrentUser";
     return await axios.get(url);
   };
   async loginWithUserNameAndPassword (username, password) {
     let requestBody ='client_id=core_client&grant_type=password&client_secret=secret';
     requestBody =requestBody+'&username='+username +'&password='+password;
-    const res = await axios.post(ConstantList.API_ENPOINT+'/oauth/token',requestBody,config).then(response=>{
+    const res = await axios.post(ConstantsList.API_ENPOINT+'/oauth/token',requestBody,config).then(response=>{
       console.log(response);
       var dateObj = new Date(Date.now() + response.data.expires_in*1000);
       localStorageService.setItem("token_expire_time",dateObj);
@@ -76,17 +76,17 @@ class JwtAuthService {
   
 
   async logout() {
-    if(ConstantList.AUTH_MODE=="Keycloak"){
+    if(ConstantsList.AUTH_MODE=="Keycloak"){
       UserService.doLogout();
       this.setSession(null);
       this.removeUser();
-      history.push(ConstantList.HOME_PAGE)
+      history.push(ConstantsList.HOME_PAGE)
     }else {
-      let url = ConstantList.API_ENPOINT + "/oauth/logout";
+      let url = ConstantsList.API_ENPOINT + "/oauth/logout";
       let res = axios.delete(url);
       this.setSession(null);
       this.removeUser();
-      history.push(ConstantList.LOGIN_PAGE)
+      history.push(ConstantsList.LOGIN_PAGE)
     }
   }
 
@@ -112,7 +112,7 @@ class JwtAuthService {
   //   user.role="ADMIN";
   //   user.age=25;
   //   user.displayName =""; // cần lấy tên user
-  //   user.photoURL =ConstantList.ROOT_PATH+"assets/images/avatar.jpg";
+  //   user.photoURL =ConstantsList.ROOT_PATH+"assets/images/avatar.jpg";
   //   this.user = user;
   //   localStorageService.setItem('auth_user', user);
   //   return user;
