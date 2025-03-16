@@ -6,7 +6,8 @@ import jwtAuthService from "../services/jwtAuthService";
 import localStorageService from "../services/localStorageService";
 import firebaseAuthService from "../services/firebase/firebaseAuthService";
 import history from "../history";
-import ConstantList from "../appConfig";
+import { ConstantsList } from "../appConfig";
+
 class Auth extends Component {
   state = {};
   
@@ -31,7 +32,7 @@ class Auth extends Component {
     if(user!=null && (isExpired==false)){      
       this.props.setUserData(user);
     }else {
-      history.push(ConstantList.LOGIN_PAGE)
+      history.push(ConstantsList.LOGIN_PAGE)
     }
     
     //this.checkJwtAuth();

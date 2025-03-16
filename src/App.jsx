@@ -11,7 +11,7 @@ import AuthGuard from './auth/AuthGuard';
 
 const App = () => {
   return (
-    <AppContext.Provider value={{ routes }}>
+    <AppContext.Provider value={{ rout }}>
       <Provider store={Store}>
         {/* <EgretTheme> */}
           <Auth>

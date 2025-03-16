@@ -2,7 +2,7 @@ import React, { Component, Fragment } from "react";
 import { withRouter } from "react-router-dom";
 import { connect } from "react-redux";
 import AppContext from "../appContext";
-import ConstantList from "../appConfig";
+import { ConstantsList } from "../appConfig";
 class AuthGuard extends Component {
   constructor(props, context) {
     super(props);
@@ -49,8 +49,8 @@ class AuthGuard extends Component {
     const { pathname } = location;
 
     history.push({
-      //pathname: ConstantList.ROOT_PATH + "session/signin",
-      pathname: ConstantList.HOME_PAGE,
+      //pathname: ConstantsList.ROOT_PATH + "session/signin",
+      pathname: ConstantsList.HOME_PAGE,
       state: { redirectUrl: pathname }
     });
   }
