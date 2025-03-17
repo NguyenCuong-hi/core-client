@@ -7,11 +7,12 @@ import Auth from './auth/Auth';
 import { Router,useHistory } from "react-router-dom";
 import history from './history';
 import AuthGuard from './auth/AuthGuard';
+import routes from './RootRoutes';
 
 
 const App = () => {
   return (
-    <AppContext.Provider value={{ rout }}>
+    <AppContext.Provider value={{ routes }}>
       <Provider store={Store}>
         {/* <EgretTheme> */}
           <Auth>

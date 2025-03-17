@@ -40,7 +40,7 @@ const routes = [
   ...MenuRoutes,
   ...UserRoutes,
   ...ShiftWorkRouters, 
-  ...ColorRoutes, 
+  // ...ColorRoutes, 
   ...CategoryRoutes,
   ...errorRoute
 
