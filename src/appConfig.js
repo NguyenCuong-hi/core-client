@@ -3,7 +3,7 @@ const CHECK_ERROR_RESULT = true;
 // const APPLICATION_PATH="/eqa/react/";//deploy
 const APPLICATION_PATH="/";//Đặt homepage tại package.json giống như tại đây
 
-export const ConstantsList = Object.freeze({
+module.exports = Object.freeze({
     //ROOT_PATH : "/egret/",
     ROOT_PATH : APPLICATION_PATH,
     ACTIVE_LAYOUT:"layout1",

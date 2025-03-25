@@ -1,7 +1,6 @@
-// import { EgretLoadable } from "egret";
-import EgretLoadable from "../../../egret/components/EgretLoadable/EgretLoadable";
-import ConstantList from "../../appConfig";
+import EgretLoadable from "egret"
 import { useTranslation, withTranslation, Trans } from 'react-i18next';
+import { ConstantsList } from "../../appConfig";
 const AdministrativeUnitTable = EgretLoadable({
   loader: () => import("./AdministrativeUnitTable")
 });
@@ -13,12 +12,12 @@ const ViewTabuComponent = withTranslation()(React15TabulatorSample);
 
 const administrativeUnitRoutes = [
   {
-    path:  ConstantList.ROOT_PATH+"dashboard/AdministrativeUnits",
+    path:  ConstantsList.ROOT_PATH+"dashboard/AdministrativeUnits",
     exact: true,
     component: ViewComponent
   },
   {
-	    path:  ConstantList.ROOT_PATH+"dashboard/TabuAdministrativeUnits",
+	    path:  ConstantsList.ROOT_PATH+"dashboard/TabuAdministrativeUnits",
 	    exact: true,
 	    component: ViewTabuComponent
   }  

@@ -1,7 +1,6 @@
-// import { EgretLoadable } from "egret";
-import EgretLoadable from "../../../egret/components/EgretLoadable/EgretLoadable";
-import ConstantList from "../../appConfig";
+import {EgretLoadable} from "../../egret";
 import { useTranslation, withTranslation, Trans } from 'react-i18next';
+import { ConstantsList } from "../../appConfig";
 
 const Landing1 = EgretLoadable({
   loader: () => import("./Landing1")
@@ -30,18 +29,18 @@ const homeLayoutSettings = {
 }
 
 const homeRoutes = [
-  // {
-  //   path:  ConstantList.ROOT_PATH+"landing1",
-  //   component: Landing1,
-  //   settings: homeLayoutSettings
-  // },
   {
-    path:  ConstantList.ROOT_PATH+"landing2",
+    path:  ConstantsList.ROOT_PATH+"landing1",
+    component: Landing1,
+    settings: homeLayoutSettings
+  },
+  {
+    path:  ConstantsList.ROOT_PATH+"landing2",
     component: Landing2,
     settings: homeLayoutSettings
   },
   {
-    path:  ConstantList.ROOT_PATH+"landing3",
+    path:  ConstantsList.ROOT_PATH+"landing3",
     component: ViewComponentLanding3,
     settings: homeLayoutSettings
   }

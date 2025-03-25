@@ -1,7 +1,7 @@
 import { EgretLoadable } from "egret";
 import { authRoles } from "../../auth/authRoles";
-import ConstantList from "../../appConfig";
 import { useTranslation, withTranslation, Trans } from 'react-i18next';
+import { ConstantsList } from "../../appConfig";
 const LearningManagement = EgretLoadable({
   loader: () => import("./LearningManagement")
 });
@@ -17,21 +17,21 @@ const Dashboard1 = EgretLoadable({
 const ViewAnalytics = withTranslation()(Analytics);
 const dashboardRoutes = [
   {
-    path:  ConstantList.ROOT_PATH+"dashboard/analytics",
+    path:  ConstantsList.ROOT_PATH+"dashboard/analytics",
     component: ViewAnalytics,
     auth: authRoles.admin
   },
   {
-    path:  ConstantList.ROOT_PATH+"dashboard/sales",
+    path:  ConstantsList.ROOT_PATH+"dashboard/sales",
     component: Sales,
     auth: authRoles.admin
   },
-  // {
-  //   path:  ConstantList.ROOT_PATH+"dashboard/dashboard1",
-  //   component: Dashboard1
-  // },
   {
-    path:  ConstantList.ROOT_PATH+"dashboard/learning-management",
+    path:  ConstantsList.ROOT_PATH+"dashboard/dashboard1",
+    component: Dashboard1
+  },
+  {
+    path:  ConstantsList.ROOT_PATH+"dashboard/learning-management",
     component: LearningManagement,
     auth: authRoles.admin
   }

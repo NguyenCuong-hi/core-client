@@ -1,8 +1,8 @@
 import NotFound from "./NotFound";
 import { EgretLoadable } from "egret";
 import { useTranslation, withTranslation, Trans } from 'react-i18next';
+import { ConstantsList } from "../../appConfig";
 //import ForgotPassword from "./ForgotPassword";
-import ConstantList from "../../appConfig";
 
 const SignIn = EgretLoadable({
   loader: () => import("./SignIn")
@@ -42,23 +42,23 @@ const settings = {
 };
 
 const sessionRoutes = [
-  // {
-  //   path: ConstantList.ROOT_PATH+"session/signupregisterhealthorg",
-  //   component: ViewComponentSignUp,
-  //   settings
-  // },
   {
-    path: ConstantList.ROOT_PATH+"session/signin",
+    path: ConstantsList.ROOT_PATH+"session/signupregisterhealthorg",
+    component: ViewComponentSignUp,
+    settings
+  },
+  {
+    path: ConstantsList.ROOT_PATH+"session/signin",
     component: ViewComponentSignIn,
     settings
   },
   {
-    path: ConstantList.ROOT_PATH+"session/forgot-password",
+    path: ConstantsList.ROOT_PATH+"session/forgot-password",
     component: ViewForgotPassword,
     settings
   },
   {
-    path: ConstantList.ROOT_PATH+"session/404",
+    path: ConstantsList.ROOT_PATH+"session/404",
     component: NotFound,
     settings
   }
