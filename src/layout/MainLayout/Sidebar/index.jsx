@@ -15,6 +15,7 @@ import NavCard from './MenuList/NavCard';
 
 // assets
 import logo from 'assets/images/logo.svg';
+import ProfileSection from '../Header/ProfileSection';
 
 // custom style
 const Nav = styled((props) => <nav {...props} />)(({ theme }) => ({
@@ -54,8 +55,10 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
       <Divider />
       <PerfectScrollbar style={{ height: 'calc(100vh - 65px)', padding: '10px' }}>
         <MenuList />
-        {/* <NavCard /> */}
       </PerfectScrollbar>
+      <Box sx={{ mb:8 }}>
+        <ProfileSection />
+      </Box>
     </>
   );
 
