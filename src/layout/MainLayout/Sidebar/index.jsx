@@ -65,7 +65,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           <MenuList />
         </PerfectScrollbar>
         
-        <Box sx={{ marginTop: 'auto', padding: '10px' }}>
+        <Box sx={{ mb: 8}}>
         <ProfileSection />
           
         </Box>
