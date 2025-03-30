@@ -47,25 +47,10 @@ const MainLayout = () => {
     setDrawerOpen(matchUpLg);
   }, [matchUpLg]);
 
-  const pathnames = location.pathname.split('/').filter((x) => x);
-
-  const breadcrumbs = pathnames.map((value, index) => {
-    const to = `/${pathnames.slice(1, index).join('/')}`;
-    return index === pathnames.length - 1 ? (
-      <Typography key={to} color="text.primary">
-        {value.charAt(0).toUpperCase() + value.slice(1)}
-      </Typography>
-    ) : (
-      <Link key={to} underline="hover" color="inherit" component={RouterLink} to={to}>
-        {value.charAt(0).toUpperCase() + value.slice(1)}
-      </Link>
-    );
-  });
-
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>
-      <AppBar position="fixed" sx={{ zIndex: 1000 }}>
-        <Toolbar>
+      <AppBar position="fixed" sx={{ zIndex: 1000, bgcolor: '#fff' }}>
+        <Toolbar sx={{ minHeight: '30px !important' }}>
           <Header drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />
         </Toolbar>
       </AppBar>
@@ -83,12 +68,7 @@ const MainLayout = () => {
         }}
       >
         <Box sx={theme.mixins.toolbar} />
-        
-
         <OutletDiv>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ marginBottom: theme.spacing(1) }}>
-          {breadcrumbs}
-        </Breadcrumbs>
           <Outlet />
         </OutletDiv>
       </Main>

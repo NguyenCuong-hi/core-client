@@ -3,7 +3,7 @@ import React from 'react';
 
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
-import { useMediaQuery, Divider, Drawer, Grid, Box } from '@mui/material';
+import { useMediaQuery, Divider, Drawer, Grid, Box, IconButton } from '@mui/material';
 
 // third party
 import PerfectScrollbar from 'react-perfect-scrollbar';
@@ -16,6 +16,7 @@ import NavCard from './MenuList/NavCard';
 // assets
 import logo from 'assets/images/logo.svg';
 import ProfileSection from '../Header/ProfileSection';
+import { MenuTwoTone } from '@mui/icons-material';
 
 // custom style
 const Nav = styled((props) => <nav {...props} />)(({ theme }) => ({
@@ -39,6 +40,29 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           height: '100%'
         }}
       >
+        <Box width={drawerWidth} sx={{ zIndex: 1201 }}>
+          <Grid container >
+            <Grid item>
+              <IconButton
+                edge="start"
+                sx={{ mr: theme.spacing(1), marginLeft: 1 }}
+                aria-label="open drawer"
+                onClick={drawerToggle}
+                size="large"
+              >
+                <MenuTwoTone sx={{ fontSize: '1rem' }} />
+              </IconButton>
+            </Grid>
+            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+              <Grid item>
+                <Box mt={0.5}>
+                  <img src={logo} alt="Logo" />
+                </Box>
+              </Grid>
+            </Box>
+
+          </Grid>
+        </Box>
         <Box sx={{ display: { md: 'none', xs: 'block' } }}>
           <Grid
             container
@@ -60,14 +84,13 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
           </Grid>
         </Box>
         <Divider />
-        
+
         <PerfectScrollbar style={{ flexGrow: 1, padding: '10px' }}>
           <MenuList />
         </PerfectScrollbar>
-        
-        <Box sx={{ mb: 8}}>
-        <ProfileSection />
-          
+
+        <Box sx={{ mb: 0 }}>
+          <ProfileSection />
         </Box>
       </Box>
     </>
@@ -83,12 +106,14 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
         anchor="left"
         open={drawerOpen}
         onClose={drawerToggle}
+
         sx={{
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             borderRight: 'none',
             boxShadow: '0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15)',
-            top: { md: 64, sm: 0 }
+            // top: { md: 30, sm: 0 },
+            height: { sm: '100%' }
           }
         }}
         ModalProps={{ keepMounted: true }}

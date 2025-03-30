@@ -69,7 +69,6 @@ const NotificationSection = () => {
         aria-haspopup="true"
         aria-label="Notification"
         onClick={handleToggle}
-        color="inherit"
       >
         <NotificationsNoneTwoToneIcon sx={{ fontSize: '1.5rem' }} />
       </Button>

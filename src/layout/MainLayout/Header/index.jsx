@@ -1,9 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { Outlet, Router, Link as RouterLink } from 'react-router-dom';
+
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
-import { Box, Grid, IconButton } from '@mui/material';
+import { Box, Grid, IconButton, Typography, Breadcrumbs, Link } from '@mui/material';
 
 // project import
 import SearchSection from './SearchSection';
@@ -15,15 +17,43 @@ import { drawerWidth } from 'config.js';
 import MenuTwoToneIcon from '@mui/icons-material/MenuTwoTone';
 import logo from 'assets/images/logo.svg';
 
+import menuItem from 'menu-items';
+
 // ==============================|| HEADER ||============================== //
 
 const Header = ({ drawerToggle }) => {
   const theme = useTheme();
+  const pathnames = location.pathname.split('/').filter((x) => x);
+
+  const breadcrumbs = pathnames.map((value, index) => {
+    const to = `/${pathnames.slice(1, index).join('/')}`;
+    return index === pathnames.length - 1 ? (
+      <Typography key={to} color="text.primary">
+        {value.charAt(0).toUpperCase() + value.slice(1)}
+      </Typography>
+    ) : (
+      <Link key={to} underline="hover" color="inherit" component={RouterLink} to={to}>
+        {value.charAt(0).toUpperCase() + value.slice(1)}
+      </Link>
+    );
+  });
+
 
   return (
     <>
       <Box width={drawerWidth} sx={{ zIndex: 1201 }}>
-        <Grid container justifyContent="space-between" alignItems="center">
+        <Grid container >
+          <Grid item>
+            <IconButton
+              edge="start"
+              sx={{ mr: theme.spacing(1) }}
+              aria-label="open drawer"
+              onClick={drawerToggle}
+              size="large"
+            >
+              <MenuTwoToneIcon sx={{ fontSize: '1rem' }} />
+            </IconButton>
+          </Grid>
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <Grid item>
               <Box mt={0.5}>
@@ -31,24 +61,19 @@ const Header = ({ drawerToggle }) => {
               </Box>
             </Grid>
           </Box>
-          <Grid item>
-            <IconButton
-              edge="start"
-              sx={{ mr: theme.spacing(1.25) }}
-              color="inherit"
-              aria-label="open drawer"
-              onClick={drawerToggle}
-              size="large"
-            >
-              <MenuTwoToneIcon sx={{ fontSize: '1.5rem' }} />
-            </IconButton>
-          </Grid>
+
+
+
         </Grid>
       </Box>
+      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+        <Breadcrumbs aria-label="breadcrumb" sx={{ marginBottom: theme.spacing(1) }}>
+          {breadcrumbs}
+        </Breadcrumbs>
+      </Box>
       <Box sx={{ flexGrow: 1 }} />
-      <SearchSection theme="light" />
+      {/* <SearchSection theme="light" /> */}
       <NotificationSection />
-      {/* <ProfileSection /> */}
     </>
   );
 };
