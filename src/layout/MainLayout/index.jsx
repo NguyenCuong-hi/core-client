@@ -1,9 +1,9 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Router, Link as RouterLink } from 'react-router-dom';
 
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
-import { useMediaQuery, AppBar, Box, Toolbar } from '@mui/material';
+import { useMediaQuery, AppBar, Box, Toolbar, Breadcrumbs, Link, Typography } from '@mui/material';
 
 // project import
 import { drawerWidth } from 'config.js';
@@ -27,9 +27,9 @@ const Main = styled((props) => <main {...props} />)(({ theme }) => ({
 
 const OutletDiv = styled((props) => <div {...props} />)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
-    padding: theme.spacing(3)
+    padding: theme.spacing(2)
   },
-  padding: theme.spacing(5)
+  padding: theme.spacing(2)
 }));
 
 // ==============================|| MAIN LAYOUT ||============================== //
@@ -47,9 +47,24 @@ const MainLayout = () => {
     setDrawerOpen(matchUpLg);
   }, [matchUpLg]);
 
+  const pathnames = location.pathname.split('/').filter((x) => x);
+
+  const breadcrumbs = pathnames.map((value, index) => {
+    const to = `/${pathnames.slice(1, index).join('/')}`;
+    return index === pathnames.length - 1 ? (
+      <Typography key={to} color="text.primary">
+        {value.charAt(0).toUpperCase() + value.slice(1)}
+      </Typography>
+    ) : (
+      <Link key={to} underline="hover" color="inherit" component={RouterLink} to={to}>
+        {value.charAt(0).toUpperCase() + value.slice(1)}
+      </Link>
+    );
+  });
+
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>
-      <AppBar position="fixed" sx={{ zIndex: 1200 }}>
+      <AppBar position="fixed" sx={{ zIndex: 1000 }}>
         <Toolbar>
           <Header drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />
         </Toolbar>
@@ -68,7 +83,12 @@ const MainLayout = () => {
         }}
       >
         <Box sx={theme.mixins.toolbar} />
+        
+
         <OutletDiv>
+        <Breadcrumbs aria-label="breadcrumb" sx={{ marginBottom: theme.spacing(1) }}>
+          {breadcrumbs}
+        </Breadcrumbs>
           <Outlet />
         </OutletDiv>
       </Main>

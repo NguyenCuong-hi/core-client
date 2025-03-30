@@ -8,6 +8,7 @@ import { List, Typography } from '@mui/material';
 // project import
 import NavItem from '../NavItem';
 import NavCollapse from '../NavCollapse';
+import ProfileSection from 'layout/MainLayout/Header/ProfileSection';
 
 // ==============================|| NAVGROUP ||============================== //
 
@@ -43,6 +44,7 @@ const NavGroup = ({ item }) => {
     >
       {items}
     </List>
+    
   );
 };
 

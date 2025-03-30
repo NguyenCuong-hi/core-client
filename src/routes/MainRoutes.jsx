@@ -3,6 +3,7 @@ import React, { lazy } from 'react';
 // project import
 import MainLayout from 'layout/MainLayout';
 import Loadable from 'component/Loadable';
+import ManageModelPage from 'views/ManageModel';
 
 const DashboardDefault = Loadable(lazy(() => import('views/Dashboard/Default')));
 const UtilsTypography = Loadable(lazy(() => import('views/Utils/Typography')));
@@ -29,6 +30,10 @@ const MainRoutes = {
     {
       path: '/sample-page',
       element: <SamplePage />
+    },
+    {
+      path: '/mng-model',
+      element: <ManageModelPage />
     }
   ]
 };

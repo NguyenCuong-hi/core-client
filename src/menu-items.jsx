@@ -58,7 +58,7 @@ export default {
               id: 'mng-device-1',
               title: 'Danh sách sản phẩm',
               type: 'item',
-              url: '/application/login',
+              url: '/mng-model',
               target: false
             },
             {
