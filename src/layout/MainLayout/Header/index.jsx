@@ -67,12 +67,11 @@ const Header = ({ drawerToggle }) => {
         </Grid>
       </Box>
       <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ marginBottom: theme.spacing(1) }}>
+        <Breadcrumbs aria-label="breadcrumb" sx={{ marginBottom: 0 }}>
           {breadcrumbs}
         </Breadcrumbs>
       </Box>
       <Box sx={{ flexGrow: 1 }} />
-      {/* <SearchSection theme="light" /> */}
       <NotificationSection />
     </>
   );
