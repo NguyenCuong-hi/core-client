@@ -67,7 +67,6 @@ const MainLayout = () => {
           })
         }}
       >
-        <Box sx={theme.mixins.toolbar} />
         <OutletDiv>
           <Outlet />
         </OutletDiv>

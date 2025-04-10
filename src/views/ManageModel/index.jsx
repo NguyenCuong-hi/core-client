@@ -8,14 +8,16 @@ import { Typography } from '@mui/material';
 import Breadcrumb from 'component/Breadcrumb';
 import { gridSpacing } from 'config.js';
 import ModelAction from './action/ModelAction';
+import ModelTable from './table/ModelTable';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
 const ManageModelPage = () => {
   return (
     <>
-      <div className="bg-slate-50 p-3 h-screen overflow-hidden">
+      <div className="p-0 h-screen overflow-hidden">
         <ModelAction />
+        <ModelTable />
       </div>
 
 
