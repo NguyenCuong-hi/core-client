@@ -1,23 +1,22 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { DataEditor, GridCellKind } from '@glideapps/glide-data-grid'
 import { TableOutlined } from '@ant-design/icons'
-// import { useLayer } from 'react-laag'
+import { useLayer } from 'react-laag'
 // import LayoutMenuSheet from '../../sheet/jsx/layoutMenu'
 // import LayoutStatusMenuSheet from '../../sheet/jsx/layoutStatusMenu'
 import { Drawer, Checkbox, message } from 'antd'
-// import { saveToLocalStorageSheet } from '../../../../localStorage/sheet/sheet'
-// import { loadFromLocalStorageSheet } from '../../../../localStorage/sheet/sheet'
+
 // import ModalHelpRootMenu from '../../modal/system/modalHelpRootMenu'
-// import { reorderColumns } from '../../sheet/js/reorderColumns'
 // import { updateEditedRows } from '../../sheet/js/updateEditedRows'
-// import useOnFill from '../../hooks/sheet/onFillHook'
 import { useExtraCells } from '@glideapps/glide-data-grid-cells'
 // import { AsyncDropdownCellRenderer } from '../../sheet/cells/AsyncDropdownCellRenderer'
 // import LayoutStatusMenuSheetNew from '../../sheet/jsx/layoutStatusMenuNew'
 import dayjs from 'dayjs'
+import useOnFill from 'utils/hooks/onFillHook'
+import { loadFromLocalStorageSheet } from 'utils/local-storage/column'
+import { resetColumn } from 'utils/local-storage/reset-column'
 
 function ModelTable({
-  dataUnit,
   setSelection,
   selection,
   setShowSearch,
@@ -40,43 +39,43 @@ function ModelTable({
   const gridRef = useRef(null)
   const [open, setOpen] = useState(false)
   const cellProps = useExtraCells()
-//   const onFill = useOnfi(setGridData, cols)
+  const onFill = useOnFill(setGridData, cols)
   const onSearchClose = useCallback(() => setShowSearch(false), [])
   const [showMenu, setShowMenu] = useState(null)
   const [isCell, setIsCell] = useState(null)
   const formatDate = (date) => date ? dayjs(date).format('YYYY-MM-DD') : '';
 
-    // const [hiddenColumns, setHiddenColumns] = useState(() => {
-    //     return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', [])
-    // })
-    
-    const [typeSearch, setTypeSearch] = useState('')
-    const [keySearchText, setKeySearchText] = useState('')
-    const [hoverRow, setHoverRow] = useState(undefined)
+  const [hiddenColumns, setHiddenColumns] = useState(() => {
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', [])
+  })
+
+  const [typeSearch, setTypeSearch] = useState('')
+  const [keySearchText, setKeySearchText] = useState('')
+  const [hoverRow, setHoverRow] = useState(undefined)
 
   const onItemHovered = useCallback((args) => {
     const [_, row] = args.location
     setHoverRow(args.kind !== 'cell' ? undefined : row)
   }, [])
 
-    const onHeaderMenuClick = useCallback((col, bounds) => {
-        if (cols[col]?.id === 'Status') {
-            setShowMenu({
-                col,
-                bounds,
-                menuType: 'statusMenu',
-            });
-        } else {
-            setShowMenu({
-                col,
-                bounds,
-                menuType: 'defaultMenu',
-            });
-        }
-    }, []);
+  const onHeaderMenuClick = useCallback((col, bounds) => {
+    if (cols[col]?.id === 'Status') {
+      setShowMenu({
+        col,
+        bounds,
+        menuType: 'statusMenu',
+      });
+    } else {
+      setShowMenu({
+        col,
+        bounds,
+        menuType: 'defaultMenu',
+      });
+    }
+  }, []);
 
-    const [dataSearch, setDataSearch] = useState([]);
-    const columnNames = ['AssetName' , 'UnitName' ,  'SMStatusName' , 'DeptName' , 'ItemClassSName' , 'VatKindName' , 'VatTypeName',  'MrpKind' ,  'OutKind' ,  'ProdMethod' ,   'ProdSpec' , 'PurKind' , 'PurProdType' , 'SMInOutKindName' ,  'SMLimitTermKindName' ,   'SMABCName' , 'EmpName' , 'PurCustName'     ];
+  const [dataSearch, setDataSearch] = useState([]);
+  const columnNames = ['AssetName', 'UnitName', 'SMStatusName', 'DeptName', 'ItemClassSName', 'VatKindName', 'VatTypeName', 'MrpKind', 'OutKind', 'ProdMethod', 'ProdSpec', 'PurKind', 'PurProdType', 'SMInOutKindName', 'SMLimitTermKindName', 'SMABCName', 'EmpName', 'PurCustName'];
 
   const [keybindings, setKeybindings] = useState({
     downFill: true,
@@ -84,18 +83,18 @@ function ModelTable({
     selectColumn: false,
   })
 
-    const getData = useCallback(
-        ([col, row]) => {
-            const person = gridData[row] || {};
-            const column = cols[col];
-            const columnKey = column?.id || '';
-            const value = person[columnKey] || '';
-            const boundingBox = document.body.getBoundingClientRect();
+  const getData = useCallback(
+    ([col, row]) => {
+      const person = gridData[row] || {};
+      const column = cols[col];
+      const columnKey = column?.id || '';
+      const value = person[columnKey] || '';
+      const boundingBox = document.body.getBoundingClientRect();
 
-            const cellConfig = {
-                
+      const cellConfig = {
 
-            };
+
+      };
 
       if (cellConfig[columnKey]) {
         return {
@@ -150,42 +149,42 @@ function ModelTable({
         }
       }
 
-      if (columnKey === 'TestEndDate' || 
+      if (columnKey === 'TestEndDate' ||
         columnKey === 'QCDate' ||
         columnKey === 'DelvDate'
       ) {
-          
+
+        return {
+          kind: GridCellKind.Text,
+          data: value,
+          displayData: formatDate(value) || '',
+          readonly: true,
+          allowOverlay: true,
+          hasMenu: false,
+        }
+      }
+
       return {
         kind: GridCellKind.Text,
         data: value,
-        displayData: formatDate(value) || '',
-        readonly: true,
+        copyData: String(value),
+        displayData: String(value),
+        readonly: column?.readonly || false,
         allowOverlay: true,
-        hasMenu: false,
+        hasMenu: column?.hasMenu || false,
+      };
+    },
+    [gridData, cols,],
+  );
+
+  const onKeyUp = useCallback(
+    (event) => {
+      if (event.key === 'Enter') {
+        console.log('Enter pressed');
       }
-    }
-            
-            return {
-                kind: GridCellKind.Text,
-                data: value,
-                copyData: String(value),
-                displayData: String(value),
-                readonly: column?.readonly || false,
-                allowOverlay: true,
-                hasMenu: column?.hasMenu || false,
-            };
-        },
-        [gridData, cols, ],
-    );
-    
-    const onKeyUp = useCallback(
-        (event) => {
-            if (event.key === 'Enter') {
-                console.log('Enter pressed');
-            }
-        },
-        [cols, gridData],
-    )
+    },
+    [cols, gridData],
+  )
 
   const onCellEdited = useCallback(
     async (cell, newValue) => {
@@ -203,19 +202,19 @@ function ModelTable({
         return
       }
 
-            const indexes = reorderColumns(cols);
-            const [col, row] = cell;
-            const key = indexes[col];
+      const indexes = resetColumn(cols);
+      const [col, row] = cell;
+      const key = indexes[col];
 
-        
-            if (
-                key === 'AssetSeq' || key === 'UnitSeq' || key === 'SMStatus' || key === 'ItemClassLName' || key === 'ItemClassMName' ||
-                key === 'SMVatKind' || key === 'SMVatType' || key === 'SMMrpKind' || key === 'SMOutKind' || key === 'SMProdMethod' || key === 'SMPurKind'
-                || key === 'SMPurProdType' || key === 'SMInOutKind' || key === 'SMLimitTermKind' || key === 'SMABC' || key === 'DeptSeq' || key === 'EmpSeq'
-                || key === 'EmpID' || key === 'PurCustSeq'
-            ) {
-                return
-            }
+
+      if (
+        key === 'AssetSeq' || key === 'UnitSeq' || key === 'SMStatus' || key === 'ItemClassLName' || key === 'ItemClassMName' ||
+        key === 'SMVatKind' || key === 'SMVatType' || key === 'SMMrpKind' || key === 'SMOutKind' || key === 'SMProdMethod' || key === 'SMPurKind'
+        || key === 'SMPurProdType' || key === 'SMInOutKind' || key === 'SMLimitTermKind' || key === 'SMABC' || key === 'DeptSeq' || key === 'EmpSeq'
+        || key === 'EmpID' || key === 'PurCustSeq'
+      ) {
+        return
+      }
 
 
       // Xử lý các trường hợp khác
@@ -238,21 +237,21 @@ function ModelTable({
             status: currentStatus === 'A' ? 'A' : 'U',
           }
 
-                    if (existingIndex === -1) {
-                        return [...prevEditedRows, updatedRowData];
-                    } else {
-                        const updatedEditedRows = [...prevEditedRows];
-                        updatedEditedRows[existingIndex] = updatedRowData;
-                        return updatedEditedRows;
-                    }
-                });
+          if (existingIndex === -1) {
+            return [...prevEditedRows, updatedRowData];
+          } else {
+            const updatedEditedRows = [...prevEditedRows];
+            updatedEditedRows[existingIndex] = updatedRowData;
+            return updatedEditedRows;
+          }
+        });
 
-                return updatedData;
-            });
-        },
-        [canEdit, cols, gridData, 
-        ],
-    );
+        return updatedData;
+      });
+    },
+    [canEdit, cols, gridData,
+    ],
+  );
 
   const onColumnResize = useCallback(
     (column, newSize) => {
@@ -295,189 +294,190 @@ function ModelTable({
       const rowsWithStatusA = prevData.filter((row) => row.Status === 'A')
       const rowsWithoutStatusA = prevData.filter((row) => row.Status !== 'A')
 
-            const sortedData = rowsWithoutStatusA.sort((a, b) => {
-                if (a[columnId] < b[columnId]) return direction === 'asc' ? -1 : 1;
-                if (a[columnId] > b[columnId]) return direction === 'asc' ? 1 : -1;
-                return 0;
-            });
+      const sortedData = rowsWithoutStatusA.sort((a, b) => {
+        if (a[columnId] < b[columnId]) return direction === 'asc' ? -1 : 1;
+        if (a[columnId] > b[columnId]) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
 
-            return [...sortedData, ...rowsWithStatusA];
-        });
-        setShowMenu(null);
-    }
-    const updateHiddenColumns = (newHiddenColumns) => {
-        setHiddenColumns((prevHidden) => {
-            const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])]
-            saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden)
-            return newHidden
-        })
-    }
+      return [...sortedData, ...rowsWithStatusA];
+    });
+    setShowMenu(null);
+  }
+  const updateHiddenColumns = (newHiddenColumns) => {
+    setHiddenColumns((prevHidden) => {
+      const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])]
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden)
+      return newHidden
+    })
+  }
 
-    const updateVisibleColumns = (newVisibleColumns) => {
-        setCols((prevCols) => {
-            const newCols = [...new Set([...prevCols, ...newVisibleColumns])]
-            const uniqueCols = newCols.filter(
-                (col, index, self) => index === self.findIndex((c) => c.id === col.id),
-            )
-            saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols)
-            return uniqueCols
-        })
-    }
-    // Hàm ẩn cột
-    const handleHideColumn = (colIndex) => {
-        const columnId = cols[colIndex]?.id
-        if (cols.length > 1) {
-            updateHiddenColumns([columnId])
-            setCols((prevCols) => {
-                const newCols = prevCols.filter((_, idx) => idx !== colIndex)
-                const uniqueCols = newCols.filter(
-                    (col, index, self) =>
-                        index === self.findIndex((c) => c.id === col.id),
-                )
-                saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols)
-                return uniqueCols
-            })
-            setShowMenu(null)
-        }
-    }
-    // Hàm rEST LẤY LẠI CỘT DỮ LIỆU
-
-    const handleReset = () => {
-        setCols(defaultCols.filter((col) => col.visible))
-        setHiddenColumns([])
-        localStorage.removeItem('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST')
-        localStorage.removeItem('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST')
-        setShowMenu(null);
-    }
-
-    const onColumnMoved = useCallback((startIndex, endIndex) => {
-        setCols((prevCols) => {
-            const updatedCols = [...prevCols]
-            const [movedColumn] = updatedCols.splice(startIndex, 1)
-            updatedCols.splice(endIndex, 0, movedColumn)
-            saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', updatedCols)
-            return updatedCols
-        })
-    }, [])
-
-    const showDrawer = () => {
-        const invisibleCols = defaultCols
-            .filter((col) => col.visible === false)
-            .map((col) => col.id)
-        const currentVisibleCols = loadFromLocalStorageSheet(
-            'S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST',
-            [],
-        ).map((col) => col.id)
-        const newInvisibleCols = invisibleCols.filter(
-            (col) => !currentVisibleCols.includes(col),
+  const updateVisibleColumns = (newVisibleColumns) => {
+    setCols((prevCols) => {
+      const newCols = [...new Set([...prevCols, ...newVisibleColumns])]
+      const uniqueCols = newCols.filter(
+        (col, index, self) => index === self.findIndex((c) => c.id === col.id),
+      )
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols)
+      return uniqueCols
+    })
+  }
+  // Hàm ẩn cột
+  const handleHideColumn = (colIndex) => {
+    const columnId = cols[colIndex]?.id
+    if (cols.length > 1) {
+      updateHiddenColumns([columnId])
+      setCols((prevCols) => {
+        const newCols = prevCols.filter((_, idx) => idx !== colIndex)
+        const uniqueCols = newCols.filter(
+          (col, index, self) =>
+            index === self.findIndex((c) => c.id === col.id),
         )
-        updateHiddenColumns(newInvisibleCols)
-        updateVisibleColumns(
-            defaultCols.filter(
-                (col) => col.visible && !hiddenColumns.includes(col.id),
-            ),
-        )
-        setOpen(true)
-        setShowMenu(null);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols)
+        return uniqueCols
+      })
+      setShowMenu(null)
     }
-    const onClose = () => {
-        setOpen(false)
-    }
+  }
+  // Hàm rEST LẤY LẠI CỘT DỮ LIỆU
 
-    const handleCheckboxChange = (columnId, isChecked) => {
-        if (isChecked) {
-            const restoredColumn = defaultCols.find((col) => col.id === columnId)
-            setCols((prevCols) => {
-                const newCols = [...prevCols, restoredColumn]
-                saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols)
-                return newCols
-            })
-            setHiddenColumns((prevHidden) => {
-                const newHidden = prevHidden.filter((id) => id !== columnId)
-                saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden)
-                return newHidden
-            })
-        } else {
-            setCols((prevCols) => {
-                const newCols = prevCols.filter((col) => col.id !== columnId)
-                saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols)
-                return newCols
-            })
-            setHiddenColumns((prevHidden) => {
-                const newHidden = [...prevHidden, columnId]
-                saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden)
-                return newHidden
-            })
-        }
+  const handleReset = () => {
+    setCols(defaultCols.filter((col) => col.visible))
+    setHiddenColumns([])
+    localStorage.removeItem('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST')
+    localStorage.removeItem('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST')
+    setShowMenu(null);
+  }
+
+  const onColumnMoved = useCallback((startIndex, endIndex) => {
+    setCols((prevCols) => {
+      const updatedCols = [...prevCols]
+      const [movedColumn] = updatedCols.splice(startIndex, 1)
+      updatedCols.splice(endIndex, 0, movedColumn)
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', updatedCols)
+      return updatedCols
+    })
+  }, [])
+
+  const showDrawer = () => {
+    const invisibleCols = defaultCols
+      .filter((col) => col.visible === false)
+      .map((col) => col.id)
+    const currentVisibleCols = loadFromLocalStorageSheet(
+      'S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST',
+      [],
+    ).map((col) => col.id)
+    const newInvisibleCols = invisibleCols.filter(
+      (col) => !currentVisibleCols.includes(col),
+    )
+    updateHiddenColumns(newInvisibleCols)
+    updateVisibleColumns(
+      defaultCols.filter(
+        (col) => col.visible && !hiddenColumns.includes(col.id),
+      ),
+    )
+    setOpen(true)
+    setShowMenu(null);
+  }
+  const onClose = () => {
+    setOpen(false)
+  }
+
+  const handleCheckboxChange = (columnId, isChecked) => {
+    if (isChecked) {
+      const restoredColumn = defaultCols.find((col) => col.id === columnId)
+      setCols((prevCols) => {
+        const newCols = [...prevCols, restoredColumn]
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols)
+        return newCols
+      })
+      setHiddenColumns((prevHidden) => {
+        const newHidden = prevHidden.filter((id) => id !== columnId)
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden)
+        return newHidden
+      })
+    } else {
+      setCols((prevCols) => {
+        const newCols = prevCols.filter((col) => col.id !== columnId)
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols)
+        return newCols
+      })
+      setHiddenColumns((prevHidden) => {
+        const newHidden = [...prevHidden, columnId]
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden)
+        return newHidden
+      })
     }
+  }
+
 
   return (
-    <div className="w-full gap-1 h-full flex items-center justify-center pb-8">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
-        <h2 className="text-xs border-b font-medium flex items-center gap-2 p-2 text-blue-600 uppercase">
-          <TableOutlined />
-          SHEET DATA
-        </h2>
 
-                <DataEditor
-                    {...cellProps}
-                    ref={gridRef}
-                    columns={cols}
-                    getCellContent={getData}
-                    onFill={onFill}
-                    rows={numRows}
-                    showSearch={showSearch}
-                    onSearchClose={onSearchClose}
-                    rowMarkers="both"
-                    width="100%"
-                    height="100%"
-                    headerHeight={30}
-                    rowHeight={28}
-                    rowSelect="multi"
-                    gridSelection={selection}
-                    onGridSelectionChange={setSelection}
-                    getCellsForSelection={true}
-                    trailingRowOptions={{
-                        hint: ' ',
-                        sticky: true,
-                        tint: true,
-                    }}
+    <div className="w-100 h-100 d-flex flex-column border bg-white rounded overflow-hidden mt-2">
+      <h2 className="text-uppercase text-primary border-bottom fw-medium d-flex align-items-center gap-2 p-2 small">
+        <TableOutlined />
+        SHEET DATA
+      </h2>
 
-                    freezeColumns={1}
-                    getRowThemeOverride={(i) =>
-                        i === hoverRow
-                            ? {
-                                bgCell: '#f7f7f7',
-                                bgCellMedium: '#f0f0f0',
-                            }
-                            : i % 2 === 0
-                                ? undefined
-                                : {
-                                    bgCell: '#FBFBFB',
-                                }
-                    }
-                    overscrollY={0}
-                    overscrollX={0}
-                    smoothScrollY={true}
-                    smoothScrollX={true}
-                    onPaste={true}
-                    fillHandle={true}
-                    // keybindings={keybindings}
-                    // onRowAppended={() => handleRowAppend(1)}
-                    // onCellEdited={onCellEdited}
-                    // onCellClicked={onCellClicked}
-            
-                    // onColumnResize={onColumnResize}
-                    // onHeaderMenuClick={onHeaderMenuClick}
-                    // onColumnMoved={onColumnMoved}
-                    // onKeyUp={onKeyUp}
-                    // customRenderers={[
-                    //     AsyncDropdownCellRenderer
-                    // ]}
-                    // onItemHovered={onItemHovered}
-                 
-                />
-                {/* {showMenu !== null &&
+      <DataEditor
+        {...cellProps}
+        ref={gridRef}
+        columns={cols}
+        getCellContent={getData}
+        onFill={onFill}
+        rows={numRows}
+        showSearch={showSearch}
+        onSearchClose={onSearchClose}
+        rowMarkers="both"
+        width="100%"
+        height="100%"
+        headerHeight={30}
+        rowHeight={28}
+        rowSelect="multi"
+        gridSelection={selection}
+        onGridSelectionChange={setSelection}
+        getCellsForSelection={true}
+        trailingRowOptions={{
+          hint: ' ',
+          sticky: true,
+          tint: true,
+        }}
+
+        freezeColumns={1}
+        getRowThemeOverride={(i) =>
+          i === hoverRow
+            ? {
+              bgCell: '#f7f7f7',
+              bgCellMedium: '#f0f0f0',
+            }
+            : i % 2 === 0
+              ? undefined
+              : {
+                bgCell: '#FBFBFB',
+              }
+        }
+        overscrollY={0}
+        overscrollX={0}
+        smoothScrollY={true}
+        smoothScrollX={true}
+        onPaste={true}
+        fillHandle={true}
+        // keybindings={keybindings}
+        // onRowAppended={() => handleRowAppend(1)}
+        // onCellEdited={onCellEdited}
+        // onCellClicked={onCellClicked}
+
+        onColumnResize={onColumnResize}
+      // onHeaderMenuClick={onHeaderMenuClick}
+      // onColumnMoved={onColumnMoved}
+      // onKeyUp={onKeyUp}
+      // customRenderers={[
+      //     AsyncDropdownCellRenderer
+      // ]}
+      // onItemHovered={onItemHovered}
+
+      />
+      {/* {showMenu !== null &&
                     renderLayer(
                         <div
                             {...layerProps}
@@ -512,37 +512,27 @@ function ModelTable({
                             )}
                         </div>,
                     )} */}
-                <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
-                    {defaultCols.map(
-                        (col) =>
-                            col.id !== 'Status' && (
-                                <div key={col.id} style={{ marginBottom: '10px' }}>
-                                    <Checkbox
-                                        checked={!hiddenColumns.includes(col.id)}
-                                        onChange={(e) =>
-                                            handleCheckboxChange(col.id, e.target.checked)
-                                        }
-                                    >
-                                        {col.title}
-                                    </Checkbox>
-                                </div>
-                            ),
-                    )}
-                </Drawer>
-                <ModalHelpRootMenu
-                    openHelp={openHelp}
-                    setOpenHelp={setOpenHelp}
-                    setKeySearchText={setKeySearchText}
-                    keySearchText={keySearchText}
-                    setOnSelectRow={setOnSelectRow}
-                    setTypeSearch={setTypeSearch}
-                    typeSearch={typeSearch}
-                    dataSearch={dataSearch}
-                    setDataSearch={setDataSearch}
-                />
-            </div>
-        </div>
-    )
+      <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
+        {defaultCols.map(
+          (col) =>
+            col.id !== 'Status' && (
+              <div key={col.id} style={{ marginBottom: '10px' }}>
+                <Checkbox
+                  checked={!hiddenColumns.includes(col.id)}
+                  onChange={(e) =>
+                    handleCheckboxChange(col.id, e.target.checked)
+                  }
+                >
+                  {col.title}
+                </Checkbox>
+              </div>
+            ),
+        )}
+      </Drawer>
+
+
+    </div>
+  )
 }
 
 export default ModelTable;

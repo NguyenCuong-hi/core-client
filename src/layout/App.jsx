@@ -4,6 +4,12 @@ import React from 'react';
 import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
+// grid-app
+import '@glideapps/glide-data-grid/dist/index.css'
+
+import '../index.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 // third-party
 import { useSelector } from 'react-redux';
 

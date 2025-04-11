@@ -1,7 +1,7 @@
 import { SearchOutlined } from '@mui/icons-material';
 import { Button, Input, Tooltip } from 'antd';
 import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import { FilterOutlined } from '@ant-design/icons';
 
 const onSearch = (value) => {

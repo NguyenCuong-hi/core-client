@@ -13,8 +13,10 @@ import Sidebar from './Sidebar';
 // custom style
 const Main = styled((props) => <main {...props} />)(({ theme }) => ({
   width: '100%',
-  minHeight: '100vh',
+  minHeight: '100%',
   flexGrow: 1,
+  marginTop:40,
+  paddingTop: 0,
   transition: theme.transitions.create('margin', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen
@@ -29,7 +31,9 @@ const OutletDiv = styled((props) => <div {...props} />)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(2)
   },
-  padding: theme.spacing(2)
+  // padding: theme.spacing(2)
+  paddingTop: 0
+
 }));
 
 // ==============================|| MAIN LAYOUT ||============================== //
@@ -55,6 +59,7 @@ const MainLayout = () => {
         </Toolbar>
       </AppBar>
       <Sidebar drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />
+      
       <Main
         style={{
           ...(drawerOpen && {
