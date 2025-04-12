@@ -23,6 +23,7 @@ const NavCollapse = ({ menu, level }) => {
   const handleClick = () => {
     setOpen(!open);
     setSelected(!selected ? menu.id : null);
+    console.log('1', 1)
   };
 
   const menus = menu.children.map((item) => {

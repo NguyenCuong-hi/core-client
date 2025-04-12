@@ -31,8 +31,9 @@ const OutletDiv = styled((props) => <div {...props} />)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(2)
   },
-  // padding: theme.spacing(2)
-  paddingTop: 0
+  padding: theme.spacing(1),
+  paddingTop: 0,
+  height: '100vh'
 
 }));
 
@@ -51,11 +52,17 @@ const MainLayout = () => {
     setDrawerOpen(matchUpLg);
   }, [matchUpLg]);
 
+
+
+
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>
       <AppBar position="fixed" sx={{ zIndex: 1000, bgcolor: '#fff' }}>
         <Toolbar sx={{ minHeight: '30px !important' }}>
-          <Header drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />
+          <Header 
+          drawerOpen={drawerOpen} 
+          drawerToggle={handleDrawerToggle} 
+          />
         </Toolbar>
       </AppBar>
       <Sidebar drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />

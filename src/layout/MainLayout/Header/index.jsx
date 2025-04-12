@@ -18,6 +18,7 @@ import MenuTwoToneIcon from '@mui/icons-material/MenuTwoTone';
 import logo from 'assets/images/logo.svg';
 
 import menuItem from 'menu-items';
+import DynamicTabs from './DynamicTabs';
 
 // ==============================|| HEADER ||============================== //
 
@@ -37,6 +38,13 @@ const Header = ({ drawerToggle }) => {
       </Link>
     );
   });
+
+  const menuItems = [
+    { key: 'home', label: 'Trang chủ', content: 'Nội dung trang chủ' },
+    { key: 'about', label: 'Giới thiệu', content: 'Nội dung giới thiệu' },
+    { key: 'contact', label: 'Liên hệ', content: 'Nội dung liên hệ' },
+  ];
+
 
 
   return (
@@ -67,9 +75,10 @@ const Header = ({ drawerToggle }) => {
         </Grid>
       </Box>
       <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ marginBottom: 0 }}>
+        {/* <Breadcrumbs aria-label="breadcrumb" sx={{ marginBottom: 0 }}>
           {breadcrumbs}
-        </Breadcrumbs>
+        </Breadcrumbs> */}
+        <DynamicTabs menuItems={menuItems} />
       </Box>
       <Box sx={{ flexGrow: 1 }} />
       <NotificationSection />
