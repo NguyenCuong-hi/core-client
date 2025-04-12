@@ -3,7 +3,7 @@ import { Outlet, Router, Link as RouterLink } from 'react-router-dom';
 
 // material-ui
 import { styled, useTheme } from '@mui/material/styles';
-import { useMediaQuery, AppBar, Box, Toolbar, Breadcrumbs, Link, Typography } from '@mui/material';
+import { useMediaQuery, AppBar, Box, Toolbar } from '@mui/material';
 
 // project import
 import { drawerWidth } from 'config.js';
@@ -15,7 +15,7 @@ const Main = styled((props) => <main {...props} />)(({ theme }) => ({
   width: '100%',
   minHeight: '100%',
   flexGrow: 1,
-  marginTop:40,
+  marginTop: 40,
   paddingTop: 0,
   transition: theme.transitions.create('margin', {
     easing: theme.transitions.easing.sharp,
@@ -33,7 +33,7 @@ const OutletDiv = styled((props) => <div {...props} />)(({ theme }) => ({
   },
   padding: theme.spacing(1),
   paddingTop: 0,
-  height: '100vh'
+  height: '100%'
 
 }));
 
@@ -56,34 +56,24 @@ const MainLayout = () => {
 
 
   return (
-    <Box sx={{ display: 'flex', width: '100%' }}>
-      <AppBar position="fixed" sx={{ zIndex: 1000, bgcolor: '#fff' }}>
-        <Toolbar sx={{ minHeight: '30px !important' }}>
-          <Header 
-          drawerOpen={drawerOpen} 
-          drawerToggle={handleDrawerToggle} 
-          />
-        </Toolbar>
-      </AppBar>
+    <div className="flex w-full">
+      <div className="fixed z-[1000] bg-white w-full">
+        <div className="min-h-[30px] flex items-center">
+          <Header drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />
+        </div>
+      </div>
+
       <Sidebar drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />
-      
-      <Main
-        style={{
-          ...(drawerOpen && {
-            transition: theme.transitions.create('margin', {
-              easing: theme.transitions.easing.easeOut,
-              duration: theme.transitions.duration.enteringScreen
-            }),
-            marginLeft: 0,
-            marginRight: 'inherit'
-          })
-        }}
+
+      <main
+        className={`flex-grow w-full min-h-screen transition-all ${drawerOpen ? 'ml-0' : 'ml-[240px]'
+          }`}
       >
-        <OutletDiv>
+        <div className="p-2 pt-0 h-full overflow-auto">
           <Outlet />
-        </OutletDiv>
-      </Main>
-    </Box>
+        </div>
+      </main>
+    </div>
   );
 };
 

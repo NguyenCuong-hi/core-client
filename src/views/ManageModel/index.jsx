@@ -78,7 +78,8 @@ const ManageModelPage = () => {
 
   return (
     <>
-      <div className="w-100 p-0 h-100 ">
+
+      <div className="h-[750px] pt-4 pr-4 pl-4">
         <ModelAction />
         <ModelTable
           defaultCols={defaultCols}

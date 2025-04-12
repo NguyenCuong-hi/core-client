@@ -1,133 +1,89 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { Layout, Menu, Grid } from 'antd';
+import {
+  MenuUnfoldOutlined,
+  MenuFoldOutlined
+} from '@ant-design/icons';
 
-// material-ui
-import { useTheme, styled } from '@mui/material/styles';
-import { useMediaQuery, Divider, Drawer, Grid, Box, IconButton } from '@mui/material';
-
-// third party
 import PerfectScrollbar from 'react-perfect-scrollbar';
 
-// project import
-import MenuList from './MenuList';
-import { drawerWidth } from 'config.js';
-import NavCard from './MenuList/NavCard';
-
-// assets
 import logo from 'assets/images/logo.svg';
 import ProfileSection from '../Header/ProfileSection';
-import { MenuTwoTone } from '@mui/icons-material';
+import menuItems from 'menu-item';
+import { useNavigate } from 'react-router-dom';
 
-// custom style
-const Nav = styled((props) => <nav {...props} />)(({ theme }) => ({
-  [theme.breakpoints.up('md')]: {
-    width: drawerWidth,
-    flexShrink: 0
-  }
-}));
+const { Sider } = Layout;
+const { useBreakpoint } = Grid;
 
-// ==============================|| SIDEBAR ||============================== //
+const Sidebar = ({ drawerOpen, drawerToggle }) => {
+  const navigate = useNavigate();
+  const screens = useBreakpoint();
 
-const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
-  const theme = useTheme();
-  const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
-  const drawer = (
-    <>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%'
-        }}
-      >
-        <Box width={drawerWidth} sx={{ zIndex: 1201 }}>
-          <Grid container >
-            <Grid item>
-              <IconButton
-                edge="start"
-                sx={{ mr: theme.spacing(1), marginLeft: 1 }}
-                aria-label="open drawer"
-                onClick={drawerToggle}
-                size="large"
-              >
-                <MenuTwoTone sx={{ fontSize: '1rem' }} />
-              </IconButton>
-            </Grid>
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-              <Grid item>
-                <Box mt={0.5}>
-                  <img src={logo} alt="Logo" />
-                </Box>
-              </Grid>
-            </Box>
+  const siderStyle = {
+    overflow: 'auto',
+    height: '100vh',
+    position: 'sticky',
+    insetInlineStart: 0,
+    top: 0,
+    bottom: 0,
+    scrollbarWidth: 'thin',
+    scrollbarGutter: 'stable',
 
-          </Grid>
-        </Box>
-        <Box sx={{ display: { md: 'none', xs: 'block' } }}>
-          <Grid
-            container
-            direction="row"
-            justifyContent="center"
-            elevation={5}
-            alignItems="center"
-            spacing={0}
-            sx={{
-              ...theme.mixins.toolbar,
-              lineHeight: 0,
-              background: theme.palette.primary.main,
-              boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)'
-            }}
-          >
-            <Grid item>
-              <img src={logo} alt="Logo" />
-            </Grid>
-          </Grid>
-        </Box>
-        <Divider />
+  };
 
-        <PerfectScrollbar style={{ flexGrow: 1, padding: '10px' }}>
-          <MenuList />
-        </PerfectScrollbar>
-
-        <Box sx={{ mb: 0 }}>
-          <ProfileSection />
-        </Box>
-      </Box>
-    </>
-  );
-
-  const container = window !== undefined ? () => window().document.body : undefined;
+  const handleMenuClick = ({ key }) => {
+    navigate(key);
+    localStorage.addItem('dynamicTabs', JSON.stringify(key));
+    localStorage.setItem('activeTab', key);
+  };
 
   return (
-    <Nav>
-      <Drawer
-        container={container}
-        variant={matchUpMd ? 'persistent' : 'temporary'}
-        anchor="left"
-        open={drawerOpen}
-        onClose={drawerToggle}
+    
 
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            borderRight: 'none',
-            boxShadow: '0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15)',
-            // top: { md: 30, sm: 0 },
-            height: { sm: '100%' }
-          }
-        }}
-        ModalProps={{ keepMounted: true }}
-      >
-        {drawer}
-      </Drawer>
-    </Nav>
+    <Sider
+      collapsible={true}
+      collapsed={!drawerOpen}
+      onCollapse={(collapsed) => drawerToggle(!collapsed)}
+      width={260}
+      style={siderStyle}
+      className="bg-white"
+      trigger={null}
+    >
+      {/* Header */}
+      {/* <div className="h-16 flex items-center px-4 border-b border-gray-700 flex-shrink-0">
+        <img src={logo} alt="Logo" className="h-8" />
+        <span className="ml-auto">
+          {drawerOpen ? (
+            <MenuFoldOutlined onClick={() => drawerToggle(false)} />
+          ) : (
+            <MenuUnfoldOutlined onClick={() => drawerToggle(true)} />
+          )}
+        </span>
+      </div> */}
+
+      {/* Scrollable Menu */}
+      <div className="flex-1 ">
+          <Menu
+            mode="inline"
+            defaultSelectedKeys={['dashboard']}
+            className="border-none"
+            items={menuItems}
+            onClick={handleMenuClick}
+          />
+      </div>
+
+      {/* Footer */}
+      <div className=" ">
+        <ProfileSection />
+      </div>
+    </Sider>
   );
 };
 
 Sidebar.propTypes = {
   drawerOpen: PropTypes.bool,
-  drawerToggle: PropTypes.func,
-  window: PropTypes.object
+  drawerToggle: PropTypes.func
 };
 
 export default Sidebar;
