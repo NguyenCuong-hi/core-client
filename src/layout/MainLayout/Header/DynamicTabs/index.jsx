@@ -3,19 +3,32 @@ import { Tabs, Tab, IconButton, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Suspense } from 'react';
-
+import menuItems from 'menu-item';
 // Giả định các component động cho nội dung tab
 const Default = React.lazy(() => import('../../../../views/Dashboard/Default')); 
 const ManageModel = React.lazy(() => import('../../../../views/ManageModel'));
 
 
 const DynamicTabs = ({ menuItems, onTabChange }) => {
+
   const navigate = useNavigate();
   const location = useLocation();
-  const [tabs, setTabs] = useState([
-    { key: 'mng-model', label: 'Trang chủ', path: '/mng-model' },
-  ]);
+  const [tabs, setTabs] = useState([]);
   const [activeTab, setActiveTab] = useState('home');
+
+  const findMenuItemByKey = (items, targetKey) => {
+    for (const item of items) {
+      if (item.key === targetKey) {
+        return item;
+      }
+  
+      if (item.children) {
+        const found = findMenuItemByKey(item.children, targetKey);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
 
   // Đồng bộ tabs và activeTab với URL
   useEffect(() => {
@@ -25,7 +38,7 @@ const DynamicTabs = ({ menuItems, onTabChange }) => {
       setActiveTab(currentPath);
     } else {
 
-      const menuItem = menuItems.find(item => item.key === currentPath);
+      const menuItem = findMenuItemByKey(menuItems, currentPath);
       if (menuItem && !tabs.find(tab => tab.key === menuItem.key)) {
         setTabs([...tabs, { ...menuItem, path: `/${menuItem.key}` }]);
       }
@@ -45,6 +58,7 @@ const DynamicTabs = ({ menuItems, onTabChange }) => {
     if (savedTabs) setTabs(JSON.parse(savedTabs));
     if (savedActiveTab) setActiveTab(savedActiveTab);
   }, []);
+  
 
   const handleOpenTab = (item) => {
     if (!tabs.find(tab => tab.key === item.key)) {

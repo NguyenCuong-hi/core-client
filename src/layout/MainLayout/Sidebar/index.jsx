@@ -1,14 +1,7 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Grid } from 'antd';
-import {
-  MenuUnfoldOutlined,
-  MenuFoldOutlined
-} from '@ant-design/icons';
 
-import PerfectScrollbar from 'react-perfect-scrollbar';
-
-import logo from 'assets/images/logo.svg';
 import ProfileSection from '../Header/ProfileSection';
 import menuItems from 'menu-item';
 import { useNavigate } from 'react-router-dom';
@@ -31,15 +24,40 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
     scrollbarGutter: 'stable',
 
   };
+  const [tabs, setTabs] = useState([
+    { key: '/', label: 'Trang chủ', path: '/' },
+  ]);
+
+  const findMenuItemByKey = (items, targetKey) => {
+    for (const item of items) {
+      if (item.key === targetKey) {
+        return item;
+      }
+  
+      if (item.children) {
+        const found = findMenuItemByKey(item.children, targetKey);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const [activeTab, setActiveTab] = useState('/');
+
+  useEffect(() => {
+    localStorage.setItem('dynamicTabs', JSON.stringify(tabs));
+    localStorage.setItem('activeTab', activeTab);
+  }, [tabs, activeTab]);
 
   const handleMenuClick = ({ key }) => {
     navigate(key);
-    localStorage.addItem('dynamicTabs', JSON.stringify(key));
+    const menu = findMenuItemByKey(menuItems, key)
+    localStorage.setItem('dynamicTabs', JSON.stringify(menu));
     localStorage.setItem('activeTab', key);
   };
 
   return (
-    
+
 
     <Sider
       collapsible={true}
@@ -64,13 +82,13 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
 
       {/* Scrollable Menu */}
       <div className="flex-1 ">
-          <Menu
-            mode="inline"
-            defaultSelectedKeys={['dashboard']}
-            className="border-none"
-            items={menuItems}
-            onClick={handleMenuClick}
-          />
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={['dashboard']}
+          className="border-none"
+          items={menuItems}
+          onClick={handleMenuClick}
+        />
       </div>
 
       {/* Footer */}

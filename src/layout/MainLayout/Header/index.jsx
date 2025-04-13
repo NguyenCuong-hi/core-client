@@ -5,15 +5,12 @@ import { Button, Layout } from 'antd';
 import DynamicTabs from './DynamicTabs';
 import logo from 'assets/images/logo.svg';
 import NotificationSection from './NotificationSection';
+import menuItems from 'menu-item';
 
 const { Header: AntHeader } = Layout;
 
 const Header = ({ drawerToggle }) => {
-  const menuItems = [
-    { key: 'home', label: 'Trang chủ', content: 'Nội dung trang chủ' },
-    { key: 'about', label: 'Giới thiệu', content: 'Nội dung giới thiệu' },
-    { key: 'contact', label: 'Liên hệ', content: 'Nội dung liên hệ' },
-  ];
+
 
   return (
     <AntHeader

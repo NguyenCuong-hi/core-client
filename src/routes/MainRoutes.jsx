@@ -91,7 +91,7 @@ const MainRoutes = () => {
 
 
 
-              <div className="fixed z-[1001] bg-amber-300 w-full ">
+              <div className="fixed z-[1001] bg-amber-50 w-full ">
                 <Header
                   drawerOpen={drawerOpen}
                   drawerToggle={handleDrawerToggle}

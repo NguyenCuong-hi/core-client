@@ -6,4 +6,9 @@ export const saveToLocalStorageSheet = (key, value) => {
     const saved = localStorage.getItem(key)
     return saved ? JSON.parse(saved) : defaultValue
   }
+
+  export const loadTabsFromLocalStr = (key) => {
+    const saved = localStorage.getItem(key)
+    return saved ? JSON.parse(saved) : ''
+  }
   
