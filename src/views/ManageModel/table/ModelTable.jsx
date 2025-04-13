@@ -4,7 +4,7 @@ import { TableOutlined } from '@ant-design/icons'
 import { useLayer } from 'react-laag'
 // import LayoutMenuSheet from '../../sheet/jsx/layoutMenu'
 // import LayoutStatusMenuSheet from '../../sheet/jsx/layoutStatusMenu'
-import { Drawer, Checkbox, message } from 'antd'
+import { Drawer, Checkbox, message, Pagination } from 'antd'
 
 // import ModalHelpRootMenu from '../../modal/system/modalHelpRootMenu'
 // import { updateEditedRows } from '../../sheet/js/updateEditedRows'
@@ -508,6 +508,14 @@ function ModelTable({
                             )}
                         </div>,
                     )} */}
+        <div className="flex justify-end px-4 py-2">
+          <Pagination
+            total={85}
+            showTotal={(total) => `Total ${total} items`}
+            defaultPageSize={20}
+            defaultCurrent={1}
+          />
+        </div>
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
             (col) =>

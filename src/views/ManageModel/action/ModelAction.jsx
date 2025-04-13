@@ -10,7 +10,7 @@ const onSearch = (value) => {
 const ModelAction = () => {
   return (
     <div className="flex justify-between items-center py-4">
-      <Typography.Title level={4} className="!mb-0 uppercase ">
+      <Typography.Title level={4} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight:'bold' }}>
         Danh sách sản phẩm
       </Typography.Title>
 

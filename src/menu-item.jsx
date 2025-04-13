@@ -27,29 +27,26 @@ const menuItems = [
     icon: <LineAxis />,
     label: 'Quản lý quy trình',
     children: [
-      { key: 'list-process', label: 'Danh sách quy trình' },
-      { key: 'line-register', label: 'Đăng ký thông tin quy trình' },
-      { key: 'line-register', label: 'Đăng ký thông tin sản phẩm' }
+      { key: 'list-process-line', label: 'Danh sách quy trình' },
+      { key: 'process-line-register', label: 'Đăng ký thông tin quy trình' },
     ]
   },
   {
-    key: 'manage-process-line',
+    key: 'manage-process',
     icon: <LineAxis />,
     label: 'Quản lý công đoạn',
     children: [
       { key: 'list-process', label: 'Danh sách công đoạn' },
-      { key: 'line-register', label: 'Đăng ký thông tin công đoạn' },
-      { key: 'line-register', label: 'Đăng ký thông tin sản phẩm' }
+      { key: 'process-register', label: 'Đăng ký thông tin công đoạn' },
     ]
   },
   {
-    key: 'manage-process-line',
+    key: 'manage-machine',
     icon: <OutboxOutlined />,
     label: 'Quản lý trang thiết bị',
     children: [
-      { key: 'list-process', label: 'Danh sách trang thiết bị' },
-      { key: 'line-register', label: 'Đăng ký trang thiết bị' },
-      { key: 'line-register', label: 'Đăng ký thông tin sản phẩm' }
+      { key: 'list-machine', label: 'Danh sách trang thiết bị' },
+      { key: 'machine-register', label: 'Đăng ký trang thiết bị' },
     ]
   },
   {
