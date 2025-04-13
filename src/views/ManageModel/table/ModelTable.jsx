@@ -413,71 +413,67 @@ function ModelTable({
 
   return (
 
-    <div className="w-100 h-100 d-flex flex-column border bg-white rounded overflow-hidden mt-2">
-      <h2 className="text-uppercase text-primary border-bottom fw-medium d-flex align-items-center gap-2 p-2 small">
-        <TableOutlined />
-        SHEET DATA
-      </h2>
+    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
+      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+        <DataEditor
+          {...cellProps}
+          ref={gridRef}
+          columns={cols}
+          getCellContent={getData}
+          onFill={onFill}
+          rows={numRows}
+          showSearch={showSearch}
+          onSearchClose={onSearchClose}
+          rowMarkers="both"
+          width="100%"
+          height="100%"
+          headerHeight={30}
+          rowHeight={28}
+          rowSelect="multi"
+          gridSelection={selection}
+          onGridSelectionChange={setSelection}
+          getCellsForSelection={true}
+          trailingRowOptions={{
+            hint: ' ',
+            sticky: true,
+            tint: true,
+          }}
 
-      <DataEditor
-        {...cellProps}
-        ref={gridRef}
-        columns={cols}
-        getCellContent={getData}
-        onFill={onFill}
-        rows={numRows}
-        showSearch={showSearch}
-        onSearchClose={onSearchClose}
-        rowMarkers="both"
-        width="100%"
-        height="100%"
-        headerHeight={30}
-        rowHeight={28}
-        rowSelect="multi"
-        gridSelection={selection}
-        onGridSelectionChange={setSelection}
-        getCellsForSelection={true}
-        trailingRowOptions={{
-          hint: ' ',
-          sticky: true,
-          tint: true,
-        }}
-
-        freezeColumns={1}
-        getRowThemeOverride={(i) =>
-          i === hoverRow
-            ? {
-              bgCell: '#f7f7f7',
-              bgCellMedium: '#f0f0f0',
-            }
-            : i % 2 === 0
-              ? undefined
-              : {
-                bgCell: '#FBFBFB',
+          freezeColumns={1}
+          getRowThemeOverride={(i) =>
+            i === hoverRow
+              ? {
+                bgCell: '#f7f7f7',
+                bgCellMedium: '#f0f0f0',
               }
-        }
-        overscrollY={0}
-        overscrollX={0}
-        smoothScrollY={true}
-        smoothScrollX={true}
-        onPaste={true}
-        fillHandle={true}
-        // keybindings={keybindings}
-        // onRowAppended={() => handleRowAppend(1)}
-        // onCellEdited={onCellEdited}
-        // onCellClicked={onCellClicked}
+              : i % 2 === 0
+                ? undefined
+                : {
+                  bgCell: '#FBFBFB',
+                }
+          }
+          overscrollY={0}
+          overscrollX={0}
+          smoothScrollY={true}
+          smoothScrollX={true}
+          onPaste={true}
+          fillHandle={true}
+          // keybindings={keybindings}
+          // onRowAppended={() => handleRowAppend(1)}
+          // onCellEdited={onCellEdited}
+          // onCellClicked={onCellClicked}
 
-        onColumnResize={onColumnResize}
-      // onHeaderMenuClick={onHeaderMenuClick}
-      // onColumnMoved={onColumnMoved}
-      // onKeyUp={onKeyUp}
-      // customRenderers={[
-      //     AsyncDropdownCellRenderer
-      // ]}
-      // onItemHovered={onItemHovered}
+          onColumnResize={onColumnResize}
+        // onHeaderMenuClick={onHeaderMenuClick}
+        // onColumnMoved={onColumnMoved}
+        // onKeyUp={onKeyUp}
+        // customRenderers={[
+        //     AsyncDropdownCellRenderer
+        // ]}
+        // onItemHovered={onItemHovered}
 
-      />
-      {/* {showMenu !== null &&
+        />
+        {/* {showMenu !== null &&
                     renderLayer(
                         <div
                             {...layerProps}
@@ -512,25 +508,26 @@ function ModelTable({
                             )}
                         </div>,
                     )} */}
-      <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
-        {defaultCols.map(
-          (col) =>
-            col.id !== 'Status' && (
-              <div key={col.id} style={{ marginBottom: '10px' }}>
-                <Checkbox
-                  checked={!hiddenColumns.includes(col.id)}
-                  onChange={(e) =>
-                    handleCheckboxChange(col.id, e.target.checked)
-                  }
-                >
-                  {col.title}
-                </Checkbox>
-              </div>
-            ),
-        )}
-      </Drawer>
+        <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
+          {defaultCols.map(
+            (col) =>
+              col.id !== 'Status' && (
+                <div key={col.id} style={{ marginBottom: '10px' }}>
+                  <Checkbox
+                    checked={!hiddenColumns.includes(col.id)}
+                    onChange={(e) =>
+                      handleCheckboxChange(col.id, e.target.checked)
+                    }
+                  >
+                    {col.title}
+                  </Checkbox>
+                </div>
+              ),
+          )}
+        </Drawer>
 
 
+      </div>
     </div>
   )
 }
