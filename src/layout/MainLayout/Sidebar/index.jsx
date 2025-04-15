@@ -4,14 +4,14 @@ import { Layout, Menu, Grid } from 'antd';
 
 import ProfileSection from '../Header/ProfileSection';
 import menuItems from 'menu-item';
-import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { addTab, setActiveTab } from 'store/tabsReducer';
 
 const { Sider } = Layout;
-const { useBreakpoint } = Grid;
 
 const Sidebar = ({ drawerOpen, drawerToggle }) => {
-  const navigate = useNavigate();
-  const screens = useBreakpoint();
+  const dispatch = useDispatch();
+  const { tabList, activeTabKey } = useSelector((state) => state.tab);
 
   const siderStyle = {
     overflow: 'auto',
@@ -24,9 +24,6 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
     scrollbarGutter: 'stable',
 
   };
-  const [tabs, setTabs] = useState([
-    { key: '/', label: 'Trang chủ', path: '/' },
-  ]);
 
   const findMenuItemByKey = (items, targetKey) => {
     for (const item of items) {
@@ -42,18 +39,22 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
     return null;
   };
 
-  const [activeTab, setActiveTab] = useState('/');
-
-  useEffect(() => {
-    localStorage.setItem('dynamicTabs', JSON.stringify(tabs));
-    localStorage.setItem('activeTab', activeTab);
-  }, [tabs, activeTab]);
-
   const handleMenuClick = ({ key }) => {
-    navigate(key);
-    const menu = findMenuItemByKey(menuItems, key)
-    localStorage.setItem('dynamicTabs', JSON.stringify(menu));
-    localStorage.setItem('activeTab', key);
+    const menuItem = findMenuItemByKey(menuItems, key);
+    if (!menuItem) return;
+
+    if (!tabList.some((tab) => tab.key === key)) {
+      dispatch(
+        addTab({
+          key: key,
+          label: menuItem.label,
+          component: menuItem.component,
+          permission: menuItem.permission,
+        })
+      );
+    }
+
+    dispatch(setActiveTab(key));
   };
 
   return (

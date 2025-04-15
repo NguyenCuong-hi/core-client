@@ -1,4 +1,4 @@
-import React, { lazy, useRef, useState } from 'react';
+import React, { lazy, useEffect, useRef, useState } from 'react';
 
 // project import
 import Loadable from 'component/Loadable';
@@ -23,6 +23,8 @@ const DefaultPage = lazy(() => import('../views/default'))
 
 import Sidebar from 'layout/MainLayout/Sidebar';
 import Header from 'layout/MainLayout/Header';
+import DynamicTabContent from 'layout/MainLayout/DynamicTabs';
+import { useDispatch, useSelector } from 'react-redux';
 const DashboardDefault = Loadable(lazy(() => import('views/Dashboard/Default')));
 const UtilsTypography = Loadable(lazy(() => import('views/Utils/Typography')));
 const SamplePage = Loadable(lazy(() => import('views/SamplePage')));
@@ -69,6 +71,18 @@ const MainRoutes = () => {
     },
   ]
 
+  const dispatch = useDispatch();
+  const tabList = useSelector((state) => state.tab.tabList);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlTab = searchParams.get("tab");
+
+    if (urlTab && tabList.some((tab) => tab.key === urlTab)) {
+      dispatch(setActiveTab(urlTab));
+    }
+  }, [location.search, tabList, dispatch]);
+
   return (
     <Routes>
       {/* Route cho login */}
@@ -106,7 +120,9 @@ const MainRoutes = () => {
                 <Content className="bg-slate-100 mt-2 mb-2">
                   <Suspense >
 
-                    <Routes>
+                    <DynamicTabContent />
+
+                    {/* <Routes>
                       {routes.map(
                         ({
                           path,
@@ -175,7 +191,7 @@ const MainRoutes = () => {
                           )
                         },
                       )}
-                    </Routes>
+                    </Routes> */}
                   </Suspense>
                 </Content>
               </Layout>
