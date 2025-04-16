@@ -41,10 +41,10 @@ const Default = () => {
 
   return (
     <div style={{ height: 'calc(100vh - 95px)' }}>
-      <Grid container spacing={gridSpacing}>
+      <Grid container spacing={gridSpacing} marginBlockStart={3} padding={2}> 
         <Grid item xs={12}>
           <Grid container spacing={gridSpacing}>
-            <Grid item lg={3} sm={6} xs={12}>
+            <Grid item lg={2} sm={3} xs={6}>
               <ReportCard
                 primary="$30200"
                 secondary="All Earnings"
