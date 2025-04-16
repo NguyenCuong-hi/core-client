@@ -16,10 +16,10 @@ const menuItems = [
   {
     key: 'model',
     icon: <ProductFilled />,
-    label: 'Quản lý sản phẩm',
+    label: 'Quản lý Hàng Hóa',
     children: [
-      { key: 'mng-model', label: 'Danh sách sản phẩm', component: "ManageModelPage", permission: null, },
-      { key: 'model-register', label: 'Đăng ký thông tin sản phẩm' },
+      { key: 'mng-model', label: 'Danh sách hàng hóa', component: "ManageModelPage", permission: null, },
+      { key: 'model-register', label: 'Đăng ký thông tin hàng hóa' },
     ]
   },
   {
