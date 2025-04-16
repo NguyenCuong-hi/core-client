@@ -18,7 +18,7 @@ const DynamicTabContent = () => {
   const Component = TabComponents[currentTab.component];
 
   return (
-    <div className="h-[750px]">
+    <div style={{ height: 'calc(100vh - 95px)' }}> 
       <Suspense fallback={<div>Loading...</div>}>
         {hasPermission ? (
           Component ? <Component /> : <div>Không tìm thấy component.</div>

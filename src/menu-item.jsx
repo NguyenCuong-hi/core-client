@@ -18,7 +18,7 @@ const menuItems = [
     icon: <ProductFilled />,
     label: 'Quản lý sản phẩm',
     children: [
-      { key: 'mng-model', label: 'Danh sách sản phẩm' },
+      { key: 'mng-model', label: 'Danh sách sản phẩm', component: "ManageModelPage", permission: null, },
       { key: 'model-register', label: 'Đăng ký thông tin sản phẩm' },
     ]
   },

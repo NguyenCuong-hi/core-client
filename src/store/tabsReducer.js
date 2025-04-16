@@ -1,3 +1,5 @@
+import excludeVariablesFromRoot from "@mui/material/styles/excludeVariablesFromRoot";
+
 // Initial State
 const initialState = {
     tabList: [
@@ -7,14 +9,9 @@ const initialState = {
         component: "DashboardDefault",
         permission: null,
       },
-      {
-        key: "mng-model",
-        label: "Trang chủ",
-        component: "ManageModelPage",
-        permission: null, 
-      },
+    
     ],
-    activeTabKey: "mng-model",
+    activeTabKey: "home",
   };
   
   // Action Types
@@ -45,7 +42,7 @@ const initialState = {
         const exists = state.tabList.some((tab) => tab.key === action.payload.key);
         return {
           ...state,
-          tabbLis: exists ? state.tabList : [...state.tabList, action.payload],
+          tabList: exists ? state.tabList : [...state.tabList, action.payload],
           activeTabKey: action.payload.key,
         };
       }

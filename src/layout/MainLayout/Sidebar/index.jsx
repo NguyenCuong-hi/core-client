@@ -41,9 +41,11 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
 
   const handleMenuClick = ({ key }) => {
     const menuItem = findMenuItemByKey(menuItems, key);
+    console.log('menuItem', menuItem)
     if (!menuItem) return;
 
     if (!tabList.some((tab) => tab.key === key)) {
+      console.log('tabList', tabList)
       dispatch(
         addTab({
           key: key,
