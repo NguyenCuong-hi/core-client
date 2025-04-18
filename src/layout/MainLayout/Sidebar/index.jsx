@@ -9,7 +9,7 @@ import { addTab, setActiveTab } from 'store/tabsReducer';
 
 const { Sider } = Layout;
 
-const Sidebar = ({ drawerOpen, drawerToggle }) => {
+const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
   const dispatch = useDispatch();
   const { tabList, activeTabKey } = useSelector((state) => state.tab);
 
@@ -30,7 +30,7 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
       if (item.key === targetKey) {
         return item;
       }
-  
+
       if (item.children) {
         const found = findMenuItemByKey(item.children, targetKey);
         if (found) return found;
@@ -41,11 +41,9 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
 
   const handleMenuClick = ({ key }) => {
     const menuItem = findMenuItemByKey(menuItems, key);
-    console.log('menuItem', menuItem)
     if (!menuItem) return;
 
     if (!tabList.some((tab) => tab.key === key)) {
-      console.log('tabList', tabList)
       dispatch(
         addTab({
           key: key,
@@ -66,24 +64,12 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
       collapsible={true}
       collapsed={!drawerOpen}
       onCollapse={(collapsed) => drawerToggle(!collapsed)}
-      width={260}
+      width={sidebarWidth}
       style={siderStyle}
       className="bg-white"
       trigger={null}
     >
-      {/* Header */}
-      {/* <div className="h-16 flex items-center px-4 border-b border-gray-700 flex-shrink-0">
-        <img src={logo} alt="Logo" className="h-8" />
-        <span className="ml-auto">
-          {drawerOpen ? (
-            <MenuFoldOutlined onClick={() => drawerToggle(false)} />
-          ) : (
-            <MenuUnfoldOutlined onClick={() => drawerToggle(true)} />
-          )}
-        </span>
-      </div> */}
 
-      {/* Scrollable Menu */}
       <div className="flex-1 ">
         <Menu
           mode="inline"
@@ -94,10 +80,7 @@ const Sidebar = ({ drawerOpen, drawerToggle }) => {
         />
       </div>
 
-      {/* Footer */}
-      <div className=" ">
-        <ProfileSection />
-      </div>
+
     </Sider>
   );
 };

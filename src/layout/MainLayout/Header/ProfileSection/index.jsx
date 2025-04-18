@@ -11,6 +11,7 @@ import LockOpenTwoTone from '@mui/icons-material/LockOpenTwoTone';
 import SettingsTwoToneIcon from '@mui/icons-material/SettingsTwoTone';
 import AccountCircleTwoToneIcon from '@mui/icons-material/AccountCircleTwoTone';
 import MeetingRoomTwoToneIcon from '@mui/icons-material/MeetingRoomTwoTone';
+import { Title } from '@mui/icons-material';
 
 // ==============================|| PROFILE SECTION ||============================== //
 
@@ -57,7 +58,7 @@ const ProfileSection = () => {
         onClick={handleToggle}
         color="inherit"
       >
-        <AccountCircleTwoToneIcon sx={{ fontSize: '1.5rem' }} />
+        <AccountCircleTwoToneIcon sx={{ fontSize: '1.6rem' }} />
       </Button>
       <Popper
         placement="bottom-end"

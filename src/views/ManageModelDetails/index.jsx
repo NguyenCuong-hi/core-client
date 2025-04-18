@@ -5,17 +5,16 @@ import { Link } from 'react-router-dom';
 import { Typography } from '@mui/material';
 
 // project import
-
-import ModelAction from './action/ModelAction';
-import ModelTable from './table/ModelTable';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
+import ModelDetailsAction from './action/ModelDetailsAction';
+import ModelDetailsQuery from './query/ModelDetailsQuery';
 
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
-const ManageModelPage = () => {
+const ManageModelPageDetails = () => {
   const { t } = useTranslation();
 
   const defaultCols = useMemo(() => [
@@ -76,20 +75,13 @@ const ManageModelPage = () => {
 
   return (
     <>
-      <div className="h-full mt-4 pr-4 pl-4">
-        <ModelAction />
-        <ModelTable
-          defaultCols={defaultCols}
-          gridData={gridData}
-          setGridData={setGridData}
-          cols={cols}
-          setCols={setCols}
-          numRows={numRows}
-          setNumRows={setNumRows}
-        />
+      <div className="h-full pt-4 pr-4 pl-4">
+        <ModelDetailsAction />
+      
+        <ModelDetailsQuery/>
       </div>
     </>
   );
 };
 
-export default ManageModelPage;
+export default ManageModelPageDetails;

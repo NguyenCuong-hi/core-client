@@ -25,6 +25,7 @@ import Sidebar from 'layout/MainLayout/Sidebar';
 import Header from 'layout/MainLayout/Header';
 import DynamicTabContent from 'layout/MainLayout/DynamicTabs';
 import { useDispatch, useSelector } from 'react-redux';
+import ProfileSection from 'layout/MainLayout/Header/ProfileSection';
 const DashboardDefault = Loadable(lazy(() => import('views/Dashboard/Default')));
 const UtilsTypography = Loadable(lazy(() => import('views/Utils/Typography')));
 const SamplePage = Loadable(lazy(() => import('views/SamplePage')));
@@ -45,12 +46,14 @@ const MainRoutes = () => {
   const [isMobile, setIsMobile] = useState(false)
   const rolesMenu = localStorage.getItem('roles_menu')
   const [keyLanguage, setKeyLanguage] = useState(null)
-  const [collapsed, setCollapsed] = useState(() => {
-    const savedState = localStorage.getItem('COLLAPSED_STATE')
-    return savedState ? JSON.parse(savedState) : false
-  })
+  // const [collapsed, setCollapsed] = useState(() => {
+  //   const savedState = localStorage.getItem('COLLAPSED_STATE')
+  //   return savedState ? JSON.parse(savedState) : false
+  // })
 
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = useState(false)
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -83,125 +86,46 @@ const MainRoutes = () => {
     }
   }, [location.search, tabList, dispatch]);
 
+  const sidebarWidth = drawerOpen === false ? 80 : 260;
+
+  console.log('drawerOpen', drawerOpen)
+  console.log('collapsed', collapsed)
+
   return (
-    <Routes>
-      {/* Route cho login */}
-      <Route
-        path="/login"
-        element={
-          <Login
+    <Layout className="h-screen w-full overflow-hidden">
+      <div className="fixed top-0 left-0 right-0 z-[1001] bg-white">
+        <Header
+          drawerOpen={drawerOpen}
+          drawerToggle={handleDrawerToggle}
+        />
+      </div>
 
-          />
-        }
-      />
+      <div
+        className="fixed  bottom-0 z-[1000] border-r bg-white transition-all duration-300"
+        style={{ width: sidebarWidth }}
+      >
+        <Sidebar
+          drawerOpen={drawerOpen}
+          drawerToggle={handleDrawerToggle}
+          sidebarWidth={sidebarWidth}
+        />
+        <div>
+          <ProfileSection />
+        </div>
+      </div>
 
-      {/* Route chính, bao gồm Sidebar, Layout và Routes con */}
-      <Route
-        path="*"
-        element={
+      <div
+        className=" mt-4 w-full h-screen overflow-y-auto bg-slate-100 transition-all duration-300"
+        style={{ marginLeft: sidebarWidth }}
+      >
+        <Content className=" min-h-full">
           <Suspense>
-            {/* <LanguageProvider keyLanguage={keyLanguage}> */}
-            <Layout className="h-100">
-
-
-
-              <div className="fixed z-[1001] bg-amber-50 w-full ">
-                <Header
-                  drawerOpen={drawerOpen}
-                  drawerToggle={handleDrawerToggle}
-                />
-              </div>
-              <Sidebar
-                drawerOpen={drawerOpen}
-                drawerToggle={handleDrawerToggle}
-              />
-
-              <Layout>
-                <Content className="bg-slate-100 mt-2 mb-2">
-                  <Suspense >
-
-                    <DynamicTabContent />
-
-                    {/* <Routes>
-                      {routes.map(
-                        ({
-                          path,
-                          element: Element,
-                          permission,
-                          public: isPublic,
-                          fallback: Fallback,
-                        }) => {
-                          // const canCreate = checkActionPermission(
-                          //   userPermissions,
-                          //   permission,
-                          //   'Create',
-                          // )
-                          // const canEdit = checkActionPermission(
-                          //   userPermissions,
-                          //   permission,
-                          //   'Edit',
-                          // )
-                          // const canDelete = checkActionPermission(
-                          //   userPermissions,
-                          //   permission,
-                          //   'Delete',
-                          // )
-                          const canView = true
-
-                          // checkActionPermission(
-                          //   userPermissions,
-                          //   permission,
-                          //   'View',
-                          // )
-                          return (
-                            <Route
-                              key={path}
-                              path={path}
-                              element={
-                                isPublic ? (
-                                  <Element
-                                    permissions={userPermissions}
-                                    isMobile={isMobile}
-                                    // canCreate={canCreate}
-                                    // canEdit={canEdit}
-                                    // canDelete={canDelete}
-                                    // cancelAllRequests={cancelAllRequests}
-                                    controllers={controllers}
-                                    collapsed={collapsed}
-                                    setCollapsed={setCollapsed}
-                                  />
-                                ) : canView ? (
-                                  <Element
-                                    permissions={userPermissions}
-                                    isMobile={isMobile}
-                                    // canCreate={canCreate}
-                                    // canEdit={canEdit}
-                                    // canDelete={canDelete}
-                                    // cancelAllRequests={cancelAllRequests}
-                                    controllers={controllers}
-                                    collapsed={collapsed}
-                                    setCollapsed={setCollapsed}
-                                  />
-                                )
-                                  : (
-                                    <ErrorPage />
-                                  )
-                              }
-                            />
-                          )
-                        },
-                      )}
-                    </Routes> */}
-                  </Suspense>
-                </Content>
-              </Layout>
-            </Layout>
-            {/* </LanguageProvider> */}
+            <DynamicTabContent />
           </Suspense>
-        }
-      />
-    </Routes>
-  )
+        </Content>
+      </div>
+    </Layout>
+  );
 };
 
 export default MainRoutes;
