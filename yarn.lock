@@ -2256,7 +2256,7 @@
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.3.6.tgz#fa59a5e9a33499a792af6c1130f55921ef49d268"
   integrity sha512-nf22//wEbKXusP6E9pfOCDwFdHAX4u172eaJI4YkDRQEZiorm6KfYnSC2SWLDMVWUOWPERmJnN0ujeAfTBLvrw==
 
-"@types/react-transition-group@^4.4.0", "@types/react-transition-group@^4.4.10":
+"@types/react-transition-group@^4.4.0", "@types/react-transition-group@^4.4.1", "@types/react-transition-group@^4.4.10":
   version "4.4.12"
   resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-4.4.12.tgz#b5d76568485b02a307238270bfe96cb51ee2a044"
   integrity sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==
@@ -4912,6 +4912,14 @@ pretty-format@^27.0.2:
     ansi-styles "^5.0.0"
     react-is "^17.0.1"
 
+primereact@^10.9.1:
+  version "10.9.4"
+  resolved "https://registry.yarnpkg.com/primereact/-/primereact-10.9.4.tgz#573044c071c96f8b447ba21b95e855ec5dc8eea3"
+  integrity sha512-GMrelh07Wd1cwKjHpay3LCpwP346D43qBVkt8H/anGYC3z7kv5/AP0pizZv+aGQs2Fg5ufTTf+SI7IKWmyzgGg==
+  dependencies:
+    "@types/react-transition-group" "^4.4.1"
+    react-transition-group "^4.4.1"
+
 prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
@@ -5558,7 +5566,7 @@ react-select@^5.2.2:
     react-transition-group "^4.3.0"
     use-isomorphic-layout-effect "^1.2.0"
 
-react-transition-group@^4.3.0, react-transition-group@^4.4.5:
+react-transition-group@^4.3.0, react-transition-group@^4.4.1, react-transition-group@^4.4.5:
   version "4.4.5"
   resolved "https://registry.yarnpkg.com/react-transition-group/-/react-transition-group-4.4.5.tgz#e53d4e3f3344da8521489fbef8f2581d42becdd1"
   integrity sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==

@@ -77,7 +77,6 @@ const ManageModelPageDetails = () => {
     <>
       <div className="h-full pt-4 pr-4 pl-4">
         <ModelDetailsAction />
-      
         <ModelDetailsQuery/>
       </div>
     </>
