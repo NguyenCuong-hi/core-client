@@ -19,7 +19,7 @@ const menuItems = [
     label: 'Quản lý Hàng Hóa',
     children: [
       { key: 'mng-model', label: 'Danh sách hàng hóa', component: "ManageModelPage", permission: null, },
-      { key: 'model-register', label: 'Đăng ký thông tin hàng hóa' },
+      { key: 'model-register', component: "ManageModelPageDetails",label: 'Đăng ký thông tin hàng hóa' },
     ]
   },
   {
