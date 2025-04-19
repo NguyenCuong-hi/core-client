@@ -3,7 +3,6 @@ import {
   HomeOutlined,
   ProductFilled,
   SettingOutlined,
-  UserOutlined
 } from '@ant-design/icons';
 import { LineAxis, OutboxOutlined } from '@mui/icons-material';
 
@@ -16,10 +15,10 @@ const menuItems = [
   {
     key: 'model',
     icon: <ProductFilled />,
-    label: 'Quản lý Hàng Hóa',
+    label: 'Quản lý dòng sản phẩm',
     children: [
-      { key: 'mng-model', label: 'Danh sách hàng hóa', component: "ManageModelPage", permission: null, },
-      { key: 'model-register', component: "ManageModelPageDetails",label: 'Đăng ký thông tin hàng hóa' },
+      { key: 'mng-model', label: 'Danh sách dòng sản phẩm', component: "ManageModelPage", permission: null, },
+      { key: 'model-register', component: "ManageModelPageDetails",label: 'Đăng ký dòng sản phẩm', permission: null, },
     ]
   },
   {
@@ -52,7 +51,11 @@ const menuItems = [
   {
     key: 'system',
     icon: <SettingOutlined />,
-    label: 'System'
+    label: 'System',
+    children: [
+      { key: 'system-code', label: 'Đăng ký thông tin hệ thống', component: "ManageCodeSys", permission: null, },
+      { key: 'system-param', label: 'Đăng ký bổ sung' },
+    ]
   }
 ];
 

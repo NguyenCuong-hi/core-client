@@ -88,9 +88,6 @@ const MainRoutes = () => {
 
   const sidebarWidth = drawerOpen === false ? 80 : 260;
 
-  console.log('drawerOpen', drawerOpen)
-  console.log('collapsed', collapsed)
-
   return (
     <Layout className="h-screen w-full overflow-hidden">
       <div className="fixed top-0 left-0 right-0 z-[1001] bg-white">
