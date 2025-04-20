@@ -26,7 +26,7 @@ const menuItems = [
     icon: <LineAxis />,
     label: 'Quản lý quy trình',
     children: [
-      { key: 'list-process-line', label: 'Danh sách quy trình' },
+      { key: 'list-process-line', label: 'Danh sách quy trình', component: "ManageModelPage", permission: null, },
       { key: 'process-line-register', label: 'Đăng ký thông tin quy trình' },
     ]
   },
