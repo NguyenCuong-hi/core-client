@@ -6,4 +6,5 @@ export const TabComponents = {
   DefaultPage: lazy(() => import("../src/views/default")),
   ManageModelPageDetails: lazy(() => import("../src/views/ManageModelDetails")),
   ManageCodeSys: lazy(() => import("../src/views/ManageCodeSys")),
+  ManageModelDetails: lazy(() => import("../src/views/ManageRouteSet")),
 };

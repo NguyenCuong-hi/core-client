@@ -160,7 +160,7 @@ const ModelInfomationQuery = () => {
             >
               <Select
                 showSearch
-                placeholder="Loại sản phẩm M"
+                placeholder="Loại sản phẩm "
                 optionFilterProp="label"
                 onChange={onChange}
                 onSearch={onSearch}
@@ -191,7 +191,7 @@ const ModelInfomationQuery = () => {
             >
               <Select
                 showSearch
-                placeholder="Loại sản phẩm S"
+                placeholder="Loại sản phẩm"
                 optionFilterProp="label"
                 onChange={onChange}
                 onSearch={onSearch}

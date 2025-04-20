@@ -159,7 +159,7 @@ const ModelGroupCategory = () => {
                             >
                                 <Select
                                     showSearch
-                                    placeholder="Loại sản phẩm M"
+                                    placeholder="Loại sản phẩm"
                                     optionFilterProp="label"
                                     onChange={onChange}
                                     onSearch={onSearch}
@@ -336,7 +336,7 @@ const ModelGroupCategory = () => {
                             >
                                 <Select
                                     showSearch
-                                    placeholder="Loại sản phẩm M"
+                                    placeholder="Loại sản phẩm"
                                     optionFilterProp="label"
                                     onChange={onChange}
                                     onSearch={onSearch}
