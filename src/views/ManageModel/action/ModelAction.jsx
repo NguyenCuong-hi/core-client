@@ -11,7 +11,7 @@ const ModelAction = () => {
   return (
     <div className="flex justify-between items-center py-4">
       <Typography.Title level={4} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight:'bold' }}>
-        Danh sách sản phẩm
+        Danh sách dòng sản phẩm
       </Typography.Title>
 
       <div className="flex items-center gap-2">

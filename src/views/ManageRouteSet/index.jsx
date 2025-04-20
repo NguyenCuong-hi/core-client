@@ -31,7 +31,7 @@ const ManageRouteSetPage = () => {
       }
     },
     {
-      title: t('Tên đơn vị sản xuất'),
+      title: t('Quy trình'),
       id: 'FactUnitName',
       kind: 'Text',
       readonly: true,
