@@ -4,7 +4,7 @@ import {
   ProductFilled,
   SettingOutlined,
 } from '@ant-design/icons';
-import { LineAxis, OutboxOutlined } from '@mui/icons-material';
+import { FactoryOutlined, LineAxis, OutboxOutlined } from '@mui/icons-material';
 
 const menuItems = [
   {
@@ -50,11 +50,20 @@ const menuItems = [
   },
   {
     key: 'system',
-    icon: <SettingOutlined />,
-    label: 'System',
+    icon: <FactoryOutlined />,
+    label: 'Hệ thống sản xuất',
     children: [
-      { key: 'system-code', label: 'Đăng ký thông tin hệ thống', component: "ManageCodeSys", permission: null, },
-      { key: 'system-param', label: 'Đăng ký bổ sung' },
+      { key: 'system-manuf-code', label: 'Đăng ký thông tin hệ thống', component: "ManageCodeSys", permission: null, },
+      { key: 'system-manuf-param', label: 'Đăng ký bổ sung' },
+    ]
+  },
+  {
+    key: 'program',
+    icon: <SettingOutlined />,
+    label: 'Cấu hình hệ thống',
+    children: [
+      { key: 'system-menu', label: 'Cài đặt menu', component: "ManageCodeSys", permission: null, },
+      { key: 'system-user', label: 'Cài đặt tài khoản' },
     ]
   }
 ];
