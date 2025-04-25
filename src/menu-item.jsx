@@ -31,12 +31,12 @@ const menuItems = [
     ]
   },
   {
-    key: 'manage-process',
+    key: 'manage-operation',
     icon: <LineAxis />,
     label: 'Quản lý công đoạn',
     children: [
-      { key: 'list-process', label: 'Danh sách công đoạn' },
-      { key: 'process-register', label: 'Đăng ký thông tin công đoạn' },
+      { key: 'list-process', label: 'Danh sách công đoạn', component: "ManageOperation", permission: null, },
+      { key: 'process-register', label: 'Đăng ký thông tin công đoạn', component: "ManageOperationDetails", permission: null, },
     ]
   },
   {

@@ -1,17 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 // project import
+
+import ModelAction from './action/RouteSetAction';
+import ModelTable from './table/ModelTable';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
-import SysMaster from './table/SysMaster';
-import SysCodeAction from './action/SysCodeAction';
+import RouteSetAction from './action/RouteSetAction';
 import AuDrAction from 'component/Actions/AuDrAction';
+import OperationInfomationQuery from './query/OperationInfomationQ';
+import OperationUseEQPQuery from './query/OperationUseEqpQ';
+import OperationParameterQuery from './query/OperationParameterq';
 
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
-const ManageCodeSys = () => {
+const ManageRouteSetPage = () => {
   const { t } = useTranslation();
 
   const defaultCols = useMemo(() => [
@@ -29,7 +35,7 @@ const ManageCodeSys = () => {
       }
     },
     {
-      title: t('Tên đơn vị sản xuất'),
+      title: t('Quy trình'),
       id: 'FactUnitName',
       kind: 'Text',
       readonly: true,
@@ -65,17 +71,23 @@ const ManageCodeSys = () => {
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
 
+  // useEffect(() => {
+
+  //   // setCols(defaultCols.filter((col) => col.visible))
+  // }, [gridData, defaultCols])
 
   return (
     <>
       <div className="h-full pt-4 pr-4 pl-4">
-        <AuDrAction 
-        title={"Đăng ký thông tin hệ thống"}
+        <AuDrAction
+          tilePage={"Đăng ký thông tin công đoạn"}
         />
-        <SysMaster/>
+        <OperationInfomationQuery />
+        <OperationUseEQPQuery />
+        <OperationParameterQuery />
       </div>
     </>
   );
 };
 
-export default ManageCodeSys;
+export default ManageRouteSetPage;

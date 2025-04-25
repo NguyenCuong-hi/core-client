@@ -13,6 +13,7 @@ import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
 import { message } from 'antd';
+import SearchPageAction from 'component/Actions/SearchPageAction';
 
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
@@ -203,7 +204,9 @@ const ManageModelPage = (
   return (
     <>
       <div className="h-full mt-4 pr-4 pl-4">
-        <ModelAction />
+        <SearchPageAction 
+          titlePage={"Danh sách dòng sản phẩm"}
+        />
         <ModelTable
           defaultCols={defaultCols}
           gridData={gridData}

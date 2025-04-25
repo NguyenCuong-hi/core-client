@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // material-ui
-import { Typography } from '@mui/material';
 
 // project import
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
@@ -10,6 +9,11 @@ import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
 import ModelDetailsAction from './action/ModelDetailsAction';
 import ModelDetailsQuery from './query/ModelDetailsQuery';
+import ModelInfomationQuery from './query/ModelInfomationQuery';
+import ModelRouteSet from './query/ModelRouteSet';
+import ModelGroupCategory from './query/ModelGroupCategory';
+import AuDrAction from 'component/Actions/AuDrAction';
+import { Typography } from 'antd';
 
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
@@ -76,8 +80,14 @@ const ManageModelPageDetails = () => {
   return (
     <>
       <div className="h-full pt-4 pr-4 pl-4">
-        <ModelDetailsAction />
-        <ModelDetailsQuery/>
+
+        <AuDrAction
+          tilePage={'Đăng ký thông tin hàng hóa'}
+        />
+
+        <ModelInfomationQuery />
+        <ModelRouteSet />
+        <ModelGroupCategory />
       </div>
     </>
   );

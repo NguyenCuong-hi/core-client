@@ -1,20 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 // project import
-
-import ModelAction from './action/RouteSetAction';
-import ModelTable from './table/ModelTable';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
-import RouteSetAction from './action/RouteSetAction';
+import OperationTable from './table/OperationTable';
 import SearchPageAction from 'component/Actions/SearchPageAction';
 
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
-const ManageRouteSetPage = () => {
+const ManageOperation = () => {
   const { t } = useTranslation();
 
   const defaultCols = useMemo(() => [
@@ -32,8 +28,8 @@ const ManageRouteSetPage = () => {
       }
     },
     {
-      title: t('Quy trình'),
-      id: 'FactUnitName',
+      title: t('Mã công đoạn'),
+      id: 'OperationCode',
       kind: 'Text',
       readonly: true,
       width: 200,
@@ -45,8 +41,60 @@ const ManageRouteSetPage = () => {
       }
     },
     {
-      title: t('Tên đơn vị sản xuất'),
-      id: 'FactUnitName',
+      title: t('Mô tả công đoạn'),
+      id: 'Description',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Đơn vị'),
+      id: 'Unit',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Bước thao tác'),
+      id: 'ProcessStep',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Thuộc tính công đoạn'),
+      id: 'OperationProperties',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Thông tin bổ sung'),
+      id: 'CodeTable',
       kind: 'Text',
       readonly: true,
       width: 200,
@@ -61,25 +109,20 @@ const ManageRouteSetPage = () => {
 
   const [cols, setCols] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST',
+      'S_ERP_COLS_PAGE_OPERATION_LIST',
       defaultCols.filter((col) => col.visible)
     )
   );
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
 
-  // useEffect(() => {
-
-  //   // setCols(defaultCols.filter((col) => col.visible))
-  // }, [gridData, defaultCols])
-
   return (
     <>
       <div className="h-full mt-4 pr-4 pl-4">
         <SearchPageAction
-          titlePage={"Danh sách quy trình"}
-        />        
-        <ModelTable
+          titlePage={"Danh sách công đoạn"}
+        />
+        <OperationTable
           defaultCols={defaultCols}
           gridData={gridData}
           setGridData={setGridData}
@@ -93,4 +136,4 @@ const ManageRouteSetPage = () => {
   );
 };
 
-export default ManageRouteSetPage;
+export default ManageOperation;
