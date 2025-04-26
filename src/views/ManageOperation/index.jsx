@@ -6,12 +6,14 @@ import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
 import OperationTable from './table/OperationTable';
 import SearchPageAction from 'component/Actions/SearchPageAction';
+import LoadingBlur from 'component/Loader/LoadingBlur';
 
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
 const ManageOperation = () => {
   const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
 
   const defaultCols = useMemo(() => [
     {
@@ -115,6 +117,10 @@ const ManageOperation = () => {
   );
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
+
+  if (loading) {
+    return <LoadingBlur />;
+  }
 
   return (
     <>

@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import { Suspense } from "react";
 import { TabComponents } from "menu-tabs";
 import Default from "views/default";
+import Spinner from "component/Loader/load";
 
 const DynamicTabContent = () => {
   const { activeTabKey, tabList } = useSelector((state) => state.tab);
@@ -28,9 +29,9 @@ const DynamicTabContent = () => {
               left: 0
             }}
           >
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<Spinner />}>
               {hasPermission ? (
-                Component ? <Component /> : <div>Không tìm thấy component.</div>
+                Component ? <Component /> : <Default />
               ) : (
                 <Default />
               )}

@@ -23,12 +23,15 @@ const DefaultPage = lazy(() => import('../views/default'))
 
 import Sidebar from 'layout/MainLayout/Sidebar';
 import Header from 'layout/MainLayout/Header';
-import DynamicTabContent from 'layout/MainLayout/DynamicTabs';
+// import DynamicTabContent from 'layout/MainLayout/DynamicTabs';
 import { useDispatch, useSelector } from 'react-redux';
 import ProfileSection from 'layout/MainLayout/Header/ProfileSection';
+import Loader from 'component/Loader/Loader';
+import Spinner from 'component/Loader/load';
 const DashboardDefault = Loadable(lazy(() => import('views/Dashboard/Default')));
-const UtilsTypography = Loadable(lazy(() => import('views/Utils/Typography')));
-const SamplePage = Loadable(lazy(() => import('views/SamplePage')));
+const DynamicTabContent = lazy(() => import('layout/MainLayout/DynamicTabs'));
+
+
 
 // ==============================|| MAIN ROUTES ||============================== //
 
@@ -116,7 +119,7 @@ const MainRoutes = () => {
         style={{ marginLeft: sidebarWidth }}
       >
         <Content className=" min-h-full">
-          <Suspense>
+          <Suspense fallback={<Spinner />}>
             <DynamicTabContent />
           </Suspense>
         </Content>
