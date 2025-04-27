@@ -1,4 +1,3 @@
-// ./MenuList/items.js
 import {
   HomeOutlined,
   ProductFilled,
@@ -7,6 +6,7 @@ import {
 import { FactoryOutlined, LineAxis, OutboxOutlined } from '@mui/icons-material';
 
 const menuItems = [
+  
   {
     key: '/',
     icon: <HomeOutlined />,
@@ -18,7 +18,7 @@ const menuItems = [
     label: 'Quản lý dòng sản phẩm',
     children: [
       { key: 'mng-model', label: 'Danh sách dòng sản phẩm', component: "ManageModelPage", permission: null, },
-      { key: 'model-register', component: "ManageModelPageDetails",label: 'Đăng ký dòng sản phẩm', permission: null, },
+      { key: 'model-register', label: 'Đăng ký dòng sản phẩm', component: "ManageModelPageDetails", permission: null, },
     ]
   },
   {

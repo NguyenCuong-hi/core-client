@@ -41,7 +41,9 @@
     "uuid": "^11.1.0",
     "vite": "^5.2.10",
     "vite-jsconfig-paths": "^2.0.1",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "axios": "^1.6.8",
+    "js-cookie": "^3.0.5" 
   },
   "scripts": {
     "start": "vite",

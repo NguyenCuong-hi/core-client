@@ -1,34 +1,21 @@
 import React, { lazy, useEffect, useRef, useState } from 'react';
 
 // project import
-import Loadable from 'component/Loadable';
-import ManageModelPage from 'views/ManageModel';
-import Login from 'views/Login';
 import {
   BrowserRouter as Router,
-  Routes,
-  Route,
   useNavigate,
   useLocation,
-  Navigate,
 } from 'react-router-dom'
-import { Layout, message } from 'antd'
+import { Layout } from 'antd'
 const { Content } = Layout
-
-
 import { Suspense } from 'react';
-
-
-const DefaultPage = lazy(() => import('../views/default'))
 
 import Sidebar from 'layout/MainLayout/Sidebar';
 import Header from 'layout/MainLayout/Header';
-// import DynamicTabContent from 'layout/MainLayout/DynamicTabs';
 import { useDispatch, useSelector } from 'react-redux';
 import ProfileSection from 'layout/MainLayout/Header/ProfileSection';
-import Loader from 'component/Loader/Loader';
 import Spinner from 'component/Loader/load';
-const DashboardDefault = Loadable(lazy(() => import('views/Dashboard/Default')));
+import AuthLogin from 'views/Login/AuthLogin';
 const DynamicTabContent = lazy(() => import('layout/MainLayout/DynamicTabs'));
 
 
@@ -54,28 +41,11 @@ const MainRoutes = () => {
   //   return savedState ? JSON.parse(savedState) : false
   // })
 
-  const [collapsed, setCollapsed] = useState(false)
-
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
-
-  const routes = [
-    {
-      path: '/',
-      permission: 'dashboad',
-      element: DashboardDefault,
-      fallback: DefaultPage,
-    },
-    {
-      path: '/mng-model',
-      permission: 'mng-model',
-      element: ManageModelPage,
-      fallback: DefaultPage,
-    },
-  ]
 
   const dispatch = useDispatch();
   const tabList = useSelector((state) => state.tab.tabList);
@@ -90,6 +60,10 @@ const MainRoutes = () => {
   }, [location.search, tabList, dispatch]);
 
   const sidebarWidth = drawerOpen === false ? 80 : 260;
+
+  if (!isLoggedIn) {
+    return <AuthLogin setIsLoggedIn= {setIsLoggedIn} />;
+  }
 
   return (
     <Layout className="h-screen w-full overflow-hidden">

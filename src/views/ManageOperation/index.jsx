@@ -13,7 +13,7 @@ import LoadingBlur from 'component/Loader/LoadingBlur';
 
 const ManageOperation = () => {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const defaultCols = useMemo(() => [
     {

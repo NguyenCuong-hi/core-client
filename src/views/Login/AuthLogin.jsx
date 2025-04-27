@@ -1,169 +1,155 @@
-import React from 'react';
-
-// material-ui
-import { useTheme } from '@mui/material/styles';
-import {
-  Box,
-  Button,
-  Divider,
-  FormHelperText,
-  Grid,
-  TextField,
-  Typography,
-  FormControl,
-  InputLabel,
-  OutlinedInput,
-  InputAdornment,
-  IconButton
-} from '@mui/material';
-
-//  third party
-import * as Yup from 'yup';
+import React, { useState } from 'react';
+import { Button, Divider, Form, Input, Typography } from 'antd';
+import { EyeInvisibleOutlined, EyeTwoTone, GoogleOutlined } from '@ant-design/icons';
 import { Formik } from 'formik';
+import * as Yup from 'yup';
+import { useDispatch } from 'react-redux';
+import { addTab, setActiveTab } from 'store/tabsReducer';
+import LoadingBlur from 'component/Loader/LoadingBlur';
+import { AuthLoginService } from 'services/Auth/GetTokenService';
+import Cookies from 'js-cookie'
+import { GetUserService } from 'services/Auth/GetUserService';
 
-// assets
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import Google from 'assets/images/social-google.svg';
+const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
+  const [loading, setLoading] = useState(false);
+  const [loadingView, setLoadingView] = useState(false);
 
-// ==============================|| FIREBASE LOGIN ||============================== //
+  const dispatch = useDispatch();
 
-const AuthLogin = ({ ...rest }) => {
-  const theme = useTheme();
-  const [showPassword, setShowPassword] = React.useState(false);
-
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
+  const handleLoginSuccess = () => {
+    setLoadingView(true);
+    setTimeout(() => {
+      setIsLoggedIn(true);
+      dispatch(addTab({
+        key: "home",
+        label: "Trang chủ",
+        component: "DashboardDefault",
+        permission: null,
+      }));
+      dispatch(setActiveTab('home'));
+    }, 1500);
   };
 
-  const handleMouseDownPassword = (event) => {
-    event.preventDefault();
-  };
+  const onSubmit = (values, { setSubmitting }) => {
+    setLoading(true);
+    setTimeout(() => {
+      console.log('Login Info:', values);
+      setLoading(false);
+      setSubmitting(false);
+      handleLoginSuccess();
+    }, 1000);
+
+
+    try {
+      const data = {
+        username: values.username,
+        password: values.password,
+      }
+
+      const loginResponse = AuthLoginService(data);
+      if (loginResponse) {
+        Cookies.set('token', loginResponse.token)
+        const user = GetUserService();
+        localStorage.setItem('username', JSON.stringify(user.data.username))
+        localStorage.setItem('role', JSON.stringify(user.data.role))
+        localStorage.setItem('menu', JSON.stringify(user.data.menu))
+      }
+    } catch (error) {
+
+    }
+  }
+
+  if (loadingView) {
+    return <LoadingBlur />;
+  }
 
   return (
-    <>
-      <Grid container justifyContent="center">
-        <Grid item xs={12}>
-          <Button
-            fullWidth={true}
-            sx={{
-              fontSize: { md: '1rem', xs: '0.875rem' },
-              fontWeight: 500,
-              backgroundColor: theme.palette.grey[50],
-              color: theme.palette.grey[600],
-              textTransform: 'capitalize',
-              '&:hover': {
-                backgroundColor: theme.palette.grey[100]
-              }
-            }}
-            size="large"
-            variant="contained"
-          >
-            <img
-              src={Google}
-              alt="google"
-              width="20px"
-              style={{
-                marginRight: '16px',
-                '@media (maxWidth:899.95px)': {
-                  marginRight: '8px'
-                }
-              }}
-            />{' '}
-            Sign in with Google
-          </Button>
-        </Grid>
-      </Grid>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+        <div className="text-center mb-6">
+          <Typography.Title level={2} className="!mb-0">
+            Welcome Back
+          </Typography.Title>
+          <Typography.Text type="secondary">Please login to your account</Typography.Text>
+        </div>
 
-      <Box alignItems="center" display="flex" mt={2}>
-        <Divider sx={{ flexGrow: 1 }} orientation="horizontal" />
-        <Typography color="textSecondary" variant="h5" sx={{ m: theme.spacing(2) }}>
-          OR
-        </Typography>
-        <Divider sx={{ flexGrow: 1 }} orientation="horizontal" />
-      </Box>
+        <Button
+          block
+          icon={<GoogleOutlined />}
+          className="mb-4 font-semibold !bg-gray-50 !text-gray-600 hover:!bg-gray-100"
+        >
+          Sign in with Google
+        </Button>
 
-      <Formik
-        initialValues={{
-          email: '',
-          password: '',
-          submit: null
-        }}
-        validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
-        })}
-      >
-        {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
-          <form noValidate onSubmit={handleSubmit} {...rest}>
-            <TextField
-              error={Boolean(touched.email && errors.email)}
-              fullWidth
-              helperText={touched.email && errors.email}
-              label="Email Address / Username"
-              margin="normal"
-              name="email"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              type="email"
-              value={values.email}
-              variant="outlined"
-            />
+        <Divider plain>OR</Divider>
 
-            <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ mt: theme.spacing(3), mb: theme.spacing(1) }}>
-              <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-password"
-                type={showPassword ? 'text' : 'password'}
-                value={values.password}
-                name="password"
-                onBlur={handleBlur}
-                onChange={handleChange}
+        <Formik
+          initialValues={{
+            email: '',
+            password: '',
+            submit: null
+          }}
+          validationSchema={Yup.object().shape({
+            email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+            password: Yup.string().max(255).required('Password is required')
+          })}
+          onSubmit={onSubmit}
+        >
+          {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
+            <Form layout="vertical" onFinish={handleSubmit} {...rest}>
+              <Form.Item
+                label="Email Address"
+                validateStatus={touched.email && errors.email ? 'error' : ''}
+                help={touched.email && errors.email}
+              >
+                <Input
+                  name="email"
+                  placeholder="Enter your email"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.email}
+                  size="large"
+                />
+              </Form.Item>
+
+              <Form.Item
                 label="Password"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      edge="end"
-                      size="large"
-                    >
-                      {showPassword ? <Visibility /> : <VisibilityOff />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-              {touched.password && errors.password && (
-                <FormHelperText error id="standard-weight-helper-text">
-                  {' '}
-                  {errors.password}{' '}
-                </FormHelperText>
-              )}
-            </FormControl>
-            <Grid container justifyContent="flex-end">
-              <Grid item>
-                <Typography variant="subtitle2" color="primary" sx={{ textDecoration: 'none' }}>
-                  Forgot Password?
-                </Typography>
-              </Grid>
-            </Grid>
+                validateStatus={touched.password && errors.password ? 'error' : ''}
+                help={touched.password && errors.password}
+              >
+                <Input.Password
+                  name="password"
+                  placeholder="Enter your password"
+                  iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.password}
+                  size="large"
+                />
+              </Form.Item>
 
-            {errors.submit && (
-              <Box mt={3}>
-                <FormHelperText error>{errors.submit}</FormHelperText>
-              </Box>
-            )}
+              <div className="flex justify-end mb-4">
+                <Typography.Link>Forgot Password?</Typography.Link>
+              </div>
 
-            <Box mt={2}>
-              <Button color="primary" disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained">
-                Log In
-              </Button>
-            </Box>
-          </form>
-        )}
-      </Formik>
-    </>
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  size="large"
+                  loading={isSubmitting || loading}
+                  className="!rounded-lg"
+                // onClick={handleLoginSuccess}
+                >
+                  Log In
+                </Button>
+              </Form.Item>
+            </Form>
+          )}
+        </Formik>
+      </div>
+    </div>
   );
 };
 

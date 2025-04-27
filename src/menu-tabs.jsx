@@ -1,7 +1,8 @@
 import { lazy } from "react";
-import ManageOperation from "views/ManageOperation";
 
 export const TabComponents = {
+  AuthLogin: lazy(() => import("../src/views/Login")),
+  AuthRegister: lazy(() => import("../src/views/Register")),
   DashboardDefault: lazy(() => import("../src/views/Dashboard/Default")),
   ManageModelPage: lazy(() => import("../src/views/ManageModel")),
   DefaultPage: lazy(() => import("../src/views/default")),
