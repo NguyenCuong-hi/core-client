@@ -172,6 +172,24 @@ function OperationTable({
         };
       }
 
+      if (
+        columnKey === 'IsBatchProcess' ||
+        columnKey === 'IsMultiEqp' ||
+        columnKey === 'IsRequestQa' ||
+        columnKey === 'IsChangeRoute' ||
+        columnKey === 'IsStock' ||
+        columnKey === 'IsCheckMaterial' ||
+        columnKey === 'IsUseStep'
+      ) {
+        const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
+        return {
+          kind: GridCellKind.Boolean,
+          data: booleanValue,
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false
+        };
+      }
+
       return {
         kind: GridCellKind.Text,
         data: value,
@@ -179,6 +197,7 @@ function OperationTable({
         displayData: String(value),
         readonly: column?.readonly || false,
         allowOverlay: true,
+        boundingBox: boundingBox,
         hasMenu: column?.hasMenu || false
       };
     },
@@ -469,8 +488,8 @@ function OperationTable({
             onPaste={true}
             fillHandle={true}
             // keybindings={keybindings}
-            // onRowAppended={() => handleRowAppend(1)}
-            // onCellEdited={onCellEdited}
+            onRowAppended={() => handleRowAppend(1)}
+            onCellEdited={onCellEdited}
             // onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}

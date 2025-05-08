@@ -1,12 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-
-// material-ui
-import { Typography } from '@mui/material';
+import React, { useCallback, useMemo, useState } from 'react';
 
 // project import
-
-import ModelAction from './action/ModelAction';
 import ModelTable from './table/ModelTable';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { GridColumnIcon } from '@glideapps/glide-data-grid';
@@ -33,10 +27,13 @@ const ManageModelPage = (
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
     },
     {
       title: t('Dòng sản phẩm'),
-      id: 'ModelId',
+      id: 'ConfigProductCode',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -46,7 +43,7 @@ const ManageModelPage = (
     },
     {
       title: t('Tên dòng sản phẩm'),
-      id: 'ModelName',
+      id: 'ConfigProductName',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -73,19 +70,6 @@ const ManageModelPage = (
     {
       title: t('Chấp nhận'),
       id: 'isApprove',
-      kind: 'Text',
-      readonly: false,
-      width: 150,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Đang áp dụng'),
-      id: 'isContinue',
       kind: 'Boolean',
       readonly: false,
       width: 150,
@@ -95,27 +79,13 @@ const ManageModelPage = (
       trailingRowOptions: {
         disabled: true
       }
-    }
-    ,
-    {
-      title: t('Loại dây chuyền (NPI/MP)'),
-      id: 'ProcessTypeId',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
     },
     {
-      title: t('Loại dây chuyền (NPI/MP)'),
-      id: 'ProcessType',
-      kind: 'Text',
+      title: t('Trạng thái'),
+      id: 'status',
+      kind: 'Custom',
       readonly: false,
-      width: 200,
+      width: 150,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -175,6 +145,71 @@ const ManageModelPage = (
         disabled: true
       }
     },
+    {
+      title: t('Nhãn hiệu'),
+      id: 'Label',
+      kind: 'Custom',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Quy trình sản xuất'),
+      id: 'RouterName',
+      kind: 'Custom',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Quy trình sản xuất'),
+      id: 'RouterCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Quy trình sản xuất'),
+      id: 'RouterId',
+      kind: 'Custom',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Người tạo'),
+      id: 'UserRegister',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
   ]);
 
   const [cols, setCols] = useState(() =>
@@ -205,7 +240,7 @@ const ManageModelPage = (
     <>
       <div className="h-full mt-4 pr-4 pl-4">
         <SearchPageAction 
-          titlePage={"Danh sách dòng sản phẩm"}
+          titlePage={"Danh sách cấu hình sản phẩm"}
         />
         <ModelTable
           defaultCols={defaultCols}

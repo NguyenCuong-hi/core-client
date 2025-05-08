@@ -13,13 +13,13 @@ const AuDrAction = ({
   onClickUpdate,
   onClickDelete,
   onClickReset,
-  tilePage,
+  titlePage,
 
 }) => {
   return (
     <div className="flex justify-between items-center py-4">
       <Typography.Title level={4} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight: 'bold' }}>
-        {tilePage}
+        {titlePage}
       </Typography.Title>
 
       <div className="flex items-center gap-2">
@@ -31,13 +31,13 @@ const AuDrAction = ({
         >
           Lưu
         </Button>
-        <Button
+        {/* <Button
           type="primary"
           icon={<UpdateOutlined />}
           onclick={onClickUpdate}
         >
           Sửa
-        </Button>
+        </Button> */}
         <Button
           type="primary"
           icon={<DeleteOutlined />}
