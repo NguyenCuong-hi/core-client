@@ -15,10 +15,10 @@ const menuItems = [
   {
     key: 'model',
     icon: <ProductFilled />,
-    label: 'Quản lý dòng sản phẩm',
+    label: 'Cấu hình sản phẩm sản xuất',
     children: [
-      { key: 'mng-model', label: 'Danh sách dòng sản phẩm', component: "ManageModelPage", permission: null, },
-      { key: 'model-register', label: 'Đăng ký dòng sản phẩm', component: "ManageModelPageDetails", permission: null, },
+      { key: 'mng-model', label: 'Danh sách cấu hình sản phẩm', component: "ManageModelPage", permission: null, },
+      { key: 'model-register', label: 'Đăng ký cấu hình sản phẩm', component: "ManageModelPageDetails", permission: null, },
     ]
   },
   {
@@ -42,10 +42,30 @@ const menuItems = [
   {
     key: 'manage-machine',
     icon: <OutboxOutlined />,
-    label: 'Quản lý trang thiết bị',
+    label: 'Quản lý thiết bị',
     children: [
-      { key: 'list-machine', label: 'Danh sách trang thiết bị' },
-      { key: 'machine-register', label: 'Đăng ký trang thiết bị' },
+      { key: 'list-machine', label: 'Danh sách thiết bị' },
+      { key: 'machine-register', label: 'Đăng ký thiết bị' },
+      { key: 'machine-event', label: 'Đăng ký sự kiện thiết bị' },
+      { key: 'machine-event-setting', label: 'Cấu hình sự kiện thiết bị' },
+    ]
+  },
+  {
+    key: 'manage-accessory',
+    icon: <OutboxOutlined />,
+    label: 'Quản lý phụ kiện',
+    children: [
+      { key: 'list-accessory', label: 'Danh sách phụ kiện' },
+      { key: 'accessory-register', label: 'Đăng ký phụ kiện' },
+    ]
+  },
+  {
+    key: 'manage-interlock',
+    icon: <OutboxOutlined />,
+    label: 'Quản lý Interlock',
+    children: [
+      { key: 'list-interlock', label: 'Danh sách Interlock' },
+      { key: 'interlock-register', label: 'Đăng ký Interlock' },
     ]
   },
   {

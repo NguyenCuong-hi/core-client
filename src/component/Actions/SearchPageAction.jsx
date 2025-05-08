@@ -1,4 +1,4 @@
-import { FilterOutlined, SearchOutlined } from '@ant-design/icons';
+import { FilterOutlined, SaveOutlined, SearchOutlined } from '@ant-design/icons';
 import { Button, Input, Tooltip, Typography } from 'antd';
 import React from 'react';
 
@@ -39,6 +39,12 @@ const SearchPageAction = ({
       icon={<SearchOutlined />}
       onClick={onClickSearch}>
         Search
+      </Button>
+      <Button 
+      type="primary" 
+      icon={<SaveOutlined />}
+      onClick={onClickSearch}>
+        Lưu
       </Button>
     </div>
   </div>

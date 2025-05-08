@@ -1,23 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
 
 // project import
 
-import ModelAction from './action/RouteSetAction';
-import ModelTable from './table/ModelTable';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
-import RouteSetAction from './action/RouteSetAction';
 import AuDrAction from 'component/Actions/AuDrAction';
 import OperationInfomationQuery from './query/OperationInfomationQ';
 import OperationUseEQPQuery from './query/OperationUseEqpQ';
 import OperationParameterQuery from './query/OperationParameterq';
+import { Form } from 'antd';
 
+// ==============================||  PAGE ||============================== //
 
-// ==============================|| MODEL PRODUCT PAGE ||============================== //
-
-const ManageRouteSetPage = () => {
+const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const { t } = useTranslation();
 
   const defaultCols = useMemo(() => [
@@ -71,18 +67,23 @@ const ManageRouteSetPage = () => {
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
 
-  // useEffect(() => {
+  const [formDataBasic] = Form.useForm();
 
-  //   // setCols(defaultCols.filter((col) => col.visible))
-  // }, [gridData, defaultCols])
+  const onFinish = (values) => {
+    console.log('Received values of form: ', values);
+  };
 
   return (
     <>
       <div className="h-full pt-4 pr-4 pl-4">
         <AuDrAction
-          tilePage={"Đăng ký thông tin công đoạn"}
+          titlePage={'Đăng ký thông tin công đoạn'}
+          onClickSave={() => formDataBasic.submit()}
+          onClickCancel={() => {}}
+          onClickDelete={() => {}}
+          onClickAdd={() => {}}
         />
-        <OperationInfomationQuery />
+        <OperationInfomationQuery formDataBasic={formDataBasic} onFinish={onFinish} />
         <OperationUseEQPQuery />
         <OperationParameterQuery />
       </div>
@@ -90,4 +91,4 @@ const ManageRouteSetPage = () => {
   );
 };
 
-export default ManageRouteSetPage;
+export default ManageOperationDetails;

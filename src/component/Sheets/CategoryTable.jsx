@@ -17,7 +17,7 @@ import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 
-function ModelTable({
+function CategoryTable({
   setSelection,
   selection,
   setShowSearch,
@@ -35,7 +35,10 @@ function ModelTable({
   setCols,
   cols,
   defaultCols,
-  canEdit
+  canEdit,
+  onCellEdited,
+  cellConfig,
+
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -75,27 +78,6 @@ function ModelTable({
     }
   }, []);
 
-  const [dataSearch, setDataSearch] = useState([]);
-  const columnNames = [
-    'AssetName',
-    'UnitName',
-    'SMStatusName',
-    'DeptName',
-    'ItemClassSName',
-    'VatKindName',
-    'VatTypeName',
-    'MrpKind',
-    'OutKind',
-    'ProdMethod',
-    'ProdSpec',
-    'PurKind',
-    'PurProdType',
-    'SMInOutKindName',
-    'SMLimitTermKindName',
-    'SMABCName',
-    'EmpName',
-    'PurCustName'
-  ];
 
   const [keybindings, setKeybindings] = useState({
     downFill: true,
@@ -111,7 +93,7 @@ function ModelTable({
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
 
-      const cellConfig = {};
+      
 
       if (cellConfig[columnKey]) {
         return {
@@ -208,82 +190,7 @@ function ModelTable({
     [cols, gridData]
   );
 
-  const onCellEdited = useCallback(
-    async (cell, newValue) => {
-      if (canEdit === false) {
-        message.warning('Bạn không có quyền chỉnh sửa dữ liệu');
-        return;
-      }
-
-      if (
-        newValue.kind !== GridCellKind.Text &&
-        newValue.kind !== GridCellKind.Custom &&
-        newValue.kind !== GridCellKind.Boolean &&
-        newValue.kind !== GridCellKind.Number
-      ) {
-        return;
-      }
-
-      const indexes = resetColumn(cols);
-      const [col, row] = cell;
-      const key = indexes[col];
-
-      if (
-        key === 'AssetSeq' ||
-        key === 'UnitSeq' ||
-        key === 'SMStatus' ||
-        key === 'ItemClassLName' ||
-        key === 'ItemClassMName' ||
-        key === 'SMVatKind' ||
-        key === 'SMVatType' ||
-        key === 'SMMrpKind' ||
-        key === 'SMOutKind' ||
-        key === 'SMProdMethod' ||
-        key === 'SMPurKind' ||
-        key === 'SMPurProdType' ||
-        key === 'SMInOutKind' ||
-        key === 'SMLimitTermKind' ||
-        key === 'SMABC' ||
-        key === 'DeptSeq' ||
-        key === 'EmpSeq' ||
-        key === 'EmpID' ||
-        key === 'PurCustSeq'
-      ) {
-        return;
-      }
-
-      // Xử lý các trường hợp khác
-      setGridData((prevData) => {
-        const updatedData = [...prevData];
-        if (!updatedData[row]) updatedData[row] = {};
-
-        const currentStatus = updatedData[row]['Status'] || '';
-        updatedData[row][key] = newValue.data;
-        updatedData[row]['Status'] = currentStatus === 'A' ? 'A' : 'U';
-
-        setEditedRows((prevEditedRows) => {
-          const existingIndex = prevEditedRows.findIndex((editedRow) => editedRow.rowIndex === row);
-
-          const updatedRowData = {
-            rowIndex: row,
-            updatedRow: updatedData[row],
-            status: currentStatus === 'A' ? 'A' : 'U'
-          };
-
-          if (existingIndex === -1) {
-            return [...prevEditedRows, updatedRowData];
-          } else {
-            const updatedEditedRows = [...prevEditedRows];
-            updatedEditedRows[existingIndex] = updatedRowData;
-            return updatedEditedRows;
-          }
-        });
-
-        return updatedData;
-      });
-    },
-    [canEdit, cols, gridData]
-  );
+  
 
   const onColumnResize = useCallback(
     (column, newSize) => {
@@ -399,7 +306,7 @@ function ModelTable({
     setOpen(false);
   };
 
-  const handleCheckboxChange = (columnId, isChecked) => {
+  const handleCheckboxChange = (columnId, isChecked) => {``
     if (isChecked) {
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
@@ -432,7 +339,7 @@ function ModelTable({
 
   return (
     <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden " id="portal">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -553,4 +460,4 @@ function ModelTable({
   );
 }
 
-export default ModelTable;
+export default CategoryTable;

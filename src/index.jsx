@@ -26,7 +26,9 @@ root.render(
     <BrowserRouter basename={import.meta.env.VITE_APP_BASE_NAME}>
       <App />
     </BrowserRouter>
+    <div id="portal"></div>
   </Provider>
+  
 );
 
 // If you want your app to work offline and load faster, you can change
