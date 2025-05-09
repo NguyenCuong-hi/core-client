@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import AuDrAction from 'component/Actions/AuDrAction';
 import OperationInfomationQuery from './query/OperationInfomationQ';
 import OperationUseEQPQuery from './query/OperationUseEqpQ';
-import OperationParameterQuery from './query/OperationParameterq';
+import OperationParameterQuery from './query/OperationParameterQ';
 import { Form } from 'antd';
 
 // ==============================||  PAGE ||============================== //

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import AuDrAction from 'component/Actions/AuDrAction';
 import { Form } from 'antd';
 import RouteInfomationQuery from './query/RouteInfomation';
-import RouteParameterQuery from './query/OperationParameterq';
+import RouteParameterQuery from './query/OperationParameterQ';
 import RouteOperationReworkQuery from './query/RouteOperationReworkQ';
 import RouteOperationQuery from './query/RouteOperationQ';
 
