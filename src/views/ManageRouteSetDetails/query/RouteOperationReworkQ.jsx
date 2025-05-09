@@ -1,8 +1,8 @@
 import { Col, Form, Input, Radio, Row, Select, Typography } from 'antd';
-import CategoryTable from 'component/Sheets/CategoryTable';
 import React from 'react';
+import OperationReworkTable from '../table/OperationReworkTable';
 
-const OperationParameterQuery = ({
+const RouteOperationReworkQuery = ({
   defaultCols,
   gridData,
   setGridData,
@@ -21,12 +21,12 @@ const OperationParameterQuery = ({
     console.log('search:', value);
   };
   return (
-    <div className="bg-slate-50 rounded-md overflow-auto mb-4 pb-10">
+    <div className="bg-slate-50 rounded-md overflow-auto mb-2 pb-2">
       <Typography.Title className="border-b-1 uppercase border-gray-400 m-2" style={{ fontSize: 'medium', color: '#6b7280' }}>
-        Đăng ký thông tin danh mục công đoạn
+        Đăng ký thông tin Rework
       </Typography.Title>
-      <div className="bg-slate-50 rounded-md h-95 ">
-        <CategoryTable
+      <div className="bg-slate-50 rounded-md h-96 ">
+        <OperationReworkTable
           defaultCols={defaultCols}
           gridData={gridData}
           setGridData={setGridData}
@@ -43,4 +43,4 @@ const OperationParameterQuery = ({
   );
 };
 
-export default OperationParameterQuery;
+export default RouteOperationReworkQuery;

@@ -1,21 +1,32 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
 
 // project import
 
-import ModelAction from './action/RouteSetAction';
-import ModelTable from './table/ModelTable';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
+import RouteSetTable from './table/RouteSetTable';
 import RouteSetAction from './action/RouteSetAction';
-import SearchPageAction from 'component/Actions/SearchPageAction';
+import { useNotify } from 'utils/hooks/onNotify';
+import { Spin } from 'antd';
+import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
 
+// ==============================|| ROUTER SET PAGE ||============================== //
 
-// ==============================|| MODEL PRODUCT PAGE ||============================== //
-
-const ManageRouteSetPage = () => {
+const ManageRouteSetPage = ({}) => {
   const { t } = useTranslation();
+  const { notify, contextHolder } = useNotify();
+  const { spinning, percent, showLoader } = useFullscreenLoading();
+
+  const handleClick = () => {
+    showLoader(3000, () => {
+      notify({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Thêm mới thành công'
+      })
+    });
+  };
 
   const defaultCols = useMemo(() => [
     {
@@ -32,8 +43,21 @@ const ManageRouteSetPage = () => {
       }
     },
     {
-      title: t('Quy trình'),
-      id: 'FactUnitName',
+      title: t('ID'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã dây chuyền'),
+      id: 'RouteCode',
       kind: 'Text',
       readonly: true,
       width: 200,
@@ -45,11 +69,37 @@ const ManageRouteSetPage = () => {
       }
     },
     {
-      title: t('Tên đơn vị sản xuất'),
-      id: 'FactUnitName',
+      title: t('Tên dây chuyền'),
+      id: 'RouteName',
       kind: 'Text',
       readonly: true,
       width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mô tả'),
+      id: 'Description',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Công đoạn'),
+      id: 'Operations',
+      kind: 'Custom',
+      readonly: true,
+      width: 800,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -61,25 +111,30 @@ const ManageRouteSetPage = () => {
 
   const [cols, setCols] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST',
+      'S_ERP_COLS_PAGE_ROUTE_SET',
       defaultCols.filter((col) => col.visible)
     )
   );
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
 
-  // useEffect(() => {
-
-  //   // setCols(defaultCols.filter((col) => col.visible))
-  // }, [gridData, defaultCols])
-
   return (
     <>
       <div className="h-full mt-4 pr-4 pl-4">
-        <SearchPageAction
-          titlePage={"Danh sách quy trình"}
-        />        
-        <ModelTable
+        <RouteSetAction
+          titlePage={'Danh sách quy trình'}
+          onSearch={''}
+          onClickSearch={() => notify({
+            type: 'success',
+            message: 'Thành công',
+            description: 'Bạn vừa nhấn tìm kiếm'
+          })}
+          onClickFilter={''}
+          keyword={''}
+          setKeyword={''}
+          onClickNew={handleClick}
+        />
+        <RouteSetTable
           defaultCols={defaultCols}
           gridData={gridData}
           setGridData={setGridData}
@@ -89,6 +144,8 @@ const ManageRouteSetPage = () => {
           setNumRows={setNumRows}
         />
       </div>
+      {contextHolder}
+      <Spin spinning={spinning} percent={percent} fullscreen />
     </>
   );
 };

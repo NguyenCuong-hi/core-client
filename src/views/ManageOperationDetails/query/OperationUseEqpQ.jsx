@@ -6,8 +6,27 @@ import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { Typography } from 'antd';
 import RouteTable from 'views/ManageModelDetails/table/RouteTable';
 import ModelRouteDetailsTable from 'views/ManageModelDetails/table/ModelRouteDetailsTable';
+import EquipmentTable from '../table/EquipmentTable';
+import OperationEquipmentsTable from '../table/OperationEquipmentsTable';
 
-const OperationUseEQPQuery = () => {
+const OperationUseEQPQuery = ({
+    defaultColsEqp,
+    gridDataEqp,
+    setGridDataEqp,
+    colsEqp,
+    setColsEqp,
+    numRowsEqp,
+    setNumRowsEqp,
+
+    defaultColsOPEqp,
+    gridDataOPEqp,
+    setGridDataOPEqp,
+    colsOPEqp,
+    setColsOPEqp,
+    numRowsOPEqp,
+    setNumRowsOPEqp,
+
+}) => {
     const { t } = useTranslation();
 
     const onChange = value => {
@@ -17,141 +36,41 @@ const OperationUseEQPQuery = () => {
         console.log('search:', value);
     };
 
-    const defaultCols = useMemo(() => [
-        {
-            title: '',
-            id: 'Status',
-            kind: 'Text',
-            readonly: true,
-            width: 50,
-            hasMenu: true,
-            visible: true,
-            icon: GridColumnIcon.HeaderLookup,
-            trailingRowOptions: {
-                disabled: true
-            }
-        },
-        {
-            title: t('Tên đơn vị sản xuất'),
-            id: 'FactUnitName',
-            kind: 'Text',
-            readonly: true,
-            width: 200,
-            hasMenu: true,
-            visible: true,
-            icon: GridColumnIcon.HeaderRowID,
-            trailingRowOptions: {
-                disabled: true
-            }
-        },
-        {
-            title: t('Tên đơn vị sản xuất'),
-            id: 'FactUnitName',
-            kind: 'Text',
-            readonly: true,
-            width: 200,
-            hasMenu: true,
-            visible: true,
-            icon: GridColumnIcon.HeaderRowID,
-            trailingRowOptions: {
-                disabled: true
-            }
-        }
-    ]);
-
-    const [cols, setCols] = useState(() =>
-        loadFromLocalStorageSheet(
-            'S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST',
-            defaultCols.filter((col) => col.visible)
-        )
-    );
-    const [gridData, setGridData] = useState([]);
-    const [numRows, setNumRows] = useState(0);
-
-
-    const defaultColsModels = useMemo(() => [
-        {
-            title: '',
-            id: 'Status',
-            kind: 'Text',
-            readonly: true,
-            width: 50,
-            hasMenu: true,
-            visible: true,
-            icon: GridColumnIcon.HeaderLookup,
-            trailingRowOptions: {
-                disabled: true
-            }
-        },
-        {
-            title: t('Tên đơn vị sản xuất'),
-            id: 'FactUnitName',
-            kind: 'Text',
-            readonly: true,
-            width: 200,
-            hasMenu: true,
-            visible: true,
-            icon: GridColumnIcon.HeaderRowID,
-            trailingRowOptions: {
-                disabled: true
-            }
-        },
-        {
-            title: t('Tên đơn vị sản xuất'),
-            id: 'FactUnitName',
-            kind: 'Text',
-            readonly: true,
-            width: 200,
-            hasMenu: true,
-            visible: true,
-            icon: GridColumnIcon.HeaderRowID,
-            trailingRowOptions: {
-                disabled: true
-            }
-        }
-    ]);
-
-    const [colsModels, setColsModels] = useState(() =>
-        loadFromLocalStorageSheet(
-            'S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST',
-            defaultColsModels.filter((col) => col.visible)
-        )
-    );
-    const [gridDataModels, setGridDataModels] = useState([]);
-    const [numRowsModels, setNumRowsModels] = useState(0);
+    
 
 
     return (
         <div className="bg-slate-50 rounded-md overflow-auto">
             <Typography.Title className="border-b-1 uppercase border-gray-400 m-2" style={{ fontSize: 'medium', color: '#6b7280' }}>
-                Đăng ký thông tin dây chuyền sản xuất
+                Đăng ký thông tin thiết bị áp dụng
             </Typography.Title>
             <div className="bg-slate-50 rounded-md h-95  ">
 
                 <Splitter className="w-full h-full mb-0 pb-0">
-                    <SplitterPanel size={25} minSize={10}>
-                        <RouteTable
-                            defaultCols={defaultCols}
-                            gridData={gridData}
-                            setGridData={setGridData}
-                            cols={cols}
-                            setCols={setCols}
-                            numRows={numRows}
-                            setNumRows={setNumRows}
+                    <SplitterPanel size={20} minSize={10}>
+                        <EquipmentTable
+                            defaultCols={defaultColsEqp}
+                            gridData={gridDataEqp}
+                            setGridData={setGridDataEqp}
+                            cols={colsEqp}
+                            setCols={setColsEqp}
+                            numRows={numRowsEqp}
+                            setNumRows={setNumRowsEqp}
                         />
                     </SplitterPanel>
 
                     <SplitterPanel size={25} minSize={10}>
-                        <ModelRouteDetailsTable
-                            defaultCols={defaultColsModels}
-                            gridData={gridDataModels}
-                            setGridData={setGridDataModels}
-                            cols={colsModels}
-                            setCols={setColsModels}
-                            numRows={numRowsModels}
-                            setNumRows={setNumRowsModels}
+                        <OperationEquipmentsTable
+                            defaultCols={defaultColsOPEqp}
+                            gridData={gridDataOPEqp}
+                            setGridData={setGridDataOPEqp}
+                            cols={colsOPEqp}
+                            setCols={setColsOPEqp}
+                            numRows={numRowsOPEqp}
+                            setNumRows={setNumRowsOPEqp}
                         />
                     </SplitterPanel>
+                    
                 </Splitter>
             </div>
         </div>

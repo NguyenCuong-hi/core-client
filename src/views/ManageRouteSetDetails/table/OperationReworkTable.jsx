@@ -16,11 +16,8 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
-import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
-import { AsyncDropdownCellRenderer } from 'utils/sheets/cell-custom/AsyncDropdownCellRenderer';
-import { StepsCell } from 'utils/sheets/cell-custom/cellsOperationsSteps';
 
-function RouteTable({
+function OperationReworkTable({
   setSelection,
   selection,
   setShowSearch,
@@ -38,10 +35,11 @@ function RouteTable({
   setCols,
   cols,
   defaultCols,
-  canEdit
+  canEdit,
+  onCellEdited,
+  cellConfig,
+
 }) {
-
-
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
   const cellProps = useExtraCells();
@@ -52,7 +50,7 @@ function RouteTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -80,27 +78,6 @@ function RouteTable({
     }
   }, []);
 
-  const [dataSearch, setDataSearch] = useState([]);
-  const columnNames = [
-    'AssetName',
-    'UnitName',
-    'SMStatusName',
-    'DeptName',
-    'ItemClassSName',
-    'VatKindName',
-    'VatTypeName',
-    'MrpKind',
-    'OutKind',
-    'ProdMethod',
-    'ProdSpec',
-    'PurKind',
-    'PurProdType',
-    'SMInOutKindName',
-    'SMLimitTermKindName',
-    'SMABCName',
-    'EmpName',
-    'PurCustName'
-  ];
 
   const [keybindings, setKeybindings] = useState({
     downFill: true,
@@ -108,18 +85,15 @@ function RouteTable({
     selectColumn: false
   });
 
-  console.log('gridData', gridData);
-
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
-      console.log('person', person);
       const column = cols[col];
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
 
-      const cellConfig = {};
+      
 
       if (cellConfig[columnKey]) {
         return {
@@ -138,18 +112,19 @@ function RouteTable({
         };
       }
 
-      if (columnKey === "OperationCode") {
+      if ( columnKey === 'isApprove') {
+        const booleanValue =
+          value === 1 || value === '1'
+            ? true
+            : value === 0 || value === '0'
+              ? false
+              : Boolean(value)
         return {
-          kind: GridCellKind.Custom,
-          allowOverlay: false,
-          readonly: true,
-          copyData: "",
-          displayData: "",
-          data: {
-            kind: "steps-cell",
-            steps: value,
-          },
-        };
+          kind: GridCellKind.Boolean,
+          data: booleanValue,
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false,
+        }
       }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
@@ -215,82 +190,7 @@ function RouteTable({
     [cols, gridData]
   );
 
-  const onCellEdited = useCallback(
-    async (cell, newValue) => {
-      if (canEdit === false) {
-        message.warning('Bạn không có quyền chỉnh sửa dữ liệu');
-        return;
-      }
-
-      if (
-        newValue.kind !== GridCellKind.Text &&
-        newValue.kind !== GridCellKind.Custom &&
-        newValue.kind !== GridCellKind.Boolean &&
-        newValue.kind !== GridCellKind.Number
-      ) {
-        return;
-      }
-
-      const indexes = resetColumn(cols);
-      const [col, row] = cell;
-      const key = indexes[col];
-
-      if (
-        key === 'AssetSeq' ||
-        key === 'UnitSeq' ||
-        key === 'SMStatus' ||
-        key === 'ItemClassLName' ||
-        key === 'ItemClassMName' ||
-        key === 'SMVatKind' ||
-        key === 'SMVatType' ||
-        key === 'SMMrpKind' ||
-        key === 'SMOutKind' ||
-        key === 'SMProdMethod' ||
-        key === 'SMPurKind' ||
-        key === 'SMPurProdType' ||
-        key === 'SMInOutKind' ||
-        key === 'SMLimitTermKind' ||
-        key === 'SMABC' ||
-        key === 'DeptSeq' ||
-        key === 'EmpSeq' ||
-        key === 'EmpID' ||
-        key === 'PurCustSeq'
-      ) {
-        return;
-      }
-
-      // Xử lý các trường hợp khác
-      setGridData((prevData) => {
-        const updatedData = [...prevData];
-        if (!updatedData[row]) updatedData[row] = {};
-
-        const currentStatus = updatedData[row]['Status'] || '';
-        updatedData[row][key] = newValue.data;
-        updatedData[row]['Status'] = currentStatus === 'A' ? 'A' : 'U';
-
-        setEditedRows((prevEditedRows) => {
-          const existingIndex = prevEditedRows.findIndex((editedRow) => editedRow.rowIndex === row);
-
-          const updatedRowData = {
-            rowIndex: row,
-            updatedRow: updatedData[row],
-            status: currentStatus === 'A' ? 'A' : 'U'
-          };
-
-          if (existingIndex === -1) {
-            return [...prevEditedRows, updatedRowData];
-          } else {
-            const updatedEditedRows = [...prevEditedRows];
-            updatedEditedRows[existingIndex] = updatedRowData;
-            return updatedEditedRows;
-          }
-        });
-
-        return updatedData;
-      });
-    },
-    [canEdit, cols, gridData]
-  );
+  
 
   const onColumnResize = useCallback(
     (column, newSize) => {
@@ -346,7 +246,7 @@ function RouteTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
       return newHidden;
     });
   };
@@ -355,7 +255,7 @@ function RouteTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
       return uniqueCols;
     });
   };
@@ -367,7 +267,7 @@ function RouteTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -378,8 +278,8 @@ function RouteTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_ROUTE_TABLE');
-    localStorage.removeItem('H_ERP_COLS_PAGE_ROUTE_TABLE');
+    localStorage.removeItem('S_ERP_COLS_PAGE_MODEL_LIST');
+    localStorage.removeItem('H_ERP_COLS_PAGE_MODEL_LIST');
     setShowMenu(null);
   };
 
@@ -388,14 +288,14 @@ function RouteTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', updatedCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -406,28 +306,28 @@ function RouteTable({
     setOpen(false);
   };
 
-  const handleCheckboxChange = (columnId, isChecked) => {
+  const handleCheckboxChange = (columnId, isChecked) => {``
     if (isChecked) {
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
         return newHidden;
       });
     }
@@ -438,7 +338,7 @@ function RouteTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
+    <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
       <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
@@ -471,39 +371,36 @@ function RouteTable({
               tint: true
             }}
             freezeColumns={1}
-            getRowThemeOverride={(i) => {
-              let themeOverride;
-              if (i === hoverRow) {
-                themeOverride = {
-                  bgCell: '#f7f7f7',
-                  bgCellMedium: '#f0f0f0'
-                };
-              } else if (i % 2 !== 0) {
-                themeOverride = {
-                  bgCell: '#FBFBFB'
-                };
-              }
-              return themeOverride;
-            }}
-            overscrollY={0}
-            overscrollX={0}
-            smoothScrollY={true}
-            smoothScrollX={true}
+            getRowThemeOverride={(i) =>
+              i === hoverRow
+                ? {
+                    bgCell: '#f7f7f7',
+                    bgCellMedium: '#f0f0f0'
+                  }
+                : i % 2 === 0
+                  ? undefined
+                  : {
+                      bgCell: '#FBFBFB'
+                    }
+            }
+            // overscrollY={0}
+            // overscrollX={0}
+            // smoothScrollY={true}
+            // smoothScrollX={true}
             onPaste={true}
             fillHandle={true}
-            // keybindings={keybindings}
-            // onRowAppended={() => handleRowAppend(1)}
-            // onCellEdited={onCellEdited}
+            keybindings={keybindings}
+            onRowAppended={() => handleRowAppend(1)}
+            onCellEdited={onCellEdited}
             // onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
             // onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}
-            customRenderers={[
-                AsyncDropdownCellRenderer,
-                StepsCell,
-            ]}
+            // customRenderers={[
+            //     AsyncDropdownCellRenderer
+            // ]}
             // onItemHovered={onItemHovered}
           />
           {/* {showMenu !== null &&
@@ -544,7 +441,7 @@ function RouteTable({
         </ContextMenuWrapper>
 
         <div className="flex justify-end px-4 py-2">
-          <Pagination total={85} showTotal={(total) => `Total ${total} items`} defaultPageSize={20} defaultCurrent={1} />
+          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
         </div>
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
@@ -563,4 +460,4 @@ function RouteTable({
   );
 }
 
-export default RouteTable;
+export default OperationReworkTable;

@@ -1,5 +1,5 @@
 // StepsCell.ts
-import { GridCellKind, getMiddleCenterBias } from "@glideapps/glide-data-grid";
+import { GridCellKind } from "@glideapps/glide-data-grid";
 
 export const StepsCell = {
   kind: GridCellKind.Custom,

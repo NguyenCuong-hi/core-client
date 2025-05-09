@@ -16,9 +16,8 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
-import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
 
-function ModelTable({
+function RouteOperationsTable({
   setSelection,
   selection,
   setShowSearch,
@@ -520,7 +519,7 @@ function ModelTable({
         </ContextMenuWrapper>
 
         <div className="flex justify-end px-4 py-2">
-          <Pagination total={85} showTotal={(total) => `Total ${total} items`} defaultPageSize={20} defaultCurrent={1} />
+          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
         </div>
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
@@ -539,4 +538,4 @@ function ModelTable({
   );
 }
 
-export default ModelTable;
+export default RouteOperationsTable;

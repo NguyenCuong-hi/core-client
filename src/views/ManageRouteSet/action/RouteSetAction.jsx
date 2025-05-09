@@ -1,34 +1,56 @@
-import { SearchOutlined } from '@mui/icons-material';
+import { FilterOutlined, SaveOutlined, SearchOutlined } from '@ant-design/icons';
 import { Button, Input, Tooltip, Typography } from 'antd';
 import React from 'react';
-import { FilterOutlined } from '@ant-design/icons';
 
-const onSearch = (value) => {
-  console.log(value);
-};
+const RouteSetAction = ({
+  titlePage,
+  onSearch,
+  onClickSearch,
+  onClickFilter,
+  keyword,
+  setKeyword,
+  onClickNew
 
-const RouteSetAction = () => {
+
+}) => {
   return (
+    
     <div className="flex justify-between items-center py-4">
-      <Typography.Title level={4} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight:'bold' }}>
-        Danh sách sản phẩm
-      </Typography.Title>
+    <Typography.Title level={4} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight:'bold' }}>
+      {titlePage}
+    </Typography.Title>
 
-      <div className="flex items-center gap-2">
-        <Input.Search
-          placeholder="Search"
-          allowClear
-          onSearch={onSearch}
-          style={{ width: 300 }}
+    <div className="flex items-center gap-2">
+      <Input.Search
+        placeholder="Search"
+        allowClear
+        onSearch={onSearch}
+        value={keyword}
+        style={{ width: 300 }}
+      />
+      <Tooltip title="Filter">
+        <Button 
+        type="primary" 
+        icon={<FilterOutlined />}
+        onClick={onClickFilter} 
         />
-        <Tooltip title="Filter">
-          <Button type="primary" icon={<FilterOutlined />} />
-        </Tooltip>
-        <Button type="primary" icon={<SearchOutlined />}>
-          Search
-        </Button>
-      </div>
+      </Tooltip>
+      <Button 
+      type="primary" 
+      icon={<SearchOutlined />}
+      onClick={onClickSearch}>
+        Search
+      </Button>
+      <Button 
+      type="primary" 
+      icon={<SaveOutlined />}
+      onClick={onClickNew}>
+        Thêm mới
+      </Button>
     </div>
+  </div>
+
+
   );
 };
 

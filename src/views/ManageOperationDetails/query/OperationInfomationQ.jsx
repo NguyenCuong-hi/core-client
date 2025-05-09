@@ -32,7 +32,7 @@ const OperationInfomationQuery = ({ formDataBasic, onFinish }) => {
             <Form.Item
               label={<span className="uppercase text-[9px]">Mô tả</span>}
               style={{ marginBottom: 0 }}
-              labelCol={{ style: { marginBottom: 2, padding: 0, width: 300 } }}
+              labelCol={{ style: { marginBottom: 2, padding: 0, } }}
               wrapperCol={{ style: { padding: 0 } }}
               name={'Description'}
             >
@@ -106,8 +106,6 @@ const OperationInfomationQuery = ({ formDataBasic, onFinish }) => {
               <Checkbox onChange={(e) => onChange(e.target.checked)}>Áp dụng</Checkbox>
             </Form.Item>
           </Col>
-        {/* </Row>
-        <Row className="gap-3 flex items-center m-2 "> */}
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px]">Kiểm tra chất lượng</span>}
@@ -119,6 +117,9 @@ const OperationInfomationQuery = ({ formDataBasic, onFinish }) => {
               <Checkbox onChange={(e) => onChange(e.target.checked)}>Áp dụng</Checkbox>
             </Form.Item>
           </Col>
+        </Row>
+        <Row className="gap-3 flex items-center m-2 ">
+          
 
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item

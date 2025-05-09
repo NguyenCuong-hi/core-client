@@ -2,7 +2,7 @@ import { Col, Form, Input, Radio, Row, Select, Typography } from 'antd';
 import CategoryTable from 'component/Sheets/CategoryTable';
 import React from 'react';
 
-const OperationParameterQuery = ({
+const RouteParameterQuery = ({
   defaultCols,
   gridData,
   setGridData,
@@ -23,7 +23,7 @@ const OperationParameterQuery = ({
   return (
     <div className="bg-slate-50 rounded-md overflow-auto mb-4 pb-10">
       <Typography.Title className="border-b-1 uppercase border-gray-400 m-2" style={{ fontSize: 'medium', color: '#6b7280' }}>
-        Đăng ký thông tin danh mục công đoạn
+        Đăng ký thông tin danh mục dây chuyền
       </Typography.Title>
       <div className="bg-slate-50 rounded-md h-95 ">
         <CategoryTable
@@ -43,4 +43,4 @@ const OperationParameterQuery = ({
   );
 };
 
-export default OperationParameterQuery;
+export default RouteParameterQuery;
