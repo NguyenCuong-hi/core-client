@@ -44,8 +44,8 @@ const menuItems = [
     icon: <OutboxOutlined />,
     label: 'Quản lý thiết bị',
     children: [
-      { key: 'list-machine', label: 'Danh sách thiết bị' },
-      { key: 'machine-register', label: 'Đăng ký thiết bị' },
+      { key: 'list-machine', label: 'Danh sách thiết bị', component: "ManageMachinePage", permission: null, },
+      { key: 'machine-register', label: 'Đăng ký thiết bị', component: "ManageMachineDetails", permission: null, },
       { key: 'machine-event', label: 'Đăng ký sự kiện thiết bị' },
       { key: 'machine-event-setting', label: 'Cấu hình sự kiện thiết bị' },
     ]

@@ -16,8 +16,11 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
+import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
+import { AsyncDropdownCellRenderer } from 'utils/sheets/cell-custom/AsyncDropdownCellRenderer';
+import { StepsCell } from 'utils/sheets/cell-custom/cellsOperationsSteps';
 
-function OperationsTable({
+function RouteSetTable({
   setSelection,
   selection,
   setShowSearch,
@@ -37,6 +40,8 @@ function OperationsTable({
   defaultCols,
   canEdit
 }) {
+
+
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
   const cellProps = useExtraCells();
@@ -47,7 +52,7 @@ function OperationsTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -103,9 +108,11 @@ function OperationsTable({
     selectColumn: false
   });
 
+
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
+      console.log('person', person);
       const column = cols[col];
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
@@ -130,44 +137,17 @@ function OperationsTable({
         };
       }
 
-      if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
+      if (columnKey === "OperationCode") {
         return {
-          kind: GridCellKind.Number,
-          data: value,
-          displayData: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 5,
-            maximumFractionDigits: 5
-          }).format(value),
-          readonly: column?.readonly || false,
-          contentAlign: 'right',
-          allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'BadRate') {
-        return {
-          kind: GridCellKind.Number,
-          data: value,
-          displayData: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(value),
-          readonly: column?.readonly || false,
-          contentAlign: 'right',
-          allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'TestEndDate' || columnKey === 'QCDate' || columnKey === 'DelvDate') {
-        return {
-          kind: GridCellKind.Text,
-          data: value,
-          displayData: formatDate(value) || '',
+          kind: GridCellKind.Custom,
+          allowOverlay: false,
           readonly: true,
-          allowOverlay: true,
-          hasMenu: false
+          copyData: "",
+          displayData: "",
+          data: {
+            kind: "steps-cell",
+            steps: value,
+          },
         };
       }
 
@@ -324,7 +304,7 @@ function OperationsTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
       return newHidden;
     });
   };
@@ -333,7 +313,7 @@ function OperationsTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
       return uniqueCols;
     });
   };
@@ -345,7 +325,7 @@ function OperationsTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -356,8 +336,8 @@ function OperationsTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
+    localStorage.removeItem('S_ERP_COLS_PAGE_ROUTE_TABLE');
+    localStorage.removeItem('H_ERP_COLS_PAGE_ROUTE_TABLE');
     setShowMenu(null);
   };
 
@@ -366,14 +346,14 @@ function OperationsTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', updatedCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -389,23 +369,23 @@ function OperationsTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
         return newHidden;
       });
     }
@@ -416,7 +396,7 @@ function OperationsTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
+    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
       <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
@@ -426,10 +406,8 @@ function OperationsTable({
           onMenuClick={handleMenuClick}
         >
           <DataEditor
-            style={{}}
             {...cellProps}
             ref={gridRef}
-            scrollbarSize={4}
             columns={cols}
             getCellContent={getData}
             onFill={onFill}
@@ -451,18 +429,20 @@ function OperationsTable({
               tint: true
             }}
             freezeColumns={1}
-            getRowThemeOverride={(i) =>
-              i === hoverRow
-                ? {
-                    bgCell: '#f7f7f7',
-                    bgCellMedium: '#f0f0f0'
-                  }
-                : i % 2 === 0
-                  ? undefined
-                  : {
-                      bgCell: '#FBFBFB'
-                    }
-            }
+            getRowThemeOverride={(i) => {
+              let themeOverride;
+              if (i === hoverRow) {
+                themeOverride = {
+                  bgCell: '#f7f7f7',
+                  bgCellMedium: '#f0f0f0'
+                };
+              } else if (i % 2 !== 0) {
+                themeOverride = {
+                  bgCell: '#FBFBFB'
+                };
+              }
+              return themeOverride;
+            }}
             overscrollY={0}
             overscrollX={0}
             smoothScrollY={true}
@@ -478,9 +458,10 @@ function OperationsTable({
             // onHeaderMenuClick={onHeaderMenuClick}
             // onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}
-            // customRenderers={[
-            //     AsyncDropdownCellRenderer
-            // ]}
+            customRenderers={[
+                AsyncDropdownCellRenderer,
+                StepsCell,
+            ]}
             // onItemHovered={onItemHovered}
           />
           {/* {showMenu !== null &&
@@ -540,4 +521,4 @@ function OperationsTable({
   );
 }
 
-export default OperationsTable;
+export default RouteSetTable;

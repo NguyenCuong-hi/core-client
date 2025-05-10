@@ -3,8 +3,8 @@ import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { useTranslation } from 'react-i18next';
 import { Typography } from 'antd';
 
-import OperationsTable from '../table/OperationTable';
-import RouteOperationsTable from '../table/RouteOperationsTable';
+import OperationsTable from '../table/EventTable';
+import RouteOperationsTable from '../table/EquipmentEventsTable';
 
 const RouteOperationQuery = ({
   defaultColsOp,

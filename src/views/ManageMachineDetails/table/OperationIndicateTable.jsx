@@ -17,7 +17,7 @@ import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 
-function OperationsTable({
+function OperationIndicateTable({
   setSelection,
   selection,
   setShowSearch,
@@ -35,7 +35,10 @@ function OperationsTable({
   setCols,
   cols,
   defaultCols,
-  canEdit
+  canEdit,
+  onCellEdited,
+  cellConfig,
+
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -47,7 +50,7 @@ function OperationsTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -75,27 +78,6 @@ function OperationsTable({
     }
   }, []);
 
-  const [dataSearch, setDataSearch] = useState([]);
-  const columnNames = [
-    'AssetName',
-    'UnitName',
-    'SMStatusName',
-    'DeptName',
-    'ItemClassSName',
-    'VatKindName',
-    'VatTypeName',
-    'MrpKind',
-    'OutKind',
-    'ProdMethod',
-    'ProdSpec',
-    'PurKind',
-    'PurProdType',
-    'SMInOutKindName',
-    'SMLimitTermKindName',
-    'SMABCName',
-    'EmpName',
-    'PurCustName'
-  ];
 
   const [keybindings, setKeybindings] = useState({
     downFill: true,
@@ -111,7 +93,7 @@ function OperationsTable({
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
 
-      const cellConfig = {};
+      
 
       if (cellConfig[columnKey]) {
         return {
@@ -128,6 +110,21 @@ function OperationsTable({
           readonly: column?.readonly || false,
           hasMenu: column?.hasMenu || false
         };
+      }
+
+      if ( columnKey === 'isApprove') {
+        const booleanValue =
+          value === 1 || value === '1'
+            ? true
+            : value === 0 || value === '0'
+              ? false
+              : Boolean(value)
+        return {
+          kind: GridCellKind.Boolean,
+          data: booleanValue,
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false,
+        }
       }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
@@ -193,82 +190,7 @@ function OperationsTable({
     [cols, gridData]
   );
 
-  const onCellEdited = useCallback(
-    async (cell, newValue) => {
-      if (canEdit === false) {
-        message.warning('Bạn không có quyền chỉnh sửa dữ liệu');
-        return;
-      }
-
-      if (
-        newValue.kind !== GridCellKind.Text &&
-        newValue.kind !== GridCellKind.Custom &&
-        newValue.kind !== GridCellKind.Boolean &&
-        newValue.kind !== GridCellKind.Number
-      ) {
-        return;
-      }
-
-      const indexes = resetColumn(cols);
-      const [col, row] = cell;
-      const key = indexes[col];
-
-      if (
-        key === 'AssetSeq' ||
-        key === 'UnitSeq' ||
-        key === 'SMStatus' ||
-        key === 'ItemClassLName' ||
-        key === 'ItemClassMName' ||
-        key === 'SMVatKind' ||
-        key === 'SMVatType' ||
-        key === 'SMMrpKind' ||
-        key === 'SMOutKind' ||
-        key === 'SMProdMethod' ||
-        key === 'SMPurKind' ||
-        key === 'SMPurProdType' ||
-        key === 'SMInOutKind' ||
-        key === 'SMLimitTermKind' ||
-        key === 'SMABC' ||
-        key === 'DeptSeq' ||
-        key === 'EmpSeq' ||
-        key === 'EmpID' ||
-        key === 'PurCustSeq'
-      ) {
-        return;
-      }
-
-      // Xử lý các trường hợp khác
-      setGridData((prevData) => {
-        const updatedData = [...prevData];
-        if (!updatedData[row]) updatedData[row] = {};
-
-        const currentStatus = updatedData[row]['Status'] || '';
-        updatedData[row][key] = newValue.data;
-        updatedData[row]['Status'] = currentStatus === 'A' ? 'A' : 'U';
-
-        setEditedRows((prevEditedRows) => {
-          const existingIndex = prevEditedRows.findIndex((editedRow) => editedRow.rowIndex === row);
-
-          const updatedRowData = {
-            rowIndex: row,
-            updatedRow: updatedData[row],
-            status: currentStatus === 'A' ? 'A' : 'U'
-          };
-
-          if (existingIndex === -1) {
-            return [...prevEditedRows, updatedRowData];
-          } else {
-            const updatedEditedRows = [...prevEditedRows];
-            updatedEditedRows[existingIndex] = updatedRowData;
-            return updatedEditedRows;
-          }
-        });
-
-        return updatedData;
-      });
-    },
-    [canEdit, cols, gridData]
-  );
+  
 
   const onColumnResize = useCallback(
     (column, newSize) => {
@@ -324,7 +246,7 @@ function OperationsTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
       return newHidden;
     });
   };
@@ -333,7 +255,7 @@ function OperationsTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
       return uniqueCols;
     });
   };
@@ -345,7 +267,7 @@ function OperationsTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -356,8 +278,8 @@ function OperationsTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
+    localStorage.removeItem('S_ERP_COLS_PAGE_MODEL_LIST');
+    localStorage.removeItem('H_ERP_COLS_PAGE_MODEL_LIST');
     setShowMenu(null);
   };
 
@@ -366,14 +288,14 @@ function OperationsTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', updatedCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -384,28 +306,28 @@ function OperationsTable({
     setOpen(false);
   };
 
-  const handleCheckboxChange = (columnId, isChecked) => {
+  const handleCheckboxChange = (columnId, isChecked) => {``
     if (isChecked) {
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
         return newHidden;
       });
     }
@@ -426,10 +348,8 @@ function OperationsTable({
           onMenuClick={handleMenuClick}
         >
           <DataEditor
-            style={{}}
             {...cellProps}
             ref={gridRef}
-            scrollbarSize={4}
             columns={cols}
             getCellContent={getData}
             onFill={onFill}
@@ -463,15 +383,15 @@ function OperationsTable({
                       bgCell: '#FBFBFB'
                     }
             }
-            overscrollY={0}
-            overscrollX={0}
-            smoothScrollY={true}
-            smoothScrollX={true}
+            // overscrollY={0}
+            // overscrollX={0}
+            // smoothScrollY={true}
+            // smoothScrollX={true}
             onPaste={true}
             fillHandle={true}
-            // keybindings={keybindings}
-            // onRowAppended={() => handleRowAppend(1)}
-            // onCellEdited={onCellEdited}
+            keybindings={keybindings}
+            onRowAppended={() => handleRowAppend(1)}
+            onCellEdited={onCellEdited}
             // onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
@@ -520,7 +440,7 @@ function OperationsTable({
                     )} */}
         </ContextMenuWrapper>
 
-        <div className="flex justify-end px-4 py-2">
+        <div className="flex justify-end px-4 py-1">
           <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
         </div>
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
@@ -540,4 +460,4 @@ function OperationsTable({
   );
 }
 
-export default OperationsTable;
+export default OperationIndicateTable;

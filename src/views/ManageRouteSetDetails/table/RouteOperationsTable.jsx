@@ -416,7 +416,7 @@ function RouteOperationsTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
+    <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
       <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[

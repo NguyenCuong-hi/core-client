@@ -65,6 +65,16 @@
   width: 100%;
 }
 
+
+
+Xóa viền của container
+.rpv-default-layout__container {
+  border: 0 !important;
+  box-shadow: none !important;
+  Xóa cả bóng nếu có
+} */
+
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #888 #f1f1f1;
@@ -93,34 +103,25 @@ html {
   scrollbar-color: #a3a3a3 #f1f1f1;
 } */
 
-/* ::-webkit-scrollbar:horizontal {
+ ::-webkit-scrollbar:horizontal {
   height: 12px;
-   // Chiều cao của thanh cuộn ngang  
-} */
-/* 
+    /* Chiều cao của thanh cuộn ngang   */
+} 
+ 
 ::-webkit-scrollbar-track:horizontal {
   background: #f1f1f1;
-  // Màu nền của track
-} */
-/* 
+   /* Màu nền của track */
+} 
 ::-webkit-scrollbar-thumb:horizontal {
   background-color: #a3a3a3;
-  Màu của thanh cuộn
+  /* Màu của thanh cuộn */
   border-radius: 6px;
-  Bo góc thanh cuộn
+  /* Bo góc thanh cuộn */
   border: 3px solid #f1f1f1;
-  Viền xung quanh thanh cuộn
+  /* Viền xung quanh thanh cuộn */
 }
 
 ::-webkit-scrollbar-thumb:horizontal:hover {
   background-color: #a3a3a3;
-  Màu thanh cuộn khi hover
+  /* Màu thanh cuộn khi hover */
 }
-
-
-Xóa viền của container
-.rpv-default-layout__container {
-  border: 0 !important;
-  box-shadow: none !important;
-  Xóa cả bóng nếu có
-} */

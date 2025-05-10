@@ -6,18 +6,21 @@ import { GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
 import AuDrAction from 'component/Actions/AuDrAction';
 import { Form } from 'antd';
-import RouteInfomationQuery from './query/RouteInfomation';
 import RouteParameterQuery from './query/OperationParameterQ';
-import RouteOperationReworkQuery from './query/RouteOperationReworkQ';
 import RouteOperationQuery from './query/RouteOperationQ';
-import RouteOperationIndicateQuery from './query/RouteOperationIndicate';
-import { set } from 'lodash';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
+import MachineInfomationQuery from './query/MachineInfomation';
+import MachineReworkQuery from './query/RouteOperationReworkQ';
+import EquipmentEventsQuery from './query/EquipmentEvents';
+import { useNotify } from 'utils/hooks/onNotify';
+import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
 
 // ==============================||  PAGE ||============================== //
 
-const ManageRouteSetDetails = ({ canCreate, canEdit, canDelete, canView }) => {
+const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const { t } = useTranslation();
+  const { notify, contextHolder } = useNotify();
+  const { spinning, percent, showLoader } = useFullscreenLoading();
 
   const defaultColsOp = useMemo(() => [
     {
@@ -620,25 +623,193 @@ const ManageRouteSetDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     
   }]
 
+  const defaultColsEvent = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('ID'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã trạng thái'),
+      id: 'EventCode',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Tên trạng thái'),
+      id: 'EventName',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mô tả'),
+      id: 'Description',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsEvent, setColsEvent] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_ERP_COLS_PAGE_EVENT_LIST',
+  defaultColsEvent.filter((col) => col.visible)
+    )
+  );
+  const [gridDataEvent, setGridDataEvent] = useState([]);
+  const [numRowsEvent, setNumRowsEvent] = useState(0);
+
+  const defaultColsEqpEvent = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('ID'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã trạng thái'),
+      id: 'EventCode',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Tên trạng thái'),
+      id: 'EventName',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mô tả'),
+      id: 'Description',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsEqpEvent, setColsEqpEvent] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_ERP_COLS_PAGE_EQP_EVENT_LIST',
+  defaultColsEqpEvent.filter((col) => col.visible)
+    )
+  );
+  const [gridDataEqpEvent, setGridDataEqpEvent] = useState([]);
+  const [numRowsEqpEvent, setNumRowsEqpEvent] = useState(0);
+
   const [formDataBasic] = Form.useForm();
 
+ 
+  // Handle Action
+  const handleClick = () => {
+    showLoader(3000, () => {
+      notify({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Thêm mới thành công'
+      })
+    });
+  };
+
   const onFinish = (values) => {
+    handleClick();
     console.log('Received values of form: ', values);
   };
+
 
   return (
     <>
       <div className="h-full pt-4 pr-4 pl-4">
         <AuDrAction
-          titlePage={'Đăng ký thông tin dây chuyền'}
+          titlePage={'Đăng ký thông tin thiết bị'}
           onClickSave={() => formDataBasic.submit()}
           onClickCancel={() => {
             
           }}
           onClickDelete={() => {}}
-          onClickAdd={() => {}}
+          onClickAdd={handleClick}
         />
-        <RouteInfomationQuery formDataBasic={formDataBasic} onFinish={onFinish} />
+        <MachineInfomationQuery formDataBasic={formDataBasic} onFinish={onFinish} />
         <RouteOperationQuery
           defaultColsOp={defaultColsOp}
           gridDataOp={gridDataOp}
@@ -656,27 +827,24 @@ const ManageRouteSetDetails = ({ canCreate, canEdit, canDelete, canView }) => {
           numRowsRouteOp={numRowsRouteOp}
           setNumRowsRouteOp={setNumRowsRouteOp}
         />
-        <RouteOperationReworkQuery
-          defaultCols={defaultColsOpRework}
-          gridData={gridDataOpRework}
-          setGridData={setGridDataOpRework}
-          cols={colsOpRework}
-          setCols={setColsOpRework}
-          numRows={numRowsOpRework}
-          setNumRows={setNumRowsOpRework}
-          handleRowAppend={handleRowAppendOpRework}
+        <EquipmentEventsQuery
+          defaultColsEvent={defaultColsEvent}
+          gridDataEvent={gridDataEvent}
+          setGridDataEvent={setGridDataEvent}
+          colsEvent={colsEvent}
+          setColsEvent={setColsEvent}
+          numRowsEvent={numRowsEvent}
+          setNumRowsEvent={setNumRowsEvent}
+
+          defaultColsEqpEvent={defaultColsEqpEvent}
+          gridDataEqpEvent={gridDataEqpEvent}
+          setGridDataEqpEvent={setGridDataEqpEvent}
+          colsEqpEvent={colsEqpEvent}
+          setColsEqpEvent={setColsEqpEvent}
+          numRowsEqpEvent={numRowsEqpEvent}
+          setNumRowsEqpEvent={setNumRowsEqpEvent}
         />
-        <RouteOperationIndicateQuery
-          defaultCols={defaultColsOpIndicate}
-          gridData={gridDataOpIndicate}
-          setGridData={setGridDataOpIndicate}
-          cols={colsOpIndicate}
-          setCols={setColsOpIndicate}
-          numRows={numRowsOpIndicate}
-          setNumRows={setNumRowsOpIndicate}
-          handleRowAppend={handleRowAppendOpIndicate}
-          cellConfig={cellConfigOpIndicate}
-        />
+
         <RouteParameterQuery
           defaultCols={defaultColsCategory}
           gridData={gridDataCategory}
@@ -692,4 +860,4 @@ const ManageRouteSetDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 };
 
-export default ManageRouteSetDetails;
+export default ManageMachineDetails;
