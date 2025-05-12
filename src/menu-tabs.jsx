@@ -2,6 +2,7 @@ import { lazy } from "react";
 
 export const TabComponents = {
   AuthLogin: lazy(() => import("../src/views/Login")),
+  ManageUsers: lazy(() => import("../src/views/ManageUsers")),
   AuthRegister: lazy(() => import("../src/views/Register")),
   DashboardDefault: lazy(() => import("../src/views/Dashboard/Default")),
   ManageModelPage: lazy(() => import("../src/views/ManageModel")),
