@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 export const useFullscreenLoading = () => {
   const [spinning, setSpinning] = useState(false);
   const [percent, setPercent] = useState(0);
+  const intervalRef = useRef(null);
 
   const showLoader = useCallback((duration = 2000, onFinish = () => {}) => {
     setSpinning(true);
@@ -10,12 +11,15 @@ export const useFullscreenLoading = () => {
     const stepTime = duration / totalSteps;
     let ptg = 0;
 
-    const interval = setInterval(() => {
+    clearInterval(intervalRef.current);
+
+    intervalRef.current = setInterval(() => {
       ptg += 100 / totalSteps;
       setPercent(Math.min(ptg, 100));
 
       if (ptg >= 100) {
-        clearInterval(interval);
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
         setSpinning(false);
         setPercent(0);
         onFinish();
@@ -23,9 +27,17 @@ export const useFullscreenLoading = () => {
     }, stepTime);
   }, []);
 
+  const hideLoader = useCallback(() => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    setSpinning(false);
+    setPercent(0);
+  }, []);
+
   return {
     spinning,
     percent,
     showLoader,
+    hideLoader,
   };
 };

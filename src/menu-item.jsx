@@ -83,9 +83,11 @@ const menuItems = [
     label: 'Cấu hình hệ thống',
     children: [
       { key: 'system-menu', label: 'Cài đặt menu', component: "ManageCodeSys", permission: null, },
+      { key: 'system-users', label: 'Tài khoản', component: "ManageUsers", permission: null, },
       { key: 'system-user', label: 'Cài đặt tài khoản' },
     ]
   }
+
 ];
 
 export default menuItems;
