@@ -9,12 +9,9 @@ import { onRowAppended } from 'utils/sheets/onRowAppended';
 import { message } from 'antd';
 import SearchPageAction from 'component/Actions/SearchPageAction';
 
-
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
-const ManageModelPage = (
-  canCreate
-) => {
+const ManageModelPage = (canCreate) => {
   const { t } = useTranslation();
 
   const defaultCols = useMemo(() => [
@@ -39,7 +36,7 @@ const ManageModelPage = (
       width: 200,
       hasMenu: true,
       visible: false,
-      icon: GridColumnIcon.HeaderRowID,
+      icon: GridColumnIcon.HeaderRowID
     },
     {
       title: t('Tên dòng sản phẩm'),
@@ -209,7 +206,7 @@ const ManageModelPage = (
       trailingRowOptions: {
         disabled: true
       }
-    },
+    }
   ]);
 
   const [cols, setCols] = useState(() =>
@@ -221,26 +218,50 @@ const ManageModelPage = (
 
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
-  const [addedRows, setAddedRows] = useState([])
-  const [numRowsToAdd, setNumRowsToAdd] = useState(null)
-  const [editedRows, setEditedRows] = useState([])
-
+  const [addedRows, setAddedRows] = useState([]);
+  const [numRowsToAdd, setNumRowsToAdd] = useState(null);
+  const [editedRows, setEditedRows] = useState([]);
 
   const handleRowAppend = useCallback(
     (numRowsToAdd) => {
-        if (canCreate === false) {
-            message.warning('Bạn không có quyền thêm dữ liệu')
-            return
-        }
-        onRowAppended(cols, setGridData, setNumRows, setAddedRows, numRowsToAdd)
+      if (canCreate === false) {
+        message.warning('Bạn không có quyền thêm dữ liệu');
+        return;
+      }
+      onRowAppended(cols, setGridData, setNumRows, setAddedRows, numRowsToAdd);
     },
-    [cols, setGridData, setNumRows, setAddedRows, numRowsToAdd],
-)
+    [cols, setGridData, setNumRows, setAddedRows, numRowsToAdd]
+  );
+
+    const [openFilter, setOpenFilter] = useState(false);
+
+  const onSearch = (value) => {
+    console.log('search:', value);
+  };
+
+  const onClickSearch = () => {
+    console.log('click search');
+  };
+
+  const onClickFilter = () => {
+    setOpenFilter(true);
+  };
+
+  const onClickSave = () => {
+    console.log('click search');
+  };
+
   return (
     <>
-      <div className="h-full mt-4 pr-4 pl-4">
-        <SearchPageAction 
-          titlePage={"Danh sách cấu hình sản phẩm"}
+      <div className="h-full mt-4">
+        <SearchPageAction
+          titlePage={'Danh sách cấu hình sản phẩm'}
+          onSearch={onSearch}
+          onClickSearch={onClickSearch}
+          onClickFilter={onClickFilter}
+          // keyword={keyword}
+          // setKeyword={setKeyword}
+          onClickSave={onClickSave}
         />
         <ModelTable
           defaultCols={defaultCols}
@@ -253,9 +274,11 @@ const ManageModelPage = (
           handleRowAppend={handleRowAppend}
           numRowsToAdd={numRowsToAdd}
           setNumRowsToAdd={setNumRowsToAdd}
-          addedRows= {addedRows}
+          addedRows={addedRows}
           setAddedRows={setAddedRows}
           setEditedRows={setEditedRows}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
         />
       </div>
     </>

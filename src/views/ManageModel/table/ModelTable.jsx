@@ -4,7 +4,7 @@ import { DeleteOutlined, EditOutlined, TableOutlined } from '@ant-design/icons';
 import { useLayer } from 'react-laag';
 // import LayoutMenuSheet from '../../sheet/jsx/layoutMenu'
 // import LayoutStatusMenuSheet from '../../sheet/jsx/layoutStatusMenu'
-import { Drawer, Checkbox, message, Pagination } from 'antd';
+import { Drawer, Checkbox, message, Pagination, Input, Button, Typography } from 'antd';
 
 // import ModalHelpRootMenu from '../../modal/system/modalHelpRootMenu'
 // import { updateEditedRows } from '../../sheet/js/updateEditedRows'
@@ -35,7 +35,9 @@ function ModelTable({
   setCols,
   cols,
   defaultCols,
-  canEdit
+  canEdit,
+  openFilter,
+  setOpenFilter
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -130,19 +132,14 @@ function ModelTable({
         };
       }
 
-      if ( columnKey === 'isApprove') {
-        const booleanValue =
-          value === 1 || value === '1'
-            ? true
-            : value === 0 || value === '0'
-              ? false
-              : Boolean(value)
+      if (columnKey === 'isApprove') {
+        const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
         return {
           kind: GridCellKind.Boolean,
           data: booleanValue,
           allowOverlay: true,
-          hasMenu: column?.hasMenu || false,
-        }
+          hasMenu: column?.hasMenu || false
+        };
       }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
@@ -399,6 +396,10 @@ function ModelTable({
     setOpen(false);
   };
 
+  const onCloseFilter = () => {
+    setOpenFilter(false);
+  };
+
   const handleCheckboxChange = (columnId, isChecked) => {
     if (isChecked) {
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
@@ -431,8 +432,8 @@ function ModelTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -547,6 +548,18 @@ function ModelTable({
                 </div>
               )
           )}
+        </Drawer>
+
+        <Drawer title="Tìm kiếm nâng cao" onClose={onCloseFilter} open={openFilter}>
+          <div style={{ marginBottom: '10px' }}>
+            <Typography.Title level={4}>Tìm kiếm</Typography.Title>
+            <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
+            <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
+            <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
+            <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
+            
+          </div>
+          <Button onClick={() => {}}>Tìm kiếm</Button>
         </Drawer>
       </div>
     </div>
