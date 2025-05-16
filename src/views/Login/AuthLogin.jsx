@@ -30,14 +30,14 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
     }, 1500);
   };
 
-  const onSubmit = (values, { setSubmitting }) => {
-    setLoading(true);
-    setTimeout(() => {
-      console.log('Login Info:', values);
-      setLoading(false);
-      setSubmitting(false);
-      handleLoginSuccess();
-    }, 1000);
+  const onSubmit = async (values, { setSubmitting }) => {
+    // setLoading(true);
+    // setTimeout(() => {
+    //   console.log('Login Info:', values);
+    //   setLoading(false);
+    //   setSubmitting(false);
+    //   handleLoginSuccess();
+    // }, 1000);
 
 
     try {
@@ -46,16 +46,18 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
         password: values.password,
       }
 
-      const loginResponse = AuthLoginService(data);
-      if (loginResponse) {
+      const loginResponse = await AuthLoginService(data);
+      console.log('loginResponse', loginResponse)
+      if (loginResponse.success) {
         Cookies.set('token', loginResponse.token)
-        const user = GetUserService();
+        const user = await GetUserService();
+        console.log('user', user)
         localStorage.setItem('username', JSON.stringify(user.data.username))
         localStorage.setItem('role', JSON.stringify(user.data.role))
         localStorage.setItem('menu', JSON.stringify(user.data.menu))
       }
     } catch (error) {
-
+      console.error(error); 
     }
   }
 
@@ -85,12 +87,12 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
 
         <Formik
           initialValues={{
-            email: '',
+            username: '',
             password: '',
             submit: null
           }}
           validationSchema={Yup.object().shape({
-            email: Yup.string().max(255).required('Email is required'),
+            username: Yup.string().max(255).required('Email is required'),
             password: Yup.string().max(255).required('Password is required')
           })}
           onSubmit={onSubmit}
@@ -99,15 +101,15 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
             <Form layout="vertical" onFinish={handleSubmit} {...rest}>
               <Form.Item
                 label="Email Address"
-                validateStatus={touched.email && errors.email ? 'error' : ''}
-                help={touched.email && errors.email}
+                validateStatus={touched.username && errors.username ? 'error' : ''}
+                help={touched.username && errors.username}
               >
                 <Input
-                  name="email"
+                  name="username"
                   placeholder="Enter your email"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.email}
+                  value={values.username}
                   size="large"
                 />
               </Form.Item>
@@ -140,7 +142,6 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
                   size="large"
                   loading={isSubmitting || loading}
                   className="!rounded-lg"
-                // onClick={handleLoginSuccess}
                 >
                   Log In
                 </Button>

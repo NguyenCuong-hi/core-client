@@ -1,18 +1,25 @@
-import { accessToken } from 'utils/cookies/CookiesUtils';
+import axios from 'axios';
+import { HOST_API_SERVER } from 'services/config';
 
 export const AuthLoginService = async (data) => {
   try {
-    const token = accessToken()
+    const formData = new FormData();
+    formData.append('username', data.username);
+    formData.append('password', data.password);
+    formData.append('client_id', 'core_client');
+    formData.append('client_secret', 'secret');
+    formData.append('grant_type', 'password');
+
     const response = await axios.post(
-      `${HOST_API_SERVER_4}/token`,
-      data,
+      `${HOST_API_SERVER}/oauth/token`,
+      formData,
       {
         headers: {
-            Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       },
     );
+    console.log('response', response)
 
     if (response.status === 200 || response.status === 201) {
       return {
@@ -22,15 +29,14 @@ export const AuthLoginService = async (data) => {
     } else {
       return {
         success: false,
-        message: response.data.message || ERROR_MESSAGES.ERROR_DATA,
+        message: response.data.message,
       };
     }
   } catch (error) {
+    console.log(error)
     return {
       success: false,
       message: error.response
-        ? error.response.data.message
-        : ERROR_MESSAGES.ERROR,
     };
   }
 };
