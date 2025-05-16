@@ -16,4 +16,5 @@ export const TabComponents = {
   ManageRouteSetDetails: lazy(() => import("../src/views/ManageRouteSetDetails")),
   ManageMachinePage: lazy(() => import("../src/views/ManageMachine")),
   ManageMachineDetails: lazy(() => import("../src/views/ManageMachineDetails")),
+  ManageMenu: lazy(() => import("../src/views/ManageMenu")),
 };

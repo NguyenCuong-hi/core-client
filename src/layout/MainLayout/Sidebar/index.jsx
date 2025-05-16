@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Grid } from 'antd';
+import React from 'react';
+import { Layout, Menu } from 'antd';
 
-import ProfileSection from '../Header/ProfileSection';
 import menuItems from 'menu-item';
 import { useDispatch, useSelector } from 'react-redux';
 import { addTab, setActiveTab } from 'store/tabsReducer';
@@ -14,7 +13,8 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
   const { tabList, activeTabKey } = useSelector((state) => state.tab);
 
   const siderStyle = {
-    overflow: 'auto',
+    overflowY: 'scroll',
+    scrollbarWidth: 'none',
     height: '100vh',
     position: 'sticky',
     insetInlineStart: 0,
@@ -22,7 +22,8 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
     bottom: 0,
     scrollbarWidth: 'thin',
     scrollbarGutter: 'stable',
-
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
   };
 
   const findMenuItemByKey = (items, targetKey) => {
@@ -70,7 +71,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
       trigger={null}
     >
 
-      <div className="flex-1 ">
         <Menu
           mode="inline"
           defaultSelectedKeys={['dashboard']}
@@ -78,7 +78,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
           items={menuItems}
           onClick={handleMenuClick}
         />
-      </div>
 
 
     </Sider>

@@ -1,13 +1,9 @@
 import React, { lazy, useEffect, useRef, useState } from 'react';
 
 // project import
-import {
-  BrowserRouter as Router,
-  useNavigate,
-  useLocation,
-} from 'react-router-dom'
-import { Layout } from 'antd'
-const { Content } = Layout
+import { BrowserRouter as Router, useNavigate, useLocation } from 'react-router-dom';
+import { Layout } from 'antd';
+const { Content } = Layout;
 import { Suspense } from 'react';
 
 import Sidebar from 'layout/MainLayout/Sidebar';
@@ -18,24 +14,17 @@ import Spinner from 'component/Loader/load';
 import AuthLogin from 'views/Login/AuthLogin';
 const DynamicTabContent = lazy(() => import('layout/MainLayout/DynamicTabs'));
 
-
-
 // ==============================|| MAIN ROUTES ||============================== //
 
 const MainRoutes = () => {
+  const controllers = useRef({});
 
-  const controllers = useRef({})
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [menuTransForm, setMenuTransForm] = useState([])
-  const [rootMenuItems, setRootMenuItems] = useState([])
-  const [errorMenu, setErrorMenu] = useState(false)
-  const [userPermissions, setUserPermissions] = useState([])
-  const [isMobile, setIsMobile] = useState(false)
-  const rolesMenu = localStorage.getItem('roles_menu')
-  const [keyLanguage, setKeyLanguage] = useState(null)
+  const rolesMenu = localStorage.getItem('roles_menu');
+  const [keyLanguage, setKeyLanguage] = useState(null);
   // const [collapsed, setCollapsed] = useState(() => {
   //   const savedState = localStorage.getItem('COLLAPSED_STATE')
   //   return savedState ? JSON.parse(savedState) : false
@@ -52,45 +41,30 @@ const MainRoutes = () => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const urlTab = searchParams.get("tab");
+    const urlTab = searchParams.get('tab');
 
     if (urlTab && tabList.some((tab) => tab.key === urlTab)) {
       dispatch(setActiveTab(urlTab));
     }
   }, [location.search, tabList, dispatch]);
 
-  const sidebarWidth = drawerOpen === false ? 80 : 260;
+  const sidebarWidth = drawerOpen === false ? 0 : 260;
 
   if (!isLoggedIn) {
-    return <AuthLogin setIsLoggedIn= {setIsLoggedIn} />;
+    return <AuthLogin setIsLoggedIn={setIsLoggedIn} />;
   }
 
   return (
     <Layout className="h-screen w-full overflow-hidden">
       <div className="fixed top-0 left-0 right-0 z-[1001] bg-white">
-        <Header
-          drawerOpen={drawerOpen}
-          drawerToggle={handleDrawerToggle}
-        />
+        <Header drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} />
       </div>
 
-      <div
-        className="fixed  bottom-0 z-[1000] border-r bg-white transition-all duration-300"
-        style={{ width: sidebarWidth }}
-      >
-        <Sidebar
-          drawerOpen={drawerOpen}
-          drawerToggle={handleDrawerToggle}
-          sidebarWidth={sidebarWidth}
-        />
-        <div>
-          <ProfileSection />
-        </div>
-      </div>
+      <Sidebar drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} sidebarWidth={sidebarWidth} />
+      
 
       <div
         className=" mt-4 w-full h-screen overflow-y-auto bg-slate-100 transition-all duration-300"
-        style={{ marginLeft: sidebarWidth }}
       >
         <Content className=" min-h-full">
           <Suspense fallback={<Spinner />}>

@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DataEditor, GridCellKind } from '@glideapps/glide-data-grid';
-import { DeleteOutlined, EditOutlined, FilterOutlined, TableOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, TableOutlined } from '@ant-design/icons';
 import { useLayer } from 'react-laag';
 // import LayoutMenuSheet from '../../sheet/jsx/layoutMenu'
 // import LayoutStatusMenuSheet from '../../sheet/jsx/layoutStatusMenu'
-import { Drawer, Checkbox, message, Pagination, Input, Tooltip, Button } from 'antd';
+import { Drawer, Checkbox, message, Pagination, Input, Typography } from 'antd';
 
 // import ModalHelpRootMenu from '../../modal/system/modalHelpRootMenu'
 // import { updateEditedRows } from '../../sheet/js/updateEditedRows'
@@ -16,9 +16,8 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
-import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
 
-function RolesTable({
+function AuthorityRegistTable({
   setSelection,
   selection,
   setShowSearch,
@@ -48,7 +47,7 @@ function RolesTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -146,27 +145,32 @@ function RolesTable({
         };
       }
 
-      if (columnKey === 'BadRate') {
+      if ( columnKey === 'accountNonExpired' 
+        || columnKey === 'accountNonLocked'
+        || columnKey === 'credentialsNonExpired'
+        || columnKey === 'active'
+        || columnKey === 'justCreated'
+      ) {
+        const booleanValue =
+          value === 1 || value === '1'
+            ? true
+            : value === 0 || value === '0'
+              ? false
+              : Boolean(value)
         return {
-          kind: GridCellKind.Number,
-          data: value,
-          displayData: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(value),
-          readonly: column?.readonly || false,
-          contentAlign: 'right',
+          kind: GridCellKind.Boolean,
+          data: booleanValue,
           allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
+          hasMenu: column?.hasMenu || false,
+        }
       }
 
-      if (columnKey === 'TestEndDate' || columnKey === 'QCDate' || columnKey === 'DelvDate') {
+      if (columnKey === 'createdDate' || columnKey === 'modifiedDate') {
         return {
           kind: GridCellKind.Text,
           data: value,
           displayData: formatDate(value) || '',
-          readonly: true,
+          readonly: false,
           allowOverlay: true,
           hasMenu: false
         };
@@ -325,7 +329,7 @@ function RolesTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', newHidden);
       return newHidden;
     });
   };
@@ -334,7 +338,7 @@ function RolesTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', uniqueCols);
       return uniqueCols;
     });
   };
@@ -346,7 +350,7 @@ function RolesTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -357,8 +361,8 @@ function RolesTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
+    localStorage.removeItem('S_ERP_COLS_PAGE_USERS_LIST');
+    localStorage.removeItem('H_ERP_COLS_PAGE_USERS_LIST');
     setShowMenu(null);
   };
 
@@ -367,14 +371,14 @@ function RolesTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', updatedCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -390,23 +394,23 @@ function RolesTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', newHidden);
         return newHidden;
       });
     }
@@ -418,20 +422,12 @@ function RolesTable({
 
   return (
     <div className="w-full h-full gap-1 flex items-center justify-center ">
-      <div className="w-full h-full flex flex-col border bg-white  overflow-hidden ">
-        <Input
-          placeholder="Search"
-          allowClear
-          className="w-full"
-          style={{
-            border: 'none',
-            boxShadow: 'none'
-          }}
-        />
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
+        
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
-            { key: 'delete', l0abel: 'Xoá', icon: <DeleteOutlined /> }
+            { key: 'delete', label: 'Xoá', icon: <DeleteOutlined /> }
           ]}
           onMenuClick={handleMenuClick}
         >
@@ -462,14 +458,14 @@ function RolesTable({
             getRowThemeOverride={(i) =>
               i === hoverRow
                 ? {
-                    bgCell: '#f7f7f7',
-                    bgCellMedium: '#f0f0f0'
-                  }
+                  bgCell: '#f7f7f7',
+                  bgCellMedium: '#f0f0f0'
+                }
                 : i % 2 === 0
                   ? undefined
                   : {
-                      bgCell: '#FBFBFB'
-                    }
+                    bgCell: '#FBFBFB'
+                  }
             }
             overscrollY={0}
             overscrollX={0}
@@ -481,14 +477,15 @@ function RolesTable({
             onRowAppended={() => handleRowAppend(1)}
             onCellEdited={onCellEdited}
             onCellClicked={onCellClicked}
+
             onColumnResize={onColumnResize}
-            // onHeaderMenuClick={onHeaderMenuClick}
-            // onColumnMoved={onColumnMoved}
-            // onKeyUp={onKeyUp}
-            // customRenderers={[
-            //     AsyncDropdownCellRenderer
-            // ]}
-            // onItemHovered={onItemHovered}
+          // onHeaderMenuClick={onHeaderMenuClick}
+          // onColumnMoved={onColumnMoved}
+          // onKeyUp={onKeyUp}
+          // customRenderers={[
+          //     AsyncDropdownCellRenderer
+          // ]}
+          // onItemHovered={onItemHovered}
           />
           {/* {showMenu !== null &&
                     renderLayer(
@@ -527,6 +524,7 @@ function RolesTable({
                     )} */}
         </ContextMenuWrapper>
 
+
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
             (col) =>
@@ -544,4 +542,4 @@ function RolesTable({
   );
 }
 
-export default RolesTable;
+export default AuthorityRegistTable;

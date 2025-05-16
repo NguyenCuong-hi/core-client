@@ -6,24 +6,23 @@ const onSearch = (value) => {
   console.log(value);
 };
 
-const UsersAction = ({ onClickSave, onClickUpdate, onClickDelete, onClickImport }) => {
-
+const UsersAction = ({ title, onClickSave, onClickUpdate, onClickDelete, onClickImport }) => {
   return (
-    <div className="flex justify-between items-center py-4">
-      <Typography.Title level={4} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight: 'bold' }}>
-        Quản lý tài khoản
+    <div className="flex justify-between items-center py-1">
+      <Typography.Title level={5} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight: 'bold', paddingLeft: '10px' }}>
+        {title}
       </Typography.Title>
 
-      <div className="flex items-center gap-2">
-        <Button type="primary" icon={<SaveOutlined />} onClick={onClickSave}>
+      <div className="flex items-center gap-2 pr-2">
+        <Button type='text' icon={<SaveOutlined style={{ color: '#10b981' }} />} onClick={onClickSave}>
           Lưu
         </Button>
 
-        <Button type="primary" icon={<DeleteOutlined />} onClick={onClickDelete}>
+        <Button type='text' icon={<DeleteOutlined style={{ color: '#ef4444' }} />} onClick={onClickDelete}>
           Xóa
         </Button>
         <Upload accept=".xlsx,.xls" showUploadList={false} beforeUpload={onClickImport}>
-          <Button type="primary" icon={<UploadOutlined />}>
+          <Button type='text'  icon={<UploadOutlined style={{  color: '#3b82f6'  }} />}>
             Import
           </Button>
         </Upload>

@@ -48,7 +48,7 @@ function RolesTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_ROLE_MENU', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -424,7 +424,11 @@ function RolesTable({
           allowClear
           className="w-full"
           style={{
-            border: 'none',
+            borderRadius: 0,
+            borderTop: 'none',
+            borderLeft: 'none',
+            borderRight: 'none',
+
             boxShadow: 'none'
           }}
         />

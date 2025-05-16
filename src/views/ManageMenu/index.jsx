@@ -4,8 +4,7 @@ import * as XLSX from 'xlsx';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { CompactSelection, GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
-import UsersAction from './action/UsersAction';
-import RolesUsersMaster from './table/RoleUsersMaster';
+import RolesUsersMaster from './table/RoleMenuMaster';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
 import { message, Spin } from 'antd';
 import useDynamicFilter from 'utils/hooks/useDynamicFilter';
@@ -19,11 +18,13 @@ import { SearchBy } from 'services/ManageUsers/SearchBy';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import useConfirmDialog from 'utils/hooks/useConfirmDialog';
 import { DeleteByService } from 'services/ManageUsers/DeleteByService';
+import UsersAction from 'views/ManageUsers/action/UsersAction';
+import RoleMenuMaster from './table/RoleMenuMaster';
 
 
-// ==============================|| ACCOUNT PRODUCT PAGE ||============================== //
+// ==============================|| MENU PAGE ||============================== //
 
-const ManageUsers = ({ canCreate }) => {
+const ManageMenu = ({ canCreate }) => {
   const { t } = useTranslation();
   const { notify, contextHolder } = useNotify();
   const { spinning, percent, showLoader, hideLoader } = useFullscreenLoading();
@@ -145,7 +146,7 @@ const ManageUsers = ({ canCreate }) => {
     [cols, setGridData, setNumRows, setAddedRowsRoles, numRowsToAddRoles]
   );
 
-  const defaultColsUsers = useMemo(() => [
+  const defaultColsMenu = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -173,8 +174,8 @@ const ManageUsers = ({ canCreate }) => {
       }
     },
     {
-      title: t('Tên đăng nhập'),
-      id: 'username',
+      title: t('Khóa'),
+      id: 'key',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -186,8 +187,8 @@ const ManageUsers = ({ canCreate }) => {
       }
     },
     {
-      title: t('Email'),
-      id: 'email',
+      title: t('Biểu tượng'),
+      id: 'icon',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -199,9 +200,9 @@ const ManageUsers = ({ canCreate }) => {
       }
     },
     {
-      title: t('Mật khẩu'),
-      id: 'password',
-      kind: 'Custom',
+      title: t('Tên menu'),
+      id: 'label',
+      kind: 'text',
       readonly: false,
       width: 200,
       hasMenu: true,
@@ -264,8 +265,8 @@ const ManageUsers = ({ canCreate }) => {
       }
     },
     {
-      title: t('Tài khoản không hết hạn'),
-      id: 'accountNonExpired',
+      title: t('Có phải là menu con'),
+      id: 'isChildren',
       kind: 'Boolean',
       readonly: false,
       width: 200,
@@ -277,9 +278,9 @@ const ManageUsers = ({ canCreate }) => {
       }
     },
     {
-      title: t('Tài khoản khóa'),
-      id: 'accountNonLocked',
-      kind: 'Boolean',
+      title: t('Khóa menu cha'),
+      id: 'keyParent',
+      kind: 'Custom',
       readonly: false,
       width: 200,
       hasMenu: true,
@@ -290,22 +291,22 @@ const ManageUsers = ({ canCreate }) => {
       }
     },
     {
-      title: t('Đang hoạt động'),
-      id: 'active',
-      kind: 'Boolean',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Hết hạn khóa bảo mật'),
-      id: 'credentialsNonExpired',
+      title: t('Component'),
+      id: 'component',
       kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Quyền hạn'),
+      id: 'permission',
+      kind: 'Custom',
       readonly: false,
       width: 200,
       hasMenu: true,
@@ -316,87 +317,115 @@ const ManageUsers = ({ canCreate }) => {
       }
     },
 
-    {
-      title: t('Đã được tạo'),
-      id: 'justCreated',
-      kind: 'Boolean',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Lần cuối đăng nhập không thành công'),
-      id: 'lastLoginFalures',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Lần đăng nhập'),
-      id: 'lastLoginTime',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Tổng đăng nhập lỗi'),
-      id: 'totalLoginFailures',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
+    
   ]);
 
-  const [colsUsers, setColsUsers] = useState(() =>
+  const [colsMenu, setColsMenu] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_USERS_LIST',
-      defaultColsUsers.filter((col) => col.visible)
+      'S_ERP_COLS_PAGE_MENU',
+      defaultColsMenu.filter((col) => col.visible)
     )
   );
-  const [gridDataUsers, setGridDataUsers] = useState([]);
-  const [numRowsUsers, setNumRowsUsers] = useState(0);
-  const [numRowsToAddUsers, setNumRowsToAddUsers] = useState(null);
-  const [addedRowsUsers, setAddedRowsUsers] = useState([]);
-  const [editedRowsUsers, setEditedRowsUsers] = useState([]);
+  const [gridDataMenu, setGridDataMenu] = useState([]);
+  const [numRowsMenu, setNumRowsMenu] = useState(0);
+  const [numRowsToAddMenu, setNumRowsToAddMenu] = useState(null);
+  const [addedRowsMenu, setAddedRowsMenu] = useState([]);
+  const [editedRowsMenu, setEditedRowsMenu] = useState([]);
 
-  const handleRowAppendUsers = useCallback(
+  const handleRowAppendMenu = useCallback(
     (numRowsToAdd) => {
       if (canCreate === false) {
         message.warning('Bạn không có quyền thêm dữ liệu');
         return;
       }
-      onRowAppended(colsUsers, setGridDataUsers, setNumRowsUsers, setAddedRowsUsers, numRowsToAdd, numRowsToAddUsers);
+      onRowAppended(colsMenu, setGridDataMenu, setNumRowsMenu, setAddedRowsMenu, numRowsToAdd, numRowsToAddMenu);
     },
-    [colsUsers, setGridDataUsers, setNumRowsUsers, setAddedRowsUsers, numRowsToAddUsers]
+    [colsMenu, setGridDataMenu, setNumRowsMenu, setAddedRowsMenu, numRowsToAddMenu]
+  );
+
+  const defaultColsAuthor = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+    {
+      title: t('id'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã phân quyền'),
+      id: 'code',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Tên phân quyền'),
+      id: 'name',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    
+  ]);
+
+  const [colsAuthor, setColsAuthor] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_ERP_COLS_PAGE_AUTHOR',
+      defaultColsAuthor.filter((col) => col.visible)
+    )
+  );
+  const [gridDataAuthor, setGridDataAuthor] = useState([]);
+  const [numRowsAuthor, setNumRowsAuthor] = useState(0);
+  const [numRowsToAddAuthor, setNumRowsToAddAuthor] = useState(null);
+  const [addedRowsAuthor, setAddedRowsAuthor] = useState([]);
+  const [editedRowsAuthor, setEditedRowsAuthor] = useState([]);
+
+  const handleRowAppendAuthor = useCallback(
+    (numRowsToAdd) => {
+      if (canCreate === false) {
+        message.warning('Bạn không có quyền thêm dữ liệu');
+        return;
+      }
+      onRowAppended(colsAuthor, setGridDataAuthor, setNumRowsAuthor, setAddedRowsAuthor, numRowsToAdd, numRowsToAddAuthor);
+    },
+    [colsAuthor, setGridDataAuthor, setNumRowsAuthor, setAddedRowsAuthor, numRowsToAddAuthor]
   );
 
   const fieldsToTrack = ['Select', 'BizUnitName', 'BizUnit'];
 
-  const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridDataUsers, fieldsToTrack);
+  const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridDataMenu, fieldsToTrack);
 
   const [count, setCount] = useState(0);
   const lastWordEntryRef = useRef(null);
@@ -480,8 +509,8 @@ const ManageUsers = ({ canCreate }) => {
       return;
     }
 
-    const resulU = filterAndSelectColumns(gridDataUsers, commonColumns, 'U');
-    const resulA = filterAndSelectColumns(gridDataUsers, commonColumns, 'A');
+    const resulU = filterAndSelectColumns(gridDataMenu, commonColumns, 'U');
+    const resulA = filterAndSelectColumns(gridDataMenu, commonColumns, 'A');
 
     const resulURoles = filterAndSelectColumns(gridData, commonColumnsRoles, 'U');
     const resulARoles = filterAndSelectColumns(gridData, commonColumnsRoles, 'A');
@@ -526,7 +555,7 @@ const ManageUsers = ({ canCreate }) => {
         if (result?.success && result.data?.data) {
           const newData = result.data.data;
           updateGridData(newData);
-          setEditedRowsUsers([]);
+          setEditedRowsMenu([]);
           hideLoader();
           notify({
             type: 'error',
@@ -553,7 +582,7 @@ const ManageUsers = ({ canCreate }) => {
       setIsSent(false);
       hideLoader();
     }
-  }, [editedRowsUsers]);
+  }, [editedRowsMenu]);
 
   const onClickDelete = useCallback(() => {
     showConfirm({
@@ -641,8 +670,8 @@ const ManageUsers = ({ canCreate }) => {
         Status: 'A',
       };
     })
-    setGridDataUsers(dataAddStatus);
-    setNumRowsUsers(dataAddStatus.length);
+    setGridDataMenu(dataAddStatus);
+    setNumRowsMenu(dataAddStatus.length);
   
     return false;
   };
@@ -695,7 +724,7 @@ const ManageUsers = ({ canCreate }) => {
     try {
       const result = await getUserByRole(data)
       if (result?.success && result.data?.data) {
-        setGridDataUsers(result.data.data)
+        setGridDataMenu(result.data.data)
       } else {
         notify({
           type: 'error',
@@ -758,7 +787,7 @@ const ManageUsers = ({ canCreate }) => {
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty(),
   })
-  const onCellClickedUser = useCallback(
+  const onCellClickedMenu = useCallback(
     (cell, event) => {
       let rowIndex
 
@@ -780,8 +809,8 @@ const ManageUsers = ({ canCreate }) => {
         return
       }
 
-      if (rowIndex >= 0 && rowIndex < gridDataUsers.length) {
-        const rowData = gridDataUsers[rowIndex]
+      if (rowIndex >= 0 && rowIndex < gridDataMenu.length) {
+        const rowData = gridDataMenu[rowIndex]
 
         const data = [
           {
@@ -806,11 +835,11 @@ const ManageUsers = ({ canCreate }) => {
 
       for (let i = start; i <= end; i++) {
         if (gridData[i]) {
-          rows.push(gridDataUsers[i])
+          rows.push(gridDataMenu[i])
 
-          setGridDataUsers((prev) => {
+          setGridDataMenu((prev) => {
             const newData = [...prev]
-            const product = gridDataUsers[i]
+            const product = gridDataMenu[i]
             
             if(product.id){
               product['Status'] = 'U'
@@ -818,7 +847,90 @@ const ManageUsers = ({ canCreate }) => {
               product['Status'] = 'A'
             }
 
-            setEditedRowsUsers((prevEditedRows) =>
+            setEditedRowsMenu((prevEditedRows) =>
+              updateEditedRows(prevEditedRows, product, newData, ''),
+            )
+      
+            return newData
+          })
+        }
+      }
+    })
+
+    return rows
+  }
+
+  const [isMinusClickedAuthor, setIsMinusClickedAuthor] = useState(false)
+  const [lastClickedCellAuthor, setLastClickedCellAuthor] = useState(null)
+  const [clickedRowDataAuthor, setClickedRowDataAuthor] = useState(null)
+  const [selectedAuthor, setSelectAuthor] = useState([])
+
+  const [selectionAuthor, setSelectionAuthor] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty(),
+  })
+
+  const onCellClickedAuthor = useCallback(
+    (cell, event) => {
+      let rowIndex
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1]
+        setIsMinusClickedAuthor(true)
+      } else {
+        rowIndex = cell[1]
+        setIsMinusClickedAuthor(false)
+      }
+
+      if (
+        lastClickedCellAuthor &&
+        lastClickedCellAuthor[0] === cell[0] &&
+        lastClickedCellAuthor[1] === cell[1]
+      ) {
+        setLastClickedCellAuthor(null)
+        setClickedRowDataAuthor(null)
+        return
+      }
+
+      if (rowIndex >= 0 && rowIndex < gridDataAuthor.length) {
+        const rowData = gridDataAuthor[rowIndex]
+
+        const data = [
+          {
+            id: rowData.key,
+            roleName: rowData.ItemNo,
+            
+          },
+        ]
+        selectedAuthor(getSelectedRowsAuthor())
+        
+      }
+    },
+    [gridDataAuthor],
+  )
+
+  const getSelectedRowsAuthor = () => {
+    const selectedRows = selectionAuthor.rows.items
+    let rows = []
+    selectedRows.forEach((range) => {
+      const start = range[0]
+      const end = range[1] - 1
+
+      for (let i = start; i <= end; i++) {
+        if (gridData[i]) {
+          rows.push(gridDataAuthor[i])
+
+          setGridDataMenu((prev) => {
+            const newData = [...prev]
+            const product = gridDataAuthor[i]
+            
+            if(product.id){
+              product['Status'] = 'U'
+            }else{
+              product['Status'] = 'A'
+            }
+
+            setEditedRowsMenu((prevEditedRows) =>
               updateEditedRows(prevEditedRows, product, newData, ''),
             )
       
@@ -833,14 +945,14 @@ const ManageUsers = ({ canCreate }) => {
 
   return (
     <>
-      <div className="h-full pt-4 ">
+      <div className="h-full pt-4">
         <UsersAction 
-        title={'Đăng ký tài khoản'} 
+        title={'Đăng ký menu'} 
         onClickSave={onClickSave} 
         onClickDelete = {onClickDelete}
         onClickImport = {onClickImport}
         />
-        <RolesUsersMaster
+        <RoleMenuMaster
           defaultCols={defaultCols}
           cols={cols}
           setCols={setCols}
@@ -852,16 +964,27 @@ const ManageUsers = ({ canCreate }) => {
           setEditedRowsRoles={setEditedRowsRoles}
           onCellClicked={onCellClicked}
 
-          defaultColsUsers={defaultColsUsers}
-          gridDataUsers={gridDataUsers}
-          setGridDataUsers={setGridDataUsers}
-          colsUsers={colsUsers}
-          setColsUsers={setColsUsers}
-          numRowsUsers={numRowsUsers}
-          setNumRowsUsers={setNumRowsUsers}
-          handleRowAppendUsers={handleRowAppendUsers}
-          setEditedRowsUsers={setEditedRowsUsers}
-          onCellClickedUser = {onCellClickedUser}
+          defaultcolsMenu={defaultColsMenu}
+          gridDataMenu={gridDataMenu}
+          setGridDataMenu={setGridDataMenu}
+          colsMenu={colsMenu}
+          setColsMenu={setColsMenu}
+          numRowsMenu={numRowsMenu}
+          setNumRowsMenu={setNumRowsMenu}
+          handleRowAppendMenu={handleRowAppendMenu}
+          setEditedRowsMenu={setEditedRowsMenu}
+          onCellClickedMenu = {onCellClickedMenu}
+
+          defaultColsAuthor={defaultColsAuthor}
+          gridDataAuthor={gridDataAuthor}
+          setGridDataAuthor={setGridDataAuthor}
+          colsAuthor={colsAuthor}
+          setColsAuthor={setColsAuthor}
+          numRowsAuthor={numRowsAuthor}
+          setNumRowsAuthor={setNumRowsAuthor}
+          handleRowAppendAuthor={handleRowAppendAuthor}
+          setEditedRowsAuthor={setEditedRowsAuthor}
+          onCellClickedAuthor = {onCellClickedAuthor}
         />
       </div>
       {contextHolder}
@@ -870,4 +993,4 @@ const ManageUsers = ({ canCreate }) => {
   );
 };
 
-export default ManageUsers;
+export default ManageMenu;

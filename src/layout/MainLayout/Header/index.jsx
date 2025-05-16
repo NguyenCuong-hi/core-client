@@ -6,6 +6,7 @@ import DynamicTabs from './DynamicTabs';
 import logo from 'assets/images/logo.svg';
 import NotificationSection from './NotificationSection';
 import menuItems from 'menu-item';
+import ProfileSection from './ProfileSection';
 
 const { Header: AntHeader } = Layout;
 
@@ -33,6 +34,7 @@ const Header = ({ drawerToggle }) => {
 
       <div className="flex items-center gap-2">
         <NotificationSection />
+        <ProfileSection />
       </div>
     </AntHeader>
   );

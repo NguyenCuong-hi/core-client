@@ -421,14 +421,18 @@ function UsersRegisTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center ">
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <div className="flex items-center justify-end ">
-          <Input.Search
+          <Input
             placeholder="Search"
             allowClear
             // onSearch={onSearch}
-            style={{ width: 300 }}
+            style={{ width: 300 , 
+              borderRadius: '0',
+              borderTop: '0',
+              borderRight: '0',
+              boxShadow: 'none'}}
           />
         </div>
         <ContextMenuWrapper

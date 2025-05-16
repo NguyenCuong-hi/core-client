@@ -9,7 +9,7 @@ const DynamicTabContent = () => {
   // const { permissions: userPermissions } = useSelector((state) => state.auth);
 
   return (
-    <div style={{ height: 'calc(100vh - 110px)', position: 'relative' }}>
+    <div style={{ height: 'calc(100vh - 75px)', position: 'relative' }}>
       {tabList.map((tab) => {
         const Component = TabComponents[tab.component];
         const isActive = tab.key === activeTabKey;
