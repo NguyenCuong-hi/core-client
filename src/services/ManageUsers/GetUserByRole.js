@@ -3,22 +3,20 @@ import { HOST_API_SERVER } from 'services/config';
 import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 
-export const CreateByService = async (users) => {
+export const getUserByRole = async (data) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/users`,
-      {
-        users
-      },
+      `${HOST_API_SERVER}/get-users-by-role`,
+      data,
       {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         },
       },
     );
-
+    
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,

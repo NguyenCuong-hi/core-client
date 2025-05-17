@@ -165,7 +165,7 @@ function UsersRegisTable({
         }
       }
 
-      if (columnKey === 'createdDate' || columnKey === 'modifiedDate') {
+      if (columnKey === 'createDate' || columnKey === 'modifyDate') {
         return {
           kind: GridCellKind.Text,
           data: value,

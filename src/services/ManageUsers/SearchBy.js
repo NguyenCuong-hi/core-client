@@ -5,31 +5,27 @@ import { accessToken } from "utils/cookies/CookiesUtils";
 export const SearchBy = async (search) => {
   try {
     const token = accessToken();
-
-    const response = await axios.get(
-      `${HOST_API_SERVER}/page`,
-      search,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
+    const response = await axios.get(`${HOST_API_SERVER}/roles/page`,{
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
-        data: response.data,
+        data: response.data.data.content,
       };
     } else {
       return {
         success: false,
-        message: response.data.message || "ERROR_DATA",
+        message: response.data.message || ERROR_MESSAGES ,
       };
     }
+
   } catch (error) {
-    console.log(error)
+    console.error(error);
 
     return {
       success: false,

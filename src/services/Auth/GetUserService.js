@@ -1,5 +1,6 @@
 import axios from "axios";
 import { HOST_API_SERVER } from "services/config";
+import { ERROR_MESSAGES } from "utils/constans/sysConstans";
 import { accessToken } from "utils/cookies/CookiesUtils";
 
 export const GetUserService = async () => {
@@ -20,13 +21,13 @@ export const GetUserService = async () => {
     } else {
       return {
         success: false,
-        message: response.data.message ,
+        message: response.error || ERROR_MESSAGES ,
       };
     }
   } catch (error) {
     return {
       success: false,
-      message: error.response
+      message: error.response || ERROR_MESSAGES
     };
   }
 };

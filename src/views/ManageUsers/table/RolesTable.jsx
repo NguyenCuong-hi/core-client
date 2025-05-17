@@ -104,6 +104,7 @@ function RolesTable({
     selectColumn: false
   });
 
+  console.log('gridData', gridData);
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
@@ -161,11 +162,11 @@ function RolesTable({
         };
       }
 
-      if (columnKey === 'TestEndDate' || columnKey === 'QCDate' || columnKey === 'DelvDate') {
+      if (columnKey === 'createDate' || columnKey === 'modifyDate') {
         return {
           kind: GridCellKind.Text,
           data: value,
-          displayData: formatDate(value) || '',
+          displayData: formatDate(value) || value,
           readonly: true,
           allowOverlay: true,
           hasMenu: false

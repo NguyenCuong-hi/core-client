@@ -19,6 +19,7 @@ import { SearchBy } from 'services/ManageUsers/SearchBy';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import useConfirmDialog from 'utils/hooks/useConfirmDialog';
 import { DeleteByService } from 'services/ManageUsers/DeleteByService';
+import { getUserByRole } from 'services/ManageUsers/GetUserByRole';
 
 
 // ==============================|| ACCOUNT PRODUCT PAGE ||============================== //
@@ -82,7 +83,7 @@ const ManageUsers = ({ canCreate }) => {
     },
     {
       title: t('Ngày tạo'),
-      id: 'createdDate',
+      id: 'createDate',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -95,7 +96,7 @@ const ManageUsers = ({ canCreate }) => {
     },
     {
       title: t('Ngày chỉnh sửa'),
-      id: 'modifiedDate',
+      id: 'modifyDate',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -405,9 +406,6 @@ const ManageUsers = ({ canCreate }) => {
   //   Load
   const fetchData = useCallback(async () => {
     if (!isAPISuccess) return
-
-    console.log('isAPISuccess', isAPISuccess)
-
     setIsAPISuccess(false)
     try {
 
@@ -420,8 +418,7 @@ const ManageUsers = ({ canCreate }) => {
       ]
 
       const response = await SearchBy(data)
-
-      const fetchedData = response.data.data || []
+      const fetchedData = response.data || []
       setGridData(fetchedData)
       setNumRows(fetchedData.length)
     } catch (error) {
@@ -436,7 +433,6 @@ const ManageUsers = ({ canCreate }) => {
   ]);
 
   useEffect(() => {
-    
     fetchData()
   },[] );
 
@@ -487,6 +483,15 @@ const ManageUsers = ({ canCreate }) => {
     const resulARoles = filterAndSelectColumns(gridData, commonColumnsRoles, 'A');
     const validationMessage = validateCheckColumns([...resulU, ...resulA], [...commonColumns, ...commonColumns], requiredColumns);
 
+    const users = resulA.map((item) => {
+      return {
+        ...item,
+        roles: [clickedRowData.name],
+        confirmPassword: item.confirmPassword,
+      };
+    });
+
+
     if (validationMessage !== true) {
       message.warning(validationMessage);
       return;
@@ -508,8 +513,8 @@ const ManageUsers = ({ canCreate }) => {
 
     try {
       const promises = [];
-      if (resulA.length > 0) promises.push(CreateByService(resulARoles, resulA));
-      if (resulU.length > 0) promises.push(UpdateByService(resulARoles, resulU));
+      if (resulA.length > 0) promises.push(CreateByService(users));
+      if (resulU.length > 0) promises.push(UpdateByService(resulU));
 
       const results = await Promise.all(promises);
 
@@ -651,6 +656,7 @@ const ManageUsers = ({ canCreate }) => {
   const [isMinusClicked, setIsMinusClicked] = useState(false)
   const [lastClickedCell, setLastClickedCell] = useState(null)
   const [clickedRowData, setClickedRowData] = useState(null)
+  const [selectedRoles, setSelectRoles] = useState([])
 
   const onCellClicked = useCallback(
     (cell, event) => {
@@ -685,7 +691,8 @@ const ManageUsers = ({ canCreate }) => {
           },
         ]
         fetchUserByRoles(data)
-        
+        setClickedRowData(rowData)
+
       }
     },
     [gridData],
@@ -694,8 +701,8 @@ const ManageUsers = ({ canCreate }) => {
   const fetchUserByRoles = async (data) => {
     try {
       const result = await getUserByRole(data)
-      if (result?.success && result.data?.data) {
-        setGridDataUsers(result.data.data)
+      if (result?.success && result?.data) {
+        setGridDataUsers(result?.data)
       } else {
         notify({
           type: 'error',
