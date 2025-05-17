@@ -6,10 +6,10 @@ import { accessToken } from 'utils/cookies/CookiesUtils';
 export const getUserByRole = async (data) => {
   try {
     const token = accessToken()
-    const response = await axios.post(
-      `${HOST_API_SERVER}/get-users-by-role`,
-      data,
-      {
+    const response = await axios.get(
+      `${HOST_API_SERVER}/users/page`,
+
+      { params: data,
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

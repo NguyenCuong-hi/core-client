@@ -20,6 +20,9 @@ import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import useConfirmDialog from 'utils/hooks/useConfirmDialog';
 import { DeleteByService } from 'services/ManageUsers/DeleteByService';
 import { getUserByRole } from 'services/ManageUsers/GetUserByRole';
+import { UpdateRoleByService } from 'services/ManageUsers/UpdateRoleByService';
+import { CreateRoleByService } from 'services/ManageUsers/CreateRoleByService';
+import { Create } from '@mui/icons-material';
 
 
 // ==============================|| ACCOUNT PRODUCT PAGE ||============================== //
@@ -483,14 +486,23 @@ const ManageUsers = ({ canCreate }) => {
     const resulARoles = filterAndSelectColumns(gridData, commonColumnsRoles, 'A');
     const validationMessage = validateCheckColumns([...resulU, ...resulA], [...commonColumns, ...commonColumns], requiredColumns);
 
-    const users = resulA.map((item) => {
+    const usersNew = resulA.map((item) => {
       return {
         ...item,
         roles: [clickedRowData.name],
-        confirmPassword: item.confirmPassword,
+        confirmPassword: item.password,
+        userAuthorities: ['USER.CREATE']
       };
     });
 
+    const usersEdit = resulU.map((item) => {
+      return {
+        ...item,
+        roles: [clickedRowData.name],
+        confirmPassword: item.password,
+        userAuthorities: ['USER.CREATE']
+      };
+    });
 
     if (validationMessage !== true) {
       message.warning(validationMessage);
@@ -513,8 +525,10 @@ const ManageUsers = ({ canCreate }) => {
 
     try {
       const promises = [];
-      if (resulA.length > 0) promises.push(CreateByService(users));
-      if (resulU.length > 0) promises.push(UpdateByService(resulU));
+      if (usersNew.length > 0) promises.push(CreateByService(usersNew));
+      if (usersNew.length > 0) promises.push(UpdateByService(usersEdit));
+      if(resulURoles.length > 0) promises.push(UpdateRoleByService(resulURoles));
+      if(resulARoles.length > 0) promises.push(CreateRoleByService(resulARoles));
 
       const results = await Promise.all(promises);
 
@@ -683,19 +697,19 @@ const ManageUsers = ({ canCreate }) => {
       if (rowIndex >= 0 && rowIndex < gridData.length) {
         const rowData = gridData[rowIndex]
 
-        const data = [
-          {
-            id: rowData.ItemSeq,
-            roleName: rowData.ItemNo,
-            
-          },
-        ]
+        const data =
+        {
+          roleCode: rowData.name,
+          page: 0,
+          size: 10
+
+        }
         fetchUserByRoles(data)
         setClickedRowData(rowData)
 
       }
     },
-    [gridData],
+    [gridData, gridDataUsers,],
   )
 
   const fetchUserByRoles = async (data) => {
@@ -703,6 +717,7 @@ const ManageUsers = ({ canCreate }) => {
       const result = await getUserByRole(data)
       if (result?.success && result?.data) {
         setGridDataUsers(result?.data)
+        setNumRowsUsers(result?.data.length)
       } else {
         notify({
           type: 'error',
@@ -731,7 +746,6 @@ const ManageUsers = ({ canCreate }) => {
         if (gridData[i]) {
           rows.push(gridData[i])
 
-          
           setGridData((prev) => {
             const newData = [...prev]
             const product = gridData[i]

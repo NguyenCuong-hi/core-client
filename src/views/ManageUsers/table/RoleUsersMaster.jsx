@@ -66,7 +66,7 @@ const RolesUsersMaster = ({
               setNumRows={setNumRowsUsers}
               handleRowAppend={handleRowAppendUsers}
               setEditedRows={setEditedRowsUsers}
-              onCellClicked = {onCellClickedUser}
+              onCellClicked={onCellClickedUser}
             />
           </SplitterPanel>
         </Splitter>
