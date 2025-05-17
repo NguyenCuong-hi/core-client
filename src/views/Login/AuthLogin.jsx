@@ -31,14 +31,6 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
   };
 
   const onSubmit = async (values, { setSubmitting }) => {
-    // setLoading(true);
-    // setTimeout(() => {
-    //   console.log('Login Info:', values);
-    //   setLoading(false);
-    //   setSubmitting(false);
-    //   handleLoginSuccess();
-    // }, 1000);
-
 
     try {
       const data = {
@@ -47,14 +39,16 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
       }
 
       const loginResponse = await AuthLoginService(data);
-      console.log('loginResponse', loginResponse)
+      setLoading(true);
       if (loginResponse.success) {
-        Cookies.set('token', loginResponse.token)
+        Cookies.set('token', loginResponse.data.access_token)
         const user = await GetUserService();
-        console.log('user', user)
-        localStorage.setItem('username', JSON.stringify(user.data.username))
-        localStorage.setItem('role', JSON.stringify(user.data.role))
-        localStorage.setItem('menu', JSON.stringify(user.data.menu))
+        localStorage.setItem('username', JSON.stringify(user.data.data.username))
+        localStorage.setItem('role', JSON.stringify(user.data.data.roles))
+        localStorage.setItem('menu', JSON.stringify(user.data.data.menuItems))
+        setLoading(false);
+        setSubmitting(false);
+        handleLoginSuccess();
       }
     } catch (error) {
       console.error(error); 

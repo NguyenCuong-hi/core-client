@@ -14,7 +14,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
 
   const siderStyle = {
     overflowY: 'scroll',
-    scrollbarWidth: 'none',
     height: '100vh',
     position: 'sticky',
     insetInlineStart: 0,

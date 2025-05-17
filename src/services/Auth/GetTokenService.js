@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { HOST_API_SERVER } from 'services/config';
+import { HOST_API_SERVER_AUTH } from 'services/config';
 
 export const AuthLoginService = async (data) => {
   try {
@@ -11,7 +11,7 @@ export const AuthLoginService = async (data) => {
     formData.append('grant_type', 'password');
 
     const response = await axios.post(
-      `${HOST_API_SERVER}/oauth/token`,
+      `${HOST_API_SERVER_AUTH}/oauth/token`,
       formData,
       {
         headers: {
@@ -19,7 +19,6 @@ export const AuthLoginService = async (data) => {
         },
       },
     );
-    console.log('response', response)
 
     if (response.status === 200 || response.status === 201) {
       return {
@@ -29,11 +28,10 @@ export const AuthLoginService = async (data) => {
     } else {
       return {
         success: false,
-        message: response.data.message,
+        message: response.error,
       };
     }
   } catch (error) {
-    console.log(error)
     return {
       success: false,
       message: error.response
