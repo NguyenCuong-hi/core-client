@@ -1,16 +1,16 @@
 import axios from 'axios';
 import { HOST_API_SERVER } from 'services/config';
-import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 
-export const CreateByService = async (users) => {
+export const DeleteByService = async (role, users) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/users/create-users`,
-      
+      `${HOST_API_SERVER}/users-manage`,
+      {
+        role,
         users
-      ,
+      },
       {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -22,18 +22,21 @@ export const CreateByService = async (users) => {
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
-        data: response.data.data,
+        data: response.data,
       };
     } else {
       return {
         success: false,
-        message: response.error || ERROR_MESSAGES,
+        message: response.data.message || "ERROR_DATA",
       };
     }
   } catch (error) {
     return {
+      
       success: false,
-      message: error.message || ERROR_MESSAGES,
+      message: error.response
+        ? error.response.data.message
+        : error.message,
     };
   }
 };

@@ -47,7 +47,7 @@ function AuthorityRegistTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_AUTHOR', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -329,7 +329,7 @@ function AuthorityRegistTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', newHidden);
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_AUTHOR', newHidden);
       return newHidden;
     });
   };
@@ -338,7 +338,7 @@ function AuthorityRegistTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_AUTHOR', uniqueCols);
       return uniqueCols;
     });
   };
@@ -350,7 +350,7 @@ function AuthorityRegistTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_AUTHOR', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -361,8 +361,8 @@ function AuthorityRegistTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_USERS_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_USERS_LIST');
+    localStorage.removeItem('S_ERP_COLS_PAGE_AUTHOR');
+    localStorage.removeItem('H_ERP_COLS_PAGE_AUTHOR');
     setShowMenu(null);
   };
 
@@ -371,14 +371,14 @@ function AuthorityRegistTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', updatedCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_AUTHOR', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_AUTHOR', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -394,23 +394,23 @@ function AuthorityRegistTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_AUTHOR', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_AUTHOR', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_USERS_LIST', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_AUTHOR', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_AUTHOR', newHidden);
         return newHidden;
       });
     }
