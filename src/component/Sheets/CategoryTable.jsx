@@ -338,8 +338,8 @@ function CategoryTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center ">
+      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-auto ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },

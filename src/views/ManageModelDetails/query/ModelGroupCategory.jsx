@@ -26,13 +26,8 @@ const ModelGroupCategory = ({
     
   };
   return (
-    <div className="bg-slate-50 rounded-md overflow-auto mb-4 pb-10">
-      <Typography.Title className="border-b-1 uppercase border-gray-400 m-2" style={{ fontSize: 'medium', color: '#6b7280' }}>
-        Đăng ký thông tin danh mục sản phẩm
-      </Typography.Title>
-      <div className="bg-slate-50 rounded-md h-95 ">
+      <div className="bg-slate-50  h-[calc(100vh-280px)]">
         <CategoryTable
-          
           defaultCols={defaultCols}
           gridData={gridData}
           setGridData={setGridData}
@@ -45,7 +40,7 @@ const ModelGroupCategory = ({
           handleRowAppend = {handleRowAppend}
         />
       </div>
-    </div>
+
   );
 };
 

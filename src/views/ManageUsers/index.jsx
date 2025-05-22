@@ -21,7 +21,7 @@ import useConfirmDialog from 'utils/hooks/useConfirmDialog';
 import { DeleteByService } from 'services/ManageUsers/DeleteByService';
 import { UpdateRoleByService } from 'services/ManageUsers/UpdateRoleByService';
 import { CreateRoleByService } from 'services/ManageUsers/CreateRoleByService';
-import { getUserByRole } from 'services/ManageMenu/GetMenuByRole';
+import { getUserByRole } from 'services/ManageUsers/GetUserByRole';
 
 
 // ==============================|| ACCOUNT PRODUCT PAGE ||============================== //
@@ -216,7 +216,7 @@ const ManageUsers = ({ canCreate }) => {
     },
     {
       title: t('Ngày tạo'),
-      id: 'createdDate',
+      id: 'createDate',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -229,7 +229,7 @@ const ManageUsers = ({ canCreate }) => {
     },
     {
       title: t('Người tạo'),
-      id: 'createdBy',
+      id: 'createBy',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -242,7 +242,7 @@ const ManageUsers = ({ canCreate }) => {
     },
     {
       title: t('Ngày thay đổi'),
-      id: 'modifiedDate',
+      id: 'modifyDate',
       kind: 'Text',
       readonly: false,
       width: 200,

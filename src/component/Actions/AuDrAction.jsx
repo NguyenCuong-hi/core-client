@@ -17,35 +17,29 @@ const AuDrAction = ({
 
 }) => {
   return (
-    <div className="flex justify-between items-center py-4">
-      <Typography.Title level={4} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight: 'bold' }}>
+    <div className="flex justify-between items-center py-1">
+      <Typography.Title level={5} className="!mb-0 uppercase" style={{ color: '#6b7280', fontWeight: 'bold', paddingLeft: '10px' }}>
         {titlePage}
       </Typography.Title>
 
       <div className="flex items-center gap-2">
 
         <Button
-          type="primary"
-          icon={<SaveOutlined />}
+          type="text"
+          icon={<SaveOutlined style={{ color: '#10b981' }}/>}
           onClick={onClickSave}
         >
           Lưu
         </Button>
-        {/* <Button
-          type="primary"
-          icon={<UpdateOutlined />}
-          onclick={onClickUpdate}
-        >
-          Sửa
-        </Button> */}
+
         <Button
-          type="primary"
-          icon={<DeleteOutlined />}
+          type="text"
+          icon={<DeleteOutlined style={{ color: '#ef4444' }} />}
           onclick={onClickDelete}>
           Xóa
         </Button>
         <Button
-          type="primary"
+          type="text"
           icon={<RefreshOutlined />}
           onclick={onClickReset}>
           Làm mới

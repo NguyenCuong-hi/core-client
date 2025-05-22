@@ -9,12 +9,17 @@ import ModelRouteSet from './query/ModelRouteSet';
 import ModelGroupCategory from './query/ModelGroupCategory';
 import AuDrAction from 'component/Actions/AuDrAction';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
-import { Form } from 'antd';
+import { Form, Menu, Spin } from 'antd';
+import { ApartmentOutlined, AppstoreAddOutlined, MonitorOutlined } from '@ant-design/icons';
+import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
+import { useNotify } from 'utils/hooks/onNotify';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
 const ManageModelPageDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const { t } = useTranslation();
+    const { notify, contextHolder } = useNotify();
+    const { spinning, percent, showLoader, hideLoader } = useFullscreenLoading();
 
   const defaultCols = useMemo(() => [
     {
@@ -205,53 +210,95 @@ const ManageModelPageDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       ...values,
       DatePeriod: values.DatePeriod?.format('YYYY-MM-DD') || null,
     };
-  
+
     console.log('Giá trị sau khi format:', formattedValues);
   }
 
+    const [checkPageA, setCheckPageA] = useState(false);
+    const [current, setCurrent] = useState('1');
 
   return (
     <>
-      <div className="h-full pt-4 pr-4 pl-4">
+      <div className="h-full pt-4">
         <AuDrAction
           titlePage={'Đăng ký chi tiết cấu hình sản phẩm'}
-          onClickDelete={() => {}}
+          onClickDelete={() => { }}
           onClickSave={() => formModelBasic.submit()}
-          onClickUpdate={() => {}}
-          onClickReset={() => {}}
+          onClickUpdate={() => { }}
+          onClickReset={() => { }}
         />
 
-        <ModelInfomationQuery 
+        <ModelInfomationQuery
           formModelBasic={formModelBasic}
           onFinish={onFinish}
         />
-        <ModelRouteSet
-          defaultCols={defaultCols}
-          gridData={gridData}
-          setGridData={setGridData}
-          cols={cols}
-          setCols={setCols}
-          numRows={numRows}
-          setNumRows={setNumRows}
-          defaultColsModels={defaultCols}
-          gridDataModels={gridData}
-          setGridDataModels={setGridData}
-          colsModels={cols}
-          setColsModels={setCols}
-          numRowsModels={numRows}
-          setNumRowsModels={setNumRows}
-        />
-        <ModelGroupCategory
-          defaultCols={defaultColsCategory}
-          gridData={gridDataCategory}
-          setGridData={setGridDataCategory}
-          cols={colsCategory}
-          setCols={setColsCategory}
-          numRows={numRowsCategory}
-          setNumRows={setNumRowsCategory}
-          handleRowAppend={handleRowAppend}
-        />
-      </div>
+            <Menu
+              mode="horizontal"
+              selectedKeys={[current]}
+              onClick={(e) => {
+                if (!checkPageA) {
+                  setCurrent(e.key);
+                } else {
+                  message.warning(t('870000042'));
+                }
+              }}
+              items={[
+                {
+                  key: '1',
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <ApartmentOutlined size={14} />
+                      {t('Đăng ký thông tin dây chuyền sản xuất')}
+                    </span>
+                  )
+                },
+                {
+                  key: '2',
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <AppstoreAddOutlined size={14} />
+                      {t('Đăng ký thông tin danh mục sản phẩm')}
+                    </span>
+                  )
+                }
+              ]}
+            />
+
+          {current === '1' && (
+            <ModelRouteSet
+              defaultCols={defaultCols}
+              gridData={gridData}
+              setGridData={setGridData}
+              cols={cols}
+              setCols={setCols}
+              numRows={numRows}
+              setNumRows={setNumRows}
+              defaultColsModels={defaultCols}
+              gridDataModels={gridData}
+              setGridDataModels={setGridData}
+              colsModels={cols}
+              setColsModels={setCols}
+              numRowsModels={numRows}
+              setNumRowsModels={setNumRows}
+            />
+          )}
+          {current === '2' && (
+            <ModelGroupCategory
+              defaultCols={defaultColsCategory}
+              gridData={gridDataCategory}
+              setGridData={setGridDataCategory}
+              cols={colsCategory}
+              setCols={setColsCategory}
+              numRows={numRowsCategory}
+              setNumRows={setNumRowsCategory}
+              handleRowAppend={handleRowAppend}
+            />
+          )}
+        </div>
+
+        {contextHolder}
+      <Spin spinning={spinning} percent={percent} fullscreen />
+
     </>
   );
 };
