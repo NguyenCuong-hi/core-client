@@ -19,10 +19,9 @@ import { SearchBy } from 'services/ManageUsers/SearchBy';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import useConfirmDialog from 'utils/hooks/useConfirmDialog';
 import { DeleteByService } from 'services/ManageUsers/DeleteByService';
-import { getUserByRole } from 'services/ManageUsers/GetUserByRole';
 import { UpdateRoleByService } from 'services/ManageUsers/UpdateRoleByService';
 import { CreateRoleByService } from 'services/ManageUsers/CreateRoleByService';
-import { Create } from '@mui/icons-material';
+import { getUserByRole } from 'services/ManageMenu/GetMenuByRole';
 
 
 // ==============================|| ACCOUNT PRODUCT PAGE ||============================== //
@@ -525,10 +524,10 @@ const ManageUsers = ({ canCreate }) => {
 
     try {
       const promises = [];
-      if (usersNew.length > 0) promises.push(CreateByService(usersNew));
-      if (usersNew.length > 0) promises.push(UpdateByService(usersEdit));
       if(resulURoles.length > 0) promises.push(UpdateRoleByService(resulURoles));
       if(resulARoles.length > 0) promises.push(CreateRoleByService(resulARoles));
+      if (usersNew.length > 0) promises.push(CreateByService(usersNew));
+      if (usersNew.length > 0) promises.push(UpdateByService(usersEdit));
 
       const results = await Promise.all(promises);
 

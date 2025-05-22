@@ -14,12 +14,14 @@ import { CreateByService } from 'services/ManageUsers/CreateByService';
 import { UpdateByService } from 'services/ManageUsers/UpdateByService';
 import { useNotify } from 'utils/hooks/onNotify';
 import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
-import { SearchBy } from 'services/ManageUsers/SearchBy';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import useConfirmDialog from 'utils/hooks/useConfirmDialog';
 import { DeleteByService } from 'services/ManageUsers/DeleteByService';
 import UsersAction from 'views/ManageUsers/action/UsersAction';
 import RoleMenuMaster from './table/RoleMenuMaster';
+import { SearchMenuBy } from 'services/ManageMenu/SearchMenuBy';
+import { SearchBy } from 'services/ManageUsers/SearchBy';
+import { SearchAuthoritiesBy } from 'services/ManageMenu/SearchAuthoritiesBy';
 
 
 // ==============================|| MENU PAGE ||============================== //
@@ -396,6 +398,58 @@ const ManageMenu = ({ canCreate }) => {
         disabled: true
       }
     },
+    {
+      title: t('Ngày tạo'),
+      id: 'createDate',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Người tạo'),
+      id: 'createdBy',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Ngày thay đổi'),
+      id: 'modifyDate',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Người thay đổi'),
+      id: 'modifiedBy',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
 
     
   ]);
@@ -432,7 +486,7 @@ const ManageMenu = ({ canCreate }) => {
   const [isSent, setIsSent] = useState(false);
 
   //   Load
-  const fetchData = useCallback(async () => {
+  const fetchDataRole = useCallback(async () => {
       if (!isAPISuccess) return
       setIsAPISuccess(false)
       try {
@@ -460,9 +514,67 @@ const ManageMenu = ({ canCreate }) => {
       
     ]);
 
+    const fetchDataMenu = useCallback(async () => {
+      if (!isAPISuccess) return
+      setIsAPISuccess(false)
+      try {
+  
+        const data = [
+          {
+            pageIndex: 1,
+            pageSize: 50,
+            keywork: '',
+          },
+        ]
+  
+        const response = await SearchMenuBy(data)
+        const fetchedData = response.data || []
+        setGridDataMenu(fetchedData)
+        setNumRowsMenu(fetchedData.length)
+      } catch (error) {
+        setGridDataMenu([])
+        setNumRowsMenu(0)
+      } finally {
+        setIsAPISuccess(true)
+      }
+    }, [
+      
+      
+    ]);
+
+    const fetchDataAuthor = useCallback(async () => {
+      if (!isAPISuccess) return
+      setIsAPISuccess(false)
+      try {
+  
+        const data = [
+          {
+            pageIndex: 1,
+            pageSize: 50,
+            keywork: '',
+          },
+        ]
+  
+        const response = await SearchAuthoritiesBy(data)
+        const fetchedData = response.data || []
+        setGridDataAuthor(fetchedData)
+        setNumRowsAuthor(fetchedData.length)
+      } catch (error) {
+        setGridDataAuthor([])
+        setNumRowsAuthor(0)
+      } finally {
+        setIsAPISuccess(true)
+      }
+    }, [
+      
+      
+    ]);
+
   useEffect(() => {
     
-    fetchData()
+    fetchDataRole()
+    fetchDataMenu()
+    fetchDataAuthor()
   },[] );
 
   //   Action
@@ -702,25 +814,28 @@ const ManageMenu = ({ canCreate }) => {
       if (rowIndex >= 0 && rowIndex < gridData.length) {
         const rowData = gridData[rowIndex]
 
-        const data = [
-          {
-            id: rowData.ItemSeq,
-            roleName: rowData.ItemNo,
-            
-          },
-        ]
-        fetchUserByRoles(data)
+        const data =
+        {
+          roleCode: rowData.name,
+          page: 0,
+          size: 10
+
+        }
+
+        fetchMenusByRoles(data)
+        setClickedRowData(rowData)
         
       }
     },
     [gridData],
   )
 
-  const fetchUserByRoles = async (data) => {
+  const fetchMenusByRoles = async (data) => {
     try {
-      const result = await getUserByRole(data)
-      if (result?.success && result.data?.data) {
-        setGridDataMenu(result.data.data)
+      const result = await SearchMenuBy(data)
+      if (result?.success && result?.data) {
+        setGridDataMenu(result.data)
+        setNumRowsMenu(result.data.length)
       } else {
         notify({
           type: 'error',

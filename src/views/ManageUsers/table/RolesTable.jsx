@@ -104,7 +104,6 @@ function RolesTable({
     selectColumn: false
   });
 
-  console.log('gridData', gridData);
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
