@@ -38,10 +38,8 @@ const ModelInfomationQuery = ({
   };
 
   return (
-    <div className="bg-slate-50 rounded-md overflow-auto">
-      <Typography.Title className="border-b-1 uppercase border-gray-400 m-2" style={{ fontSize: 'medium', color: '#6b7280' }}>
-        Đăng ký thông tin cơ bản
-      </Typography.Title>
+    <div className="bg-slate-50 ">
+
       <Form 
       form={formModelBasic}
       onFinish={onFinish}
