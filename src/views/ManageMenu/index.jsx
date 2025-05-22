@@ -433,36 +433,32 @@ const ManageMenu = ({ canCreate }) => {
 
   //   Load
   const fetchData = useCallback(async () => {
-    if (!isAPISuccess) return
-
-    console.log('isAPISuccess', isAPISuccess)
-
-    setIsAPISuccess(false)
-    try {
-
-      const data = [
-        {
-          pageIndex: 1,
-          pageSize: 50,
-          keywork: '',
-        },
-      ]
-
-      const response = await SearchBy(data)
-
-      const fetchedData = response.data.data || []
-      setGridData(fetchedData)
-      setNumRows(fetchedData.length)
-    } catch (error) {
-      setGridData([])
-      setNumRows(0)
-    } finally {
-      setIsAPISuccess(true)
-    }
-  }, [
-    
-    
-  ]);
+      if (!isAPISuccess) return
+      setIsAPISuccess(false)
+      try {
+  
+        const data = [
+          {
+            pageIndex: 1,
+            pageSize: 50,
+            keywork: '',
+          },
+        ]
+  
+        const response = await SearchBy(data)
+        const fetchedData = response.data || []
+        setGridData(fetchedData)
+        setNumRows(fetchedData.length)
+      } catch (error) {
+        setGridData([])
+        setNumRows(0)
+      } finally {
+        setIsAPISuccess(true)
+      }
+    }, [
+      
+      
+    ]);
 
   useEffect(() => {
     

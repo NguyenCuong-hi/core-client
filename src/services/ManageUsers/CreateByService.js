@@ -8,12 +8,12 @@ export const CreateByService = async (users) => {
     const token = accessToken()
     const response = await axios.post(
       `${HOST_API_SERVER}/users`,
-      {
+      
         users
-      },
+      ,
       {
         headers: {
-          'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
@@ -22,7 +22,7 @@ export const CreateByService = async (users) => {
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
-        data: response.data.data.content,
+        data: response.data.data,
       };
     } else {
       return {
