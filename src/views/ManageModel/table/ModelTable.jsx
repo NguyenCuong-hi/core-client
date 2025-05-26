@@ -13,7 +13,7 @@ import { useExtraCells } from '@glideapps/glide-data-grid-cells';
 // import LayoutStatusMenuSheetNew from '../../sheet/jsx/layoutStatusMenuNew'
 import dayjs from 'dayjs';
 import useOnFill from 'utils/hooks/onFillHook';
-import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
+import { loadFromLocalStorageSheet, saveToLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 
@@ -55,6 +55,8 @@ function ModelTable({
   const [typeSearch, setTypeSearch] = useState('');
   const [keySearchText, setKeySearchText] = useState('');
   const [hoverRow, setHoverRow] = useState(undefined);
+  const [contextRowIndex, setContextRowIndex] = useState(null);
+
 
   const onItemHovered = useCallback((args) => {
     const [_, row] = args.location;
@@ -431,6 +433,23 @@ function ModelTable({
     if (key === 'delete') message.warning('Xoá');
   };
 
+const handleGridMouseDown = (args) => {
+  if (args.kind === "cell" && args.button === 2) {
+    setContextRowIndex(args.location.row);
+  }
+};
+
+const [contextMenuPos, setContextMenuPos] = useState(null);
+
+const handleContextMenu = (args, event) => {
+  event.preventDefault(); // Ngăn menu mặc định của trình duyệt
+
+  if (args.kind === "cell") {
+    setContextRowIndex(args.location.row);
+    setContextMenuPos({ x: event.clientX, y: event.clientY });
+  }
+};
+
   return (
     <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
       <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
@@ -490,12 +509,13 @@ function ModelTable({
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
-            // onColumnMoved={onColumnMoved}
+            onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}
             // customRenderers={[
             //     AsyncDropdownCellRenderer
             // ]}
-            // onItemHovered={onItemHovered}
+            onItemHovered={onItemHovered}
+
           />
           {/* {showMenu !== null &&
                     renderLayer(

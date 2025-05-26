@@ -9,9 +9,10 @@ import { Suspense } from 'react';
 import Sidebar from 'layout/MainLayout/Sidebar';
 import Header from 'layout/MainLayout/Header';
 import { useDispatch, useSelector } from 'react-redux';
-import ProfileSection from 'layout/MainLayout/Header/ProfileSection';
 import Spinner from 'component/Loader/load';
 import AuthLogin from 'views/Login/AuthLogin';
+import { GetUserService } from 'services/Auth/GetUserService';
+import LoadingBlur from 'component/Loader/LoadingBlur';
 const DynamicTabContent = lazy(() => import('layout/MainLayout/DynamicTabs'));
 
 // ==============================|| MAIN ROUTES ||============================== //
@@ -22,6 +23,7 @@ const MainRoutes = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingLogin, setCheckingLogin] = useState(true);
 
   const rolesMenu = localStorage.getItem('roles_menu');
   const [keyLanguage, setKeyLanguage] = useState(null);
@@ -50,6 +52,28 @@ const MainRoutes = () => {
 
   const sidebarWidth = drawerOpen === false ? 0 : 260;
 
+  useEffect(() => {
+    checkLogin();
+  });
+
+  const checkLogin = async () => {
+    try {
+      const loginResponse = await GetUserService();
+      if (loginResponse.success) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    } catch (error) {
+      setIsLoggedIn(false);
+    } finally {
+      setCheckingLogin(false);
+    }
+  };
+
+  if (checkingLogin) {
+    return <LoadingBlur />; 
+  } 
   if (!isLoggedIn) {
     return <AuthLogin setIsLoggedIn={setIsLoggedIn} />;
   }

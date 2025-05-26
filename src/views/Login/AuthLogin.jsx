@@ -13,25 +13,24 @@ import { GetUserService } from 'services/Auth/GetUserService';
 const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
   const [loading, setLoading] = useState(false);
   const [loadingView, setLoadingView] = useState(false);
+  const [logInFailMessage, setLogInFailMessage] = useState('');
 
   const dispatch = useDispatch();
 
   const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    dispatch(addTab({
+      key: "home",
+      label: "Trang chủ",
+      component: "DashboardDefault",
+      permission: null,
+    }));
+    dispatch(setActiveTab('home'));
     setLoadingView(true);
-    setTimeout(() => {
-      setIsLoggedIn(true);
-      dispatch(addTab({
-        key: "home",
-        label: "Trang chủ",
-        component: "DashboardDefault",
-        permission: null,
-      }));
-      dispatch(setActiveTab('home'));
-    }, 1500);
   };
 
   const onSubmit = async (values, { setSubmitting }) => {
-
+    setLoading(true);
     try {
       const data = {
         username: values.username,
@@ -39,19 +38,28 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
       }
 
       const loginResponse = await AuthLoginService(data);
-      setLoading(true);
+
       if (loginResponse.success) {
         Cookies.set('token', loginResponse.data.access_token)
         const user = await GetUserService();
         localStorage.setItem('username', JSON.stringify(user.data.data.username))
         localStorage.setItem('role', JSON.stringify(user.data.data.roles))
-        localStorage.setItem('menu', JSON.stringify(user.data.data.menuItems))
+        localStorage.setItem('menu-item', JSON.stringify(user.data.data.menuItems))
         setLoading(false);
         setSubmitting(false);
         handleLoginSuccess();
+      } else {
+        setLogInFailMessage('Sai thông tin tài khoản hoặc mật khẩu đăng nhập !');
+        setLoading(false);
+        setSubmitting(false);
+        setIsLoggedIn(false);
       }
     } catch (error) {
-      console.error(error); 
+      console.error(error);
+    } finally {
+      setLoading(false);
+      setSubmitting(false);
+      setLoadingView(false);
     }
   }
 
@@ -123,6 +131,14 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
                   size="large"
                 />
               </Form.Item>
+
+              {logInFailMessage && (
+                <div className="flex justify-center w-full">
+                  <Typography.Text type="danger" italic>
+                    {logInFailMessage}
+                  </Typography.Text>
+                </div>
+              )}
 
               <div className="flex justify-end mb-4">
                 <Typography.Link>Forgot Password?</Typography.Link>
