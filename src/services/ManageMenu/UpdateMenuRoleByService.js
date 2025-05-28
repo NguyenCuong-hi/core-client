@@ -2,7 +2,7 @@ import axios from 'axios';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 import { HOST_API_SERVER } from 'services/config';
 
-export const UpdateRoleByService = async (role) => {
+export const UpdateMenuRoleByService = async (roleId, menus) => {
   try {
     const token = accessToken();
 
@@ -14,11 +14,8 @@ export const UpdateRoleByService = async (role) => {
     }
 
     const response = await axios.put(
-      `${HOST_API_SERVER}/users-manage`,
-      {
-        role,
-        users,
-      },
+      `${HOST_API_SERVER}/menu-item/update-roles/${roleId}`,
+      menus,
       {
         headers: {
           Authorization: `Bearer ${token}`,

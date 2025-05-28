@@ -22,6 +22,9 @@ import RoleMenuMaster from './table/RoleMenuMaster';
 import { SearchMenuBy } from 'services/ManageMenu/SearchMenuBy';
 import { SearchBy } from 'services/ManageUsers/SearchBy';
 import { SearchAuthoritiesBy } from 'services/ManageMenu/SearchAuthoritiesBy';
+import { CreateMenuByService } from 'services/ManageMenu/CreateMenuByService';
+import { UpdateMenuRoleByService } from 'services/ManageMenu/UpdateMenuRoleByService';
+import MenuAuthorAction from './action/MenuAuthorAction';
 
 
 // ==============================|| MENU PAGE ||============================== //
@@ -216,7 +219,7 @@ const ManageMenu = ({ canCreate }) => {
     },
     {
       title: t('Ngày tạo'),
-      id: 'createdDate',
+      id: 'createDate',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -229,7 +232,7 @@ const ManageMenu = ({ canCreate }) => {
     },
     {
       title: t('Người tạo'),
-      id: 'createdBy',
+      id: 'createBy',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -242,7 +245,7 @@ const ManageMenu = ({ canCreate }) => {
     },
     {
       title: t('Ngày thay đổi'),
-      id: 'modifiedDate',
+      id: 'modifyDate',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -255,7 +258,7 @@ const ManageMenu = ({ canCreate }) => {
     },
     {
       title: t('Người thay đổi'),
-      id: 'modifiedBy',
+      id: 'modifyBy',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -484,6 +487,7 @@ const ManageMenu = ({ canCreate }) => {
   const [count, setCount] = useState(0);
   const lastWordEntryRef = useRef(null);
   const [isSent, setIsSent] = useState(false);
+  const [idRole, setIdRole] = useState(null);
 
   //   Load
   const fetchDataRole = useCallback(async () => {
@@ -580,27 +584,24 @@ const ManageMenu = ({ canCreate }) => {
   //   Action
   const onClickSave = useCallback(async () => {
     showLoader();
-    const requiredColumns = ['userName', 'password'];
+    const requiredColumns = ['key',];
 
     const commonColumnsRoles = ['id', 'name', 'createdBy', 'createdDate', 'modifiedDate', 'modifiedBy'];
 
     const commonColumns = [
       'id',
-      'username',
-      'email',
-      'password',
-      'createdDate',
-      'createdBy',
-      'modifiedDate',
-      'modifiedBy',
-      'accountNonExpired',
-      'accountNonLocked',
-      'active',
-      'credentialsNonExpired',
-      'justCreated',
-      'lastLoginFalures',
-      'lastLoginTime',
-      'totalLoginFailures'
+      'key',
+      'icon',
+      'label',
+      'createDate',
+      'createBy',
+      'modifyDate',
+      'modifyBy',
+      'isChildren',
+      'keyParent',
+      'component',
+      'permission',
+      
     ];
 
     const validEntries = filterValidEntries();
@@ -620,8 +621,6 @@ const ManageMenu = ({ canCreate }) => {
     const resulU = filterAndSelectColumns(gridDataMenu, commonColumns, 'U');
     const resulA = filterAndSelectColumns(gridDataMenu, commonColumns, 'A');
 
-    const resulURoles = filterAndSelectColumns(gridData, commonColumnsRoles, 'U');
-    const resulARoles = filterAndSelectColumns(gridData, commonColumnsRoles, 'A');
     const validationMessage = validateCheckColumns([...resulU, ...resulA], [...commonColumns, ...commonColumns], requiredColumns);
 
     if (validationMessage !== true) {
@@ -644,9 +643,14 @@ const ManageMenu = ({ canCreate }) => {
     }
 
     try {
+      const dataRole = {
+        idRole: idRole,
+      }
+
       const promises = [];
-      if (resulA.length > 0) promises.push(CreateByService(resulARoles, resulA));
-      if (resulU.length > 0) promises.push(UpdateByService(resulARoles, resulU));
+      if (resulA.length > 0) promises.push(CreateMenuByService(dataRole, resulA));
+      if (resulU.length > 0) promises.push(CreateMenuByService(dataRole, resulU));
+      if (selectMenu.length > 0) promises.push(UpdateMenuRoleByService(idRole, selectMenu));
 
       const results = await Promise.all(promises);
 
@@ -704,7 +708,7 @@ const ManageMenu = ({ canCreate }) => {
   
 
   const handleDelete = useCallback(async () => {
-    if (selectedUser.length === 0) {
+    if (selectMenu.length === 0) {
       notify({
         type: 'error',
         message: 'Lỗi',
@@ -716,8 +720,8 @@ const ManageMenu = ({ canCreate }) => {
   
     try {
       const promises = [];
-      if (selectedUser.length > 0)
-        promises.push(DeleteByService(selectedUser, selectedUser));
+      if (selectMenu.length > 0)
+        promises.push(DeleteByService(selectMenu, selectMenu));
   
       const results = await Promise.all(promises);
   
@@ -821,13 +825,13 @@ const ManageMenu = ({ canCreate }) => {
           size: 10
 
         }
-
+        setIdRole(rowData.id)
         fetchMenusByRoles(data)
         setClickedRowData(rowData)
         
       }
     },
-    [gridData],
+    [gridData, idRole],
   )
 
   const fetchMenusByRoles = async (data) => {
@@ -889,12 +893,12 @@ const ManageMenu = ({ canCreate }) => {
     return rows
   }
 
-  const [isMinusClickedUser, setIsMinusClickedUser] = useState(false)
-  const [lastClickedCellUser, setLastClickedCellUser] = useState(null)
-  const [clickedRowDataUser, setClickedRowDataUser] = useState(null)
-  const [selectedUser, setSelectUser] = useState([])
+  const [isMinusClickedMenu, setIsMinusClickedMenu] = useState(false)
+  const [lastClickedCellMenu, setLastClickedCellMenu] = useState(null)
+  const [clickedRowDataMenu, setClickedRowDataMenu] = useState(null)
+  const [selectMenu, setSelectMenu] = useState([])
 
-  const [selectionUser, setSelectionUser] = useState({
+  const [selectionMenu, setSelectionMenu] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty(),
   })
@@ -904,10 +908,10 @@ const ManageMenu = ({ canCreate }) => {
 
       if (cell[0] === -1) {
         rowIndex = cell[1]
-        setIsMinusClickedUser(true)
+        setIsMinusClickedMenu(true)
       } else {
         rowIndex = cell[1]
-        setIsMinusClickedUser(false)
+        setIsMinusClickedMenu(false)
       }
 
       if (
@@ -915,8 +919,8 @@ const ManageMenu = ({ canCreate }) => {
         lastClickedCell[0] === cell[0] &&
         lastClickedCell[1] === cell[1]
       ) {
-        setLastClickedCellUser(null)
-        setClickedRowDataUser(null)
+        setLastClickedCellMenu(null)
+        setClickedRowDataMenu(null)
         return
       }
 
@@ -926,19 +930,19 @@ const ManageMenu = ({ canCreate }) => {
         const data = [
           {
             id: rowData.ItemSeq,
-            roleName: rowData.ItemNo,
+            key: rowData.ItemNo,
             
           },
         ]
-        setSelectUser(getSelectedRowsUsers())
+        setSelectMenu(getSelectedRowsMenu())
         
       }
     },
-    [gridData],
+    [gridDataMenu],
   )
 
-  const getSelectedRowsUsers = () => {
-    const selectedRows = selectionUser.rows.items
+  const getSelectedRowsMenu = () => {
+    const selectedRows = selectionMenu.rows.items
     let rows = []
     selectedRows.forEach((range) => {
       const start = range[0]
@@ -1057,7 +1061,7 @@ const ManageMenu = ({ canCreate }) => {
   return (
     <>
       <div className="h-full pt-4">
-        <UsersAction 
+        <MenuAuthorAction 
         title={'Đăng ký menu'} 
         onClickSave={onClickSave} 
         onClickDelete = {onClickDelete}
