@@ -1,22 +1,22 @@
 import axios from 'axios';
 import { HOST_API_SERVER } from 'services/config';
 import { accessToken } from 'utils/cookies/CookiesUtils';
+import qs from 'qs';
 
-export const DeleteByService = async (role, users) => {
+
+export const DeleteMenuByService = async (id) => {
   try {
     const token = accessToken()
-    const response = await axios.post(
-      `${HOST_API_SERVER}/users-manage`,
+    const response = await axios.delete(
+      `${HOST_API_SERVER}/menu-item/ids`,
       {
-        role,
-        users
-      },
-      {
+        params: { id },
+        paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
         headers: {
-            Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
-        },
-      },
+        }
+      }
     );
 
     if (response.status === 200 || response.status === 201) {

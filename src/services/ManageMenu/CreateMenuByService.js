@@ -7,11 +7,8 @@ export const CreateMenuByService = async (idRole, menus) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/menu-item/create-menus`,
-      {
-        idRole,
-        menus
-      }
+      `${HOST_API_SERVER}/menu-item/create-menus/?idRole=${idRole}`,
+      menus
       ,
       {
         headers: {

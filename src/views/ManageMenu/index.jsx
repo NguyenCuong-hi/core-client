@@ -4,20 +4,16 @@ import * as XLSX from 'xlsx';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { CompactSelection, GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
-import RolesUsersMaster from './table/RoleMenuMaster';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
 import { message, Spin } from 'antd';
 import useDynamicFilter from 'utils/hooks/useDynamicFilter';
 import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
 import { validateCheckColumns } from 'utils/sheets/validateColumns';
-import { CreateByService } from 'services/ManageUsers/CreateByService';
-import { UpdateByService } from 'services/ManageUsers/UpdateByService';
 import { useNotify } from 'utils/hooks/onNotify';
 import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import useConfirmDialog from 'utils/hooks/useConfirmDialog';
 import { DeleteByService } from 'services/ManageUsers/DeleteByService';
-import UsersAction from 'views/ManageUsers/action/UsersAction';
 import RoleMenuMaster from './table/RoleMenuMaster';
 import { SearchMenuBy } from 'services/ManageMenu/SearchMenuBy';
 import { SearchBy } from 'services/ManageUsers/SearchBy';
@@ -25,6 +21,7 @@ import { SearchAuthoritiesBy } from 'services/ManageMenu/SearchAuthoritiesBy';
 import { CreateMenuByService } from 'services/ManageMenu/CreateMenuByService';
 import { UpdateMenuRoleByService } from 'services/ManageMenu/UpdateMenuRoleByService';
 import MenuAuthorAction from './action/MenuAuthorAction';
+import { DeleteMenuByService } from 'services/ManageMenu/DeleteMenuByService';
 
 
 // ==============================|| MENU PAGE ||============================== //
@@ -34,7 +31,7 @@ const ManageMenu = ({ canCreate }) => {
   const { notify, contextHolder } = useNotify();
   const { spinning, percent, showLoader, hideLoader } = useFullscreenLoading();
   const [isAPISuccess, setIsAPISuccess] = useState(true)
-  const {showConfirm} = useConfirmDialog();
+  const { showConfirm } = useConfirmDialog();
 
   const defaultCols = useMemo(() => [
     {
@@ -180,7 +177,7 @@ const ManageMenu = ({ canCreate }) => {
     },
     {
       title: t('Khóa'),
-      id: 'key',
+      id: 'keyMenu',
       kind: 'Text',
       readonly: false,
       width: 200,
@@ -322,7 +319,7 @@ const ManageMenu = ({ canCreate }) => {
       }
     },
 
-    
+
   ]);
 
   const [colsMenu, setColsMenu] = useState(() =>
@@ -454,7 +451,7 @@ const ManageMenu = ({ canCreate }) => {
       }
     },
 
-    
+
   ]);
 
   const [colsAuthor, setColsAuthor] = useState(() =>
@@ -488,98 +485,380 @@ const ManageMenu = ({ canCreate }) => {
   const lastWordEntryRef = useRef(null);
   const [isSent, setIsSent] = useState(false);
   const [idRole, setIdRole] = useState(null);
+  const [roleCode, setRoleCode] = useState('');
+
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
+
+  const [isMinusClicked, setIsMinusClicked] = useState(false)
+  const [lastClickedCell, setLastClickedCell] = useState(null)
+  const [clickedRowData, setClickedRowData] = useState(null)
+
+
+
+  const [isMinusClickedMenu, setIsMinusClickedMenu] = useState(false)
+  const [lastClickedCellMenu, setLastClickedCellMenu] = useState(null)
+  const [clickedRowDataMenu, setClickedRowDataMenu] = useState(null)
+  const [selectMenu, setSelectMenu] = useState([])
+
+  const [selectionMenu, setSelectionMenu] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty(),
+  })
+
+  const [isMinusClickedAuthor, setIsMinusClickedAuthor] = useState(false)
+  const [lastClickedCellAuthor, setLastClickedCellAuthor] = useState(null)
+  const [clickedRowDataAuthor, setClickedRowDataAuthor] = useState(null)
+  const [selectedAuthor, setSelectAuthor] = useState([])
+
+  const [selectionAuthor, setSelectionAuthor] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty(),
+  })
+
+  const getSelectedRows = () => {
+    const selectedRows = selection.rows.items
+    let rows = []
+    selectedRows.forEach((range) => {
+      const start = range[0]
+      const end = range[1] - 1
+
+      for (let i = start; i <= end; i++) {
+        if (gridData[i]) {
+          rows.push(gridData[i])
+
+
+          setGridData((prev) => {
+            const newData = [...prev]
+            const product = gridData[i]
+
+            if (product.UMQCTitleSeq) {
+              product['Status'] = 'U'
+            } else {
+              product['Status'] = 'A'
+            }
+
+
+            setEditedRowsRoles((prevEditedRows) =>
+              updateEditedRows(prevEditedRows, product, newData, ''),
+            )
+
+            return newData
+          })
+        }
+      }
+    })
+
+    return rows
+  }
+
+  const onCellClickedMenu = useCallback(
+    (cell, event) => {
+      let rowIndex
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1]
+        setIsMinusClickedMenu(true)
+      } else {
+        rowIndex = cell[1]
+        setIsMinusClickedMenu(false)
+      }
+
+      if (
+        lastClickedCell &&
+        lastClickedCell[0] === cell[0] &&
+        lastClickedCell[1] === cell[1]
+      ) {
+        setLastClickedCellMenu(null)
+        setClickedRowDataMenu(null)
+        return
+      }
+
+      if (rowIndex >= 0 && rowIndex < gridDataMenu.length) {
+        const rowData = gridDataMenu[rowIndex]
+
+        const data = [
+          {
+            id: rowData.ItemSeq,
+            key: rowData.ItemNo,
+
+          },
+        ]
+        setSelectMenu(getSelectedRowsMenu())
+
+      }
+    },
+    [gridDataMenu, selectMenu, selectionMenu],
+  )
+
+  const getSelectedRowsMenu = () => {
+    const selectedRows = selectionMenu.rows.items
+    let rows = []
+    selectedRows.forEach((range) => {
+      const start = range[0]
+      const end = range[1] - 1
+
+      for (let i = start; i <= end; i++) {
+        if (gridData[i]) {
+          rows.push(gridDataMenu[i])
+
+          setGridDataMenu((prev) => {
+            const newData = [...prev]
+            const product = gridDataMenu[i]
+
+            if (product.id) {
+              product['Status'] = 'U'
+            } else {
+              product['Status'] = 'A'
+            }
+
+            setEditedRowsMenu((prevEditedRows) =>
+              updateEditedRows(prevEditedRows, product, newData, ''),
+            )
+
+            return newData
+          })
+        }
+      }
+    })
+
+    return rows
+  }
+
+  const onCellClicked = useCallback(
+    (cell, event) => {
+      let rowIndex
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1]
+        setIsMinusClicked(true)
+      } else {
+        rowIndex = cell[1]
+        setIsMinusClicked(false)
+      }
+
+      if (
+        lastClickedCell &&
+        lastClickedCell[0] === cell[0] &&
+        lastClickedCell[1] === cell[1]
+      ) {
+        setLastClickedCell(null)
+        setClickedRowData(null)
+        return
+      }
+
+      if (rowIndex >= 0 && rowIndex < gridData.length) {
+        const rowData = gridData[rowIndex]
+
+
+        setIdRole(rowData.id)
+        setRoleCode(rowData.name)
+        setClickedRowData(rowData)
+
+      }
+    },
+    [gridData, idRole, roleCode],
+  )
+
+  const fetchMenusByRoles = useCallback(async () => {
+    try {
+      const data =
+      {
+        roleCode: roleCode,
+        page: 0,
+        size: 10
+
+      }
+      const result = await SearchMenuBy(data)
+      if (result?.success && result?.data) {
+        setGridDataMenu(result.data)
+        setNumRowsMenu(result.data.length)
+      } else {
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: result?.message || 'Đã có lỗi xảy ra, thử lại'
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      notify({
+        type: 'error',
+        message: 'Lỗi',
+        description: 'Đã có lỗi xảy ra, thử lại'
+      });
+    }
+  }, [roleCode])
+
+  const onCellClickedAuthor = useCallback(
+    (cell, event) => {
+      let rowIndex
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1]
+        setIsMinusClickedAuthor(true)
+      } else {
+        rowIndex = cell[1]
+        setIsMinusClickedAuthor(false)
+      }
+
+      if (
+        lastClickedCellAuthor &&
+        lastClickedCellAuthor[0] === cell[0] &&
+        lastClickedCellAuthor[1] === cell[1]
+      ) {
+        setLastClickedCellAuthor(null)
+        setClickedRowDataAuthor(null)
+        return
+      }
+
+      if (rowIndex >= 0 && rowIndex < gridDataAuthor.length) {
+        const rowData = gridDataAuthor[rowIndex]
+
+        const data = [
+          {
+            id: rowData.key,
+            roleName: rowData.ItemNo,
+
+          },
+        ]
+        selectedAuthor(getSelectedRowsAuthor())
+
+      }
+    },
+    [gridDataAuthor],
+  )
+
+  const getSelectedRowsAuthor = () => {
+    const selectedRows = selectionAuthor.rows.items
+    let rows = []
+    selectedRows.forEach((range) => {
+      const start = range[0]
+      const end = range[1] - 1
+
+      for (let i = start; i <= end; i++) {
+        if (gridData[i]) {
+          rows.push(gridDataAuthor[i])
+
+          setGridDataMenu((prev) => {
+            const newData = [...prev]
+            const product = gridDataAuthor[i]
+
+            if (product.id) {
+              product['Status'] = 'U'
+            } else {
+              product['Status'] = 'A'
+            }
+
+            setEditedRowsMenu((prevEditedRows) =>
+              updateEditedRows(prevEditedRows, product, newData, ''),
+            )
+
+            return newData
+          })
+        }
+      }
+    })
+
+    return rows
+  }
+
+  const handleOnclickSearch = useCallback(() => {
+    fetchMenusByRoles()
+  }, [roleCode])
 
   //   Load
   const fetchDataRole = useCallback(async () => {
-      if (!isAPISuccess) return
-      setIsAPISuccess(false)
-      try {
-  
-        const data = [
-          {
-            pageIndex: 1,
-            pageSize: 50,
-            keywork: '',
-          },
-        ]
-  
-        const response = await SearchBy(data)
-        const fetchedData = response.data || []
-        setGridData(fetchedData)
-        setNumRows(fetchedData.length)
-      } catch (error) {
-        setGridData([])
-        setNumRows(0)
-      } finally {
-        setIsAPISuccess(true)
-      }
-    }, [
-      
-      
-    ]);
+    if (!isAPISuccess) return
+    setIsAPISuccess(false)
+    try {
 
-    const fetchDataMenu = useCallback(async () => {
-      if (!isAPISuccess) return
-      setIsAPISuccess(false)
-      try {
-  
-        const data = [
-          {
-            pageIndex: 1,
-            pageSize: 50,
-            keywork: '',
-          },
-        ]
-  
-        const response = await SearchMenuBy(data)
-        const fetchedData = response.data || []
-        setGridDataMenu(fetchedData)
-        setNumRowsMenu(fetchedData.length)
-      } catch (error) {
-        setGridDataMenu([])
-        setNumRowsMenu(0)
-      } finally {
-        setIsAPISuccess(true)
-      }
-    }, [
-      
-      
-    ]);
+      const data = [
+        {
+          pageIndex: 1,
+          pageSize: 50,
+          keywork: '',
+        },
+      ]
 
-    const fetchDataAuthor = useCallback(async () => {
-      if (!isAPISuccess) return
-      setIsAPISuccess(false)
-      try {
-  
-        const data = [
-          {
-            pageIndex: 1,
-            pageSize: 50,
-            keywork: '',
-          },
-        ]
-  
-        const response = await SearchAuthoritiesBy(data)
-        const fetchedData = response.data || []
-        setGridDataAuthor(fetchedData)
-        setNumRowsAuthor(fetchedData.length)
-      } catch (error) {
-        setGridDataAuthor([])
-        setNumRowsAuthor(0)
-      } finally {
-        setIsAPISuccess(true)
-      }
-    }, [
-      
-      
-    ]);
+      const response = await SearchBy(data)
+      const fetchedData = response.data || []
+      setGridData(fetchedData)
+      setNumRows(fetchedData.length)
+    } catch (error) {
+      setGridData([])
+      setNumRows(0)
+    } finally {
+      setIsAPISuccess(true)
+    }
+  }, [
+
+
+  ]);
+
+  const fetchDataMenu = useCallback(async () => {
+    if (!isAPISuccess) return
+    setIsAPISuccess(false)
+    try {
+
+      const data = [
+        {
+          pageIndex: 1,
+          pageSize: 50,
+          keywork: '',
+        },
+      ]
+
+      const response = await SearchMenuBy(data)
+      const fetchedData = response.data || []
+      setGridDataMenu(fetchedData)
+      setNumRowsMenu(fetchedData.length)
+    } catch (error) {
+      setGridDataMenu([])
+      setNumRowsMenu(0)
+    } finally {
+      setIsAPISuccess(true)
+    }
+  }, [
+
+
+  ]);
+
+  const fetchDataAuthor = useCallback(async () => {
+    if (!isAPISuccess) return
+    setIsAPISuccess(false)
+    try {
+
+      const data = [
+        {
+          pageIndex: 1,
+          pageSize: 50,
+          keywork: '',
+        },
+      ]
+
+      const response = await SearchAuthoritiesBy(data)
+      const fetchedData = response.data || []
+      setGridDataAuthor(fetchedData)
+      setNumRowsAuthor(fetchedData.length)
+    } catch (error) {
+      setGridDataAuthor([])
+      setNumRowsAuthor(0)
+    } finally {
+      setIsAPISuccess(true)
+    }
+  }, [
+
+
+  ]);
 
   useEffect(() => {
-    
+
+
     fetchDataRole()
     fetchDataMenu()
     fetchDataAuthor()
-  },[] );
+  }, []);
 
   //   Action
   const onClickSave = useCallback(async () => {
@@ -590,7 +869,7 @@ const ManageMenu = ({ canCreate }) => {
 
     const commonColumns = [
       'id',
-      'key',
+      'keyMenu',
       'icon',
       'label',
       'createDate',
@@ -601,7 +880,7 @@ const ManageMenu = ({ canCreate }) => {
       'keyParent',
       'component',
       'permission',
-      
+
     ];
 
     const validEntries = filterValidEntries();
@@ -631,26 +910,24 @@ const ManageMenu = ({ canCreate }) => {
     if (isSent) return;
     setIsSent(true);
 
-    if (resulA.length === 0) {
-      hideLoader();
-      notify({
-        type: 'error',
-        message: 'Lỗi',
-        description: 'Không có dữ liệu để lưu!'
-      });
-      setIsSent(false);
-      return;
-    }
+    // if (resulA.length === 0) {
+    //   hideLoader();
+    //   notify({
+    //     type: 'error',
+    //     message: 'Lỗi',
+    //     description: 'Không có dữ liệu để lưu!'
+    //   });
+    //   setIsSent(false);
+    //   return;
+    // }    
 
     try {
-      const dataRole = {
-        idRole: idRole,
-      }
+
 
       const promises = [];
-      if (resulA.length > 0) promises.push(CreateMenuByService(dataRole, resulA));
-      if (resulU.length > 0) promises.push(CreateMenuByService(dataRole, resulU));
-      if (selectMenu.length > 0) promises.push(UpdateMenuRoleByService(idRole, selectMenu));
+      if (resulA.length > 0) promises.push(CreateMenuByService(idRole, resulA));
+      if (resulU.length > 0) promises.push(CreateMenuByService(idRole, resulU));
+      // if (selectMenu.length > 0) promises.push(UpdateMenuRoleByService(idRole, selectMenu));
 
       const results = await Promise.all(promises);
 
@@ -694,7 +971,7 @@ const ManageMenu = ({ canCreate }) => {
       setIsSent(false);
       hideLoader();
     }
-  }, [editedRowsMenu]);
+  }, [editedRowsMenu, idRole]);
 
   const onClickDelete = useCallback(() => {
     showConfirm({
@@ -704,8 +981,7 @@ const ManageMenu = ({ canCreate }) => {
         return handleDelete();
       }
     });
-  }, []);
-  
+  }, [selectMenu]);
 
   const handleDelete = useCallback(async () => {
     if (selectMenu.length === 0) {
@@ -717,14 +993,17 @@ const ManageMenu = ({ canCreate }) => {
       setIsSent(false);
       throw new Error('Không có dữ liệu');
     }
-  
+
+
     try {
+      const ids = selectMenu.map((item) => item.id);
+      console.log(ids);
       const promises = [];
       if (selectMenu.length > 0)
-        promises.push(DeleteByService(selectMenu, selectMenu));
-  
+        promises.push(DeleteMenuByService(ids));
+
       const results = await Promise.all(promises);
-  
+
       results.forEach((result) => {
         if (result?.success && result.data?.data) {
           notify({
@@ -751,22 +1030,19 @@ const ManageMenu = ({ canCreate }) => {
     } finally {
       setIsSent(false);
     }
-  }, []);
-
-  const [columns, setColumns] = useState([]);
-  const [rows, setRows] = useState([]);
+  }, [selectMenu]);
 
   const onClickImport = async (file) => {
     if (!file) return false;
-  
+
     const data = await file.arrayBuffer();
     const workbook = XLSX.read(data);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  
+
     const rowData = XLSX.utils.sheet_to_json(worksheet);
-  
+
     if (rowData.length === 0) return false;
-  
+
     const colHeaders = Object.keys(rowData[0]);
     setColumns(
       colHeaders.map((header, index) => ({
@@ -774,8 +1050,8 @@ const ManageMenu = ({ canCreate }) => {
         id: String(index),
       }))
     );
-  
-  
+
+
     const dataAddStatus = rowData.map((row) => {
       return {
         ...row,
@@ -784,288 +1060,19 @@ const ManageMenu = ({ canCreate }) => {
     })
     setGridDataMenu(dataAddStatus);
     setNumRowsMenu(dataAddStatus.length);
-  
+
     return false;
   };
-  
-
-  const [isMinusClicked, setIsMinusClicked] = useState(false)
-  const [lastClickedCell, setLastClickedCell] = useState(null)
-  const [clickedRowData, setClickedRowData] = useState(null)
-
-  const onCellClicked = useCallback(
-    (cell, event) => {
-      let rowIndex
-
-      if (cell[0] === -1) {
-        rowIndex = cell[1]
-        setIsMinusClicked(true)
-      } else {
-        rowIndex = cell[1]
-        setIsMinusClicked(false)
-      }
-
-      if (
-        lastClickedCell &&
-        lastClickedCell[0] === cell[0] &&
-        lastClickedCell[1] === cell[1]
-      ) {
-        setLastClickedCell(null)
-        setClickedRowData(null)
-        return
-      }
-
-      if (rowIndex >= 0 && rowIndex < gridData.length) {
-        const rowData = gridData[rowIndex]
-
-        const data =
-        {
-          roleCode: rowData.name,
-          page: 0,
-          size: 10
-
-        }
-        setIdRole(rowData.id)
-        fetchMenusByRoles(data)
-        setClickedRowData(rowData)
-        
-      }
-    },
-    [gridData, idRole],
-  )
-
-  const fetchMenusByRoles = async (data) => {
-    try {
-      const result = await SearchMenuBy(data)
-      if (result?.success && result?.data) {
-        setGridDataMenu(result.data)
-        setNumRowsMenu(result.data.length)
-      } else {
-        notify({
-          type: 'error',
-          message: 'Lỗi',
-          description: result?.message || 'Đã có lỗi xảy ra, thử lại'
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      notify({
-        type: 'error',
-        message: 'Lỗi',
-        description: 'Đã có lỗi xảy ra, thử lại'
-      });
-    }
-  }
-
-  const getSelectedRows = () => {
-    const selectedRows = selection.rows.items
-    let rows = []
-    selectedRows.forEach((range) => {
-      const start = range[0]
-      const end = range[1] - 1
-
-      for (let i = start; i <= end; i++) {
-        if (gridData[i]) {
-          rows.push(gridData[i])
-
-          
-          setGridData((prev) => {
-            const newData = [...prev]
-            const product = gridData[i]
-            
-            if(product.UMQCTitleSeq){
-              product['Status'] = 'U'
-            }else{
-              product['Status'] = 'A'
-            }
-            
-      
-            setEditedRowsRoles((prevEditedRows) =>
-              updateEditedRows(prevEditedRows, product, newData, ''),
-            )
-      
-            return newData
-          })
-        }
-      }
-    })
-
-    return rows
-  }
-
-  const [isMinusClickedMenu, setIsMinusClickedMenu] = useState(false)
-  const [lastClickedCellMenu, setLastClickedCellMenu] = useState(null)
-  const [clickedRowDataMenu, setClickedRowDataMenu] = useState(null)
-  const [selectMenu, setSelectMenu] = useState([])
-
-  const [selectionMenu, setSelectionMenu] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty(),
-  })
-  const onCellClickedMenu = useCallback(
-    (cell, event) => {
-      let rowIndex
-
-      if (cell[0] === -1) {
-        rowIndex = cell[1]
-        setIsMinusClickedMenu(true)
-      } else {
-        rowIndex = cell[1]
-        setIsMinusClickedMenu(false)
-      }
-
-      if (
-        lastClickedCell &&
-        lastClickedCell[0] === cell[0] &&
-        lastClickedCell[1] === cell[1]
-      ) {
-        setLastClickedCellMenu(null)
-        setClickedRowDataMenu(null)
-        return
-      }
-
-      if (rowIndex >= 0 && rowIndex < gridDataMenu.length) {
-        const rowData = gridDataMenu[rowIndex]
-
-        const data = [
-          {
-            id: rowData.ItemSeq,
-            key: rowData.ItemNo,
-            
-          },
-        ]
-        setSelectMenu(getSelectedRowsMenu())
-        
-      }
-    },
-    [gridDataMenu],
-  )
-
-  const getSelectedRowsMenu = () => {
-    const selectedRows = selectionMenu.rows.items
-    let rows = []
-    selectedRows.forEach((range) => {
-      const start = range[0]
-      const end = range[1] - 1
-
-      for (let i = start; i <= end; i++) {
-        if (gridData[i]) {
-          rows.push(gridDataMenu[i])
-
-          setGridDataMenu((prev) => {
-            const newData = [...prev]
-            const product = gridDataMenu[i]
-            
-            if(product.id){
-              product['Status'] = 'U'
-            }else{
-              product['Status'] = 'A'
-            }
-
-            setEditedRowsMenu((prevEditedRows) =>
-              updateEditedRows(prevEditedRows, product, newData, ''),
-            )
-      
-            return newData
-          })
-        }
-      }
-    })
-
-    return rows
-  }
-
-  const [isMinusClickedAuthor, setIsMinusClickedAuthor] = useState(false)
-  const [lastClickedCellAuthor, setLastClickedCellAuthor] = useState(null)
-  const [clickedRowDataAuthor, setClickedRowDataAuthor] = useState(null)
-  const [selectedAuthor, setSelectAuthor] = useState([])
-
-  const [selectionAuthor, setSelectionAuthor] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty(),
-  })
-
-  const onCellClickedAuthor = useCallback(
-    (cell, event) => {
-      let rowIndex
-
-      if (cell[0] === -1) {
-        rowIndex = cell[1]
-        setIsMinusClickedAuthor(true)
-      } else {
-        rowIndex = cell[1]
-        setIsMinusClickedAuthor(false)
-      }
-
-      if (
-        lastClickedCellAuthor &&
-        lastClickedCellAuthor[0] === cell[0] &&
-        lastClickedCellAuthor[1] === cell[1]
-      ) {
-        setLastClickedCellAuthor(null)
-        setClickedRowDataAuthor(null)
-        return
-      }
-
-      if (rowIndex >= 0 && rowIndex < gridDataAuthor.length) {
-        const rowData = gridDataAuthor[rowIndex]
-
-        const data = [
-          {
-            id: rowData.key,
-            roleName: rowData.ItemNo,
-            
-          },
-        ]
-        selectedAuthor(getSelectedRowsAuthor())
-        
-      }
-    },
-    [gridDataAuthor],
-  )
-
-  const getSelectedRowsAuthor = () => {
-    const selectedRows = selectionAuthor.rows.items
-    let rows = []
-    selectedRows.forEach((range) => {
-      const start = range[0]
-      const end = range[1] - 1
-
-      for (let i = start; i <= end; i++) {
-        if (gridData[i]) {
-          rows.push(gridDataAuthor[i])
-
-          setGridDataMenu((prev) => {
-            const newData = [...prev]
-            const product = gridDataAuthor[i]
-            
-            if(product.id){
-              product['Status'] = 'U'
-            }else{
-              product['Status'] = 'A'
-            }
-
-            setEditedRowsMenu((prevEditedRows) =>
-              updateEditedRows(prevEditedRows, product, newData, ''),
-            )
-      
-            return newData
-          })
-        }
-      }
-    })
-
-    return rows
-  }
 
   return (
     <>
       <div className="h-full pt-4">
-        <MenuAuthorAction 
-        title={'Đăng ký menu'} 
-        onClickSave={onClickSave} 
-        onClickDelete = {onClickDelete}
-        onClickImport = {onClickImport}
+        <MenuAuthorAction
+          title={'Đăng ký menu'}
+          onClickSave={onClickSave}
+          onClickDelete={onClickDelete}
+          onClickImport={onClickImport}
+          onClickSearch={handleOnclickSearch}
         />
         <RoleMenuMaster
           defaultCols={defaultCols}
@@ -1088,7 +1095,9 @@ const ManageMenu = ({ canCreate }) => {
           setNumRowsMenu={setNumRowsMenu}
           handleRowAppendMenu={handleRowAppendMenu}
           setEditedRowsMenu={setEditedRowsMenu}
-          onCellClickedMenu = {onCellClickedMenu}
+          onCellClickedMenu={onCellClickedMenu}
+          selectionMenu={selectionMenu}
+          setSelectionMenu={setSelectionMenu}
 
           defaultColsAuthor={defaultColsAuthor}
           gridDataAuthor={gridDataAuthor}
@@ -1099,7 +1108,7 @@ const ManageMenu = ({ canCreate }) => {
           setNumRowsAuthor={setNumRowsAuthor}
           handleRowAppendAuthor={handleRowAppendAuthor}
           setEditedRowsAuthor={setEditedRowsAuthor}
-          onCellClickedAuthor = {onCellClickedAuthor}
+          onCellClickedAuthor={onCellClickedAuthor}
         />
       </div>
       {contextHolder}

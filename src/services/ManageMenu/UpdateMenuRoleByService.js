@@ -2,7 +2,7 @@ import axios from 'axios';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 import { HOST_API_SERVER } from 'services/config';
 
-export const UpdateMenuRoleByService = async (roleId, menus) => {
+export const UpdateMenuRoleByService = async (idRole, menus) => {
   try {
     const token = accessToken();
 
@@ -14,7 +14,7 @@ export const UpdateMenuRoleByService = async (roleId, menus) => {
     }
 
     const response = await axios.put(
-      `${HOST_API_SERVER}/menu-item/update-roles/${roleId}`,
+      `${HOST_API_SERVER}/menu-item/update-roles/?idRole=${idRole}`,
       menus,
       {
         headers: {
