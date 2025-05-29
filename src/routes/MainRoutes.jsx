@@ -22,8 +22,8 @@ const MainRoutes = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [checkingLogin, setCheckingLogin] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [checkingLogin, setCheckingLogin] = useState(false);
 
   const rolesMenu = localStorage.getItem('roles_menu');
   const [keyLanguage, setKeyLanguage] = useState(null);
@@ -52,9 +52,9 @@ const MainRoutes = () => {
 
   const sidebarWidth = drawerOpen === false ? 0 : 260;
 
-  useEffect(() => {
-    checkLogin();
-  });
+  // useEffect(() => {
+  //   checkLogin();
+  // });
 
   const checkLogin = async () => {
     try {
