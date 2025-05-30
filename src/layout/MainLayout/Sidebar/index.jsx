@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Menu } from 'antd';
+import * as Icons from '@ant-design/icons';
 
 import menuItems from 'menu-item';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,6 +12,22 @@ const { Sider } = Layout;
 const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
   const dispatch = useDispatch();
   const { tabList, activeTabKey } = useSelector((state) => state.tab);
+
+  // const [menuItems, setMenuItems] = useState([]);
+
+  // useEffect(() => {
+  //   const stored = localStorage.getItem('menu-item');
+  //   if (stored) {
+  //     try {
+  //       const rawItems = JSON.parse(stored);
+  //       setMenuItems(rawItems);
+  //     } catch (err) {
+  //       console.error('Failed to parse menuItems:', err);
+  //     }
+  //   }
+  // }, []);
+
+  // console.log('menuItems', menuItems);
 
   const siderStyle = {
     overflowY: 'scroll',

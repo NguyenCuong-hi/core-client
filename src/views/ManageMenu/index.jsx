@@ -176,9 +176,22 @@ const ManageMenu = ({ canCreate }) => {
       }
     },
     {
-      title: t('Khóa'),
-      id: 'keyMenu',
+      title: t('id'),
+      id: 'id',
       kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Thứ tự'),
+      id: 'sort',
+      kind: 'Number',
       readonly: false,
       width: 200,
       hasMenu: true,
@@ -880,6 +893,7 @@ const ManageMenu = ({ canCreate }) => {
       'keyParent',
       'component',
       'permission',
+      'sort'
 
     ];
 
@@ -947,7 +961,7 @@ const ManageMenu = ({ canCreate }) => {
           setEditedRowsMenu([]);
           hideLoader();
           notify({
-            type: 'error',
+            type: 'success',
             message: 'Thành công',
             description: index === 0 ? 'Thêm mới thành công' : 'Cập nhật thành công'
           });
