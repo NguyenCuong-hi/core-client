@@ -176,13 +176,13 @@ const ManageMenu = ({ canCreate }) => {
       }
     },
     {
-      title: t('id'),
-      id: 'id',
+      title: t('Key Menu'),
+      id: 'key',
       kind: 'Text',
-      readonly: true,
+      readonly: false,
       width: 200,
       hasMenu: true,
-      visible: false,
+      visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
@@ -882,7 +882,7 @@ const ManageMenu = ({ canCreate }) => {
 
     const commonColumns = [
       'id',
-      'keyMenu',
+      'key',
       'icon',
       'label',
       'createDate',
@@ -946,17 +946,18 @@ const ManageMenu = ({ canCreate }) => {
       const results = await Promise.all(promises);
 
       const updateGridData = (newData) => {
-        setGridData((prevGridData) =>
+        setGridDataMenu((prevGridData) =>
           prevGridData.map((item) => {
-            const matchingData = newData.find((data) => data.IDX_NO === item.IdxNo);
-            return matchingData ? { ...matchingData, IdxNo: matchingData.IDX_NO } : item;
+            const matchingData = newData.find((data) => data.id === item.id);
+            return matchingData ? { ...matchingData, IdxNo: matchingData.id } : item;
           })
         );
       };
 
       results.forEach((result, index) => {
-        if (result?.success && result.data?.data) {
-          const newData = result.data.data;
+        if (result?.success && result?.data.length > 0) {
+
+          const newData = result.data;
           updateGridData(newData);
           setEditedRowsMenu([]);
           hideLoader();
@@ -984,6 +985,7 @@ const ManageMenu = ({ canCreate }) => {
     } finally {
       setIsSent(false);
       hideLoader();
+      fetchDataMenu();
     }
   }, [editedRowsMenu, idRole]);
 

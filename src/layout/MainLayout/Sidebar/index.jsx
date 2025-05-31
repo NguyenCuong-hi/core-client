@@ -13,21 +13,67 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
   const dispatch = useDispatch();
   const { tabList, activeTabKey } = useSelector((state) => state.tab);
 
-  // const [menuItems, setMenuItems] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+
+  // const mapMenuItems = (rawItems) => {
+  //   return rawItems.map((item) => {
+  //     const IconComponent = Icons[item.icon] || null;
+  //     return {
+  //       ...item,
+  //       key: item.key,
+  //       label: item.label,
+  //       icon: IconComponent ? <IconComponent /> : null,
+  //       children: Array.isArray(item.children) ? mapMenuItems(item.children) : [],
+  //     };
+  //   });
+  // };
+  
 
   // useEffect(() => {
   //   const stored = localStorage.getItem('menu-item');
   //   if (stored) {
   //     try {
   //       const rawItems = JSON.parse(stored);
-  //       setMenuItems(rawItems);
+  //       const formattedMenu = mapMenuItems(rawItems);
+  //       setMenuItems(formattedMenu);
   //     } catch (err) {
   //       console.error('Failed to parse menuItems:', err);
   //     }
   //   }
   // }, []);
 
-  // console.log('menuItems', menuItems);
+  const mapMenuItems = (items) => {
+    return items.map((item) => {
+      const IconComponent =
+        typeof item.icon === 'string' && Icons[item.icon]
+          ? Icons[item.icon]
+          : null;
+  
+      return {
+        key: item.key,
+        label: item.label,
+        children: Array.isArray(item.children)
+          ? mapMenuItems(item.children)
+          : [],
+      };
+    });
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('menu-item');
+    if (stored) {
+      try {
+        const rawItems = JSON.parse(stored);
+        const formattedMenu = mapMenuItems(rawItems);
+        setMenuItems(formattedMenu);
+      } catch (err) {
+        console.error('Failed to parse menuItems:', err);
+      }
+    }
+  }, []);
+  
+
+  console.log('menuItems', menuItems);
 
   const siderStyle = {
     overflowY: 'scroll',
