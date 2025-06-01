@@ -9,6 +9,8 @@ import LoadingBlur from 'component/Loader/LoadingBlur';
 import { AuthLoginService } from 'services/Auth/GetTokenService';
 import Cookies from 'js-cookie'
 import { GetUserService } from 'services/Auth/GetUserService';
+import * as Icons from '@ant-design/icons';
+
 
 const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
   const [loading, setLoading] = useState(false);

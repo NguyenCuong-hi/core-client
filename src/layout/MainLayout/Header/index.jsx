@@ -5,7 +5,6 @@ import { Button, Layout } from 'antd';
 import DynamicTabs from './DynamicTabs';
 import logo from 'assets/images/logo.svg';
 import NotificationSection from './NotificationSection';
-import menuItems from 'menu-item';
 import ProfileSection from './ProfileSection';
 
 const { Header: AntHeader } = Layout;
@@ -27,9 +26,8 @@ const Header = ({ drawerToggle }) => {
         <img src={logo} alt="Logo" className="h-8 hidden md:block" />
       </div>
 
-      {/* Center: Dynamic Tabs */}
       <div className="flex-1 mx-4 hidden md:block">
-        <DynamicTabs menuItems={menuItems} />
+        <DynamicTabs />
       </div>
 
       <div className="flex items-center gap-2">

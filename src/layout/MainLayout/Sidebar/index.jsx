@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Layout, Menu } from 'antd';
 import * as Icons from '@ant-design/icons';
 
-import menuItems from 'menu-item';
 import { useDispatch, useSelector } from 'react-redux';
 import { addTab, setActiveTab } from 'store/tabsReducer';
 
@@ -15,33 +14,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
 
   const [menuItems, setMenuItems] = useState([]);
 
-  // const mapMenuItems = (rawItems) => {
-  //   return rawItems.map((item) => {
-  //     const IconComponent = Icons[item.icon] || null;
-  //     return {
-  //       ...item,
-  //       key: item.key,
-  //       label: item.label,
-  //       icon: IconComponent ? <IconComponent /> : null,
-  //       children: Array.isArray(item.children) ? mapMenuItems(item.children) : [],
-  //     };
-  //   });
-  // };
-  
-
-  // useEffect(() => {
-  //   const stored = localStorage.getItem('menu-item');
-  //   if (stored) {
-  //     try {
-  //       const rawItems = JSON.parse(stored);
-  //       const formattedMenu = mapMenuItems(rawItems);
-  //       setMenuItems(formattedMenu);
-  //     } catch (err) {
-  //       console.error('Failed to parse menuItems:', err);
-  //     }
-  //   }
-  // }, []);
-
   const mapMenuItems = (items) => {
     return items.map((item) => {
       const IconComponent =
@@ -50,11 +22,14 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
           : null;
   
       return {
+        
         key: item.key,
         label: item.label,
+        icon: IconComponent ? <IconComponent /> : null,
+        component: item?.component || null,
         children: Array.isArray(item.children)
           ? mapMenuItems(item.children)
-          : [],
+          : '',
       };
     });
   };
@@ -71,9 +46,6 @@ const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
       }
     }
   }, []);
-  
-
-  console.log('menuItems', menuItems);
 
   const siderStyle = {
     overflowY: 'scroll',

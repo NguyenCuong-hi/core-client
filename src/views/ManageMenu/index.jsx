@@ -612,7 +612,7 @@ const ManageMenu = ({ canCreate }) => {
       const end = range[1] - 1
 
       for (let i = start; i <= end; i++) {
-        if (gridData[i]) {
+        if (gridDataMenu[i]) {
           rows.push(gridDataMenu[i])
 
           setGridDataMenu((prev) => {
@@ -941,7 +941,6 @@ const ManageMenu = ({ canCreate }) => {
       const promises = [];
       if (resulA.length > 0) promises.push(CreateMenuByService(idRole, resulA));
       if (resulU.length > 0) promises.push(CreateMenuByService(idRole, resulU));
-      // if (selectMenu.length > 0) promises.push(UpdateMenuRoleByService(idRole, selectMenu));
 
       const results = await Promise.all(promises);
 
