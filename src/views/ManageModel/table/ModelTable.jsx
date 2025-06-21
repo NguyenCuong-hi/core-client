@@ -16,6 +16,7 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet, saveToLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
+import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
 
 function ModelTable({
   setSelection,
@@ -37,7 +38,8 @@ function ModelTable({
   defaultCols,
   canEdit,
   openFilter,
-  setOpenFilter
+  setOpenFilter,
+  onVisibleRegionChanged,
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -49,7 +51,7 @@ function ModelTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', []);
+    return loadFromLocalStorageSheet('H_model_prod', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -107,6 +109,12 @@ function ModelTable({
     selectColumn: false
   });
 
+  const data = [
+    'A',
+    'B',  
+    'C',  
+  ]
+
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
@@ -142,6 +150,20 @@ function ModelTable({
           allowOverlay: true,
           hasMenu: column?.hasMenu || false
         };
+      }
+
+      if (columnKey === 'modelTypeMName') {
+        const val = data.find((item) => item === value) || 'A';
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: val,
+          data: {
+            kind: "dropdown-cell",
+            allowedValues: ["A", "B", "C"],
+            value: val
+          }
+        }
       }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
@@ -338,7 +360,7 @@ function ModelTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+      saveToLocalStorageSheet('H_model_prod', newHidden);
       return newHidden;
     });
   };
@@ -347,7 +369,7 @@ function ModelTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_model_prod', uniqueCols);
       return uniqueCols;
     });
   };
@@ -359,7 +381,7 @@ function ModelTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_model_prod', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -370,8 +392,8 @@ function ModelTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_MODEL_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_MODEL_LIST');
+    localStorage.removeItem('S_model_prod');
+    localStorage.removeItem('H_model_prod');
     setShowMenu(null);
   };
 
@@ -380,14 +402,14 @@ function ModelTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', updatedCols);
+      saveToLocalStorageSheet('S_model_prod', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_model_prod', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -407,23 +429,23 @@ function ModelTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_model_prod', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_model_prod', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_model_prod', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_model_prod', newHidden);
         return newHidden;
       });
     }
@@ -505,7 +527,7 @@ const handleContextMenu = (args, event) => {
             keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
+            onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
@@ -515,6 +537,10 @@ const handleContextMenu = (args, event) => {
             //     AsyncDropdownCellRenderer
             // ]}
             onItemHovered={onItemHovered}
+
+            onVisibleRegionChanged={onVisibleRegionChanged}
+            customRenderers={[DropdownRenderer]}
+
 
           />
           {/* {showMenu !== null &&

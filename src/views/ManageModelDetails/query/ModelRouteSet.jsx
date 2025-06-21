@@ -21,7 +21,7 @@ const ModelRouteSet = ({
 }) => {
   
   return (
-      <div className="bg-slate-50 h-[calc(100vh-280px)]">
+      <div className="bg-slate-50 h-[calc(100vh-255px)]">
         <Splitter className="w-full h-full ">
           <SplitterPanel size={25} minSize={10}>
             <RouteTable
@@ -33,10 +33,11 @@ const ModelRouteSet = ({
               numRows={numRows}
               setNumRows={setNumRows}
               
+              
             />
           </SplitterPanel>
 
-          <SplitterPanel size={25} minSize={10}>
+          <SplitterPanel size={55} minSize={10}>
             <ModelRouteDetailsTable
               defaultCols={defaultColsModels}
               gridData={gridDataModels}

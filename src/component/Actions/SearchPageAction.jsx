@@ -10,7 +10,7 @@ const SearchPageAction = ({ titlePage, onSearch, onClickSearch, onClickFilter, k
       </Typography.Title>
 
       <div className="flex items-center gap-2 pr-2">
-        <Input placeholder="Search" allowClear onSearch={onSearch} value={keyword} style={{ width: 300 }} />
+        <Input placeholder="Search" allowClear onSearch={onSearch} value={keyword} onChange={(e) => setKeyword(e.target.value)} style={{ width: 300 }} />
         <Tooltip title="Filter">
           <Button icon={<FilterOutlined />} onClick={onClickFilter} />
         </Tooltip>

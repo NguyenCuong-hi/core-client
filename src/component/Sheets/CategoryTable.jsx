@@ -339,7 +339,7 @@ function CategoryTable({
 
   return (
     <div className="w-full h-full gap-1 flex items-center justify-center ">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-auto ">
+      <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -359,8 +359,8 @@ function CategoryTable({
             rowMarkers="both"
             width="100%"
             height="100%"
-            headerHeight={30}
-            rowHeight={28}
+            headerHeight={32}
+            rowHeight={27}
             rowSelect="multi"
             gridSelection={selection}
             onGridSelectionChange={setSelection}
@@ -440,9 +440,6 @@ function CategoryTable({
                     )} */}
         </ContextMenuWrapper>
 
-        <div className="flex justify-end px-4 py-2">
-          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
-        </div>
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
             (col) =>

@@ -417,8 +417,8 @@ function ModelRouteDetailsTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center mb-2">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center">
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -439,7 +439,7 @@ function ModelRouteDetailsTable({
             width="100%"
             height="100%"
             headerHeight={30}
-            rowHeight={28}
+            rowHeight={27}
             rowSelect="multi"
             gridSelection={selection}
             onGridSelectionChange={setSelection}
@@ -469,7 +469,7 @@ function ModelRouteDetailsTable({
             onPaste={true}
             fillHandle={true}
             // keybindings={keybindings}
-            // onRowAppended={() => handleRowAppend(1)}
+            onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
             // onCellClicked={onCellClicked}
 

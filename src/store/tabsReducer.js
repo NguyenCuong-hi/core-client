@@ -1,4 +1,3 @@
-import excludeVariablesFromRoot from "@mui/material/styles/excludeVariablesFromRoot";
 
 // Initial State
 const initialState = {

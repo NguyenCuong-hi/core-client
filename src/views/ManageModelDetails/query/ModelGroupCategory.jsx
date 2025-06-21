@@ -26,7 +26,7 @@ const ModelGroupCategory = ({
     
   };
   return (
-      <div className="bg-slate-50  h-[calc(100vh-280px)]">
+      <div className="bg-slate-50  h-[calc(100vh-255px)]">
         <CategoryTable
           defaultCols={defaultCols}
           gridData={gridData}

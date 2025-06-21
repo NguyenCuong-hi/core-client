@@ -58,6 +58,7 @@ const MainRoutes = () => {
 
   const checkLogin = async () => {
     try {
+      if (isLoggedIn || checkingLogin) return;
       const loginResponse = await GetUserService();
       if (loginResponse.success) {
         setIsLoggedIn(true);
@@ -72,8 +73,8 @@ const MainRoutes = () => {
   };
 
   if (checkingLogin) {
-    return <LoadingBlur />; 
-  } 
+    return <LoadingBlur />;
+  }
   if (!isLoggedIn) {
     return <AuthLogin setIsLoggedIn={setIsLoggedIn} />;
   }
@@ -85,11 +86,8 @@ const MainRoutes = () => {
       </div>
 
       <Sidebar drawerOpen={drawerOpen} drawerToggle={handleDrawerToggle} sidebarWidth={sidebarWidth} />
-      
 
-      <div
-        className=" mt-4 w-full h-screen overflow-y-auto bg-slate-100 transition-all duration-300"
-      >
+      <div className=" mt-4 w-full h-screen overflow-y-auto bg-slate-100 transition-all duration-300">
         <Content className=" min-h-full">
           <Suspense fallback={<Spinner />}>
             <DynamicTabContent />
