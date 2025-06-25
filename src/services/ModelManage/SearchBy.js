@@ -6,7 +6,7 @@ export const SearchConfigProdBy = async (data) => {
   try {
     const token = accessToken();
     const response = await axios.get(
-      `${HOST_API_SERVER}/config-prod/page`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/config-prod/page`,
 
       { params: data,
         headers: {

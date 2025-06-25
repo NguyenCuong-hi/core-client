@@ -11,7 +11,7 @@ export const AuthLoginService = async (data) => {
     formData.append('grant_type', 'password');
 
     const response = await axios.post(
-      `${HOST_API_SERVER_AUTH}/oauth/token`,
+      `${HOST_API_SERVER_AUTH}/nvc-core/oauth/token`,
       formData,
       {
         headers: {
