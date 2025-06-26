@@ -7,7 +7,7 @@ export const CreateListByService = async (users) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}mes-admin/config-prod/create-list`,
+      `${HOST_API_SERVER}/mes-admin/config-prod/create-list`,
       
         users
       ,

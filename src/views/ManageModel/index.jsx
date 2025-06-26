@@ -295,6 +295,7 @@ const ManageModelPage = (canCreate) => {
   const [isSent, setIsSent] = useState(false);
   const [count, setCount] = useState(0);
   const lastWordEntryRef = useRef(null);
+  const [errorData, setErrorData] = useState(null);
   const fieldsToTrack = ['IdxNo'];
   const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
 
@@ -396,7 +397,7 @@ const ManageModelPage = (canCreate) => {
       return;
     }
 
-    const requiredColumns = ['EmpName', 'EmpSeq', 'EmpID'];
+    const requiredColumns = ['configProdName', ];
 
     const columns = [
       'IdxNo',
@@ -487,10 +488,10 @@ const ManageModelPage = (canCreate) => {
 
           setIsSent(false);
           setEditedRows([]);
-          resetTable();
+          // resetTable();
         } else {
           setIsSent(false);
-          setErrorData(result.data.errors);
+          setErrorData(result);
           message.error('Có lỗi xảy ra khi lưu dữ liệu');
         }
       });
