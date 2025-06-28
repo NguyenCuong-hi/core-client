@@ -3,13 +3,13 @@ import { HOST_API_SERVER } from 'services/config';
 import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 
-export const CreateListByService = async (users) => {
+export const CreateListByService = async (dto) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/mes-admin/config-prod/create-list`,
-      
-        users
+      `${HOST_API_SERVER}/mes-admin/api/v1/config-prod/create-list`,
+      dto
+        
       ,
       {
         headers: {

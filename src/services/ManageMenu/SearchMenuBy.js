@@ -6,7 +6,7 @@ export const SearchMenuBy = async (data) => {
   try {
     const token = accessToken();
     const response = await axios.get(
-      `${HOST_API_SERVER}/menu-item/page`,
+      `${HOST_API_SERVER}/nvc-core/api/v1/menu-item/page`,
 
       { params: data,
         headers: {

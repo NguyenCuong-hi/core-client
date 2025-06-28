@@ -786,13 +786,13 @@ const ManageMenu = ({ canCreate }) => {
     setIsAPISuccess(false)
     try {
 
-      const data = [
+      const data = 
         {
           pageIndex: 1,
           pageSize: 50,
           keywork: '',
-        },
-      ]
+        }
+      
 
       const response = await SearchBy(data)
       const fetchedData = response.data || []
@@ -814,13 +814,12 @@ const ManageMenu = ({ canCreate }) => {
     setIsAPISuccess(false)
     try {
 
-      const data = [
+      const data =
         {
           pageIndex: 1,
           pageSize: 50,
           keywork: '',
-        },
-      ]
+        }
 
       const response = await SearchMenuBy(data)
       const fetchedData = response.data || []

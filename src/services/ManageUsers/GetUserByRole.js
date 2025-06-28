@@ -7,7 +7,7 @@ export const getUserByRole = async (data) => {
   try {
     const token = accessToken()
     const response = await axios.get(
-      `${HOST_API_SERVER}/users/page`,
+      `${HOST_API_SERVER}/nvc-core/users/page`,
 
       { params: data,
         headers: {

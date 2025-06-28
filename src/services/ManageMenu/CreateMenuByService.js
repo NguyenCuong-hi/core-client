@@ -7,7 +7,7 @@ export const CreateMenuByService = async (idRole, menus) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/menu-item/create-menus/?idRole=${idRole}`,
+      `${HOST_API_SERVER}/nvc-core/api/v1/menu-item/create-menus/?idRole=${idRole}`,
       menus
       ,
       {

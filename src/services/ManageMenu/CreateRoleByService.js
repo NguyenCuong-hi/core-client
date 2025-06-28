@@ -14,7 +14,7 @@ export const CreateRoleByService = async (role) => {
     }
 
     const response = await axios.put(
-      `${HOST_API_SERVER}/users-manage`,
+      `${HOST_API_SERVER}/nvc-core/api/v1/users-manage`,
       {
         role,
         users,
