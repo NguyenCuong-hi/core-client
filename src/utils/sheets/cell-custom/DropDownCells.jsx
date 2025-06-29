@@ -41,18 +41,7 @@ const DropdownEditor = ({ value: cell, onFinishedEditing, initialValue }) => {
       autoFocus
       openMenuOnFocus
       placeholder=""
-      // styles={{
-      //   control: (base) => ({
-      //     ...base,
-      //     border: 0,
-      //     boxShadow: 'none'
-      //   }),
-      //   option: (base) => ({
-      //     ...base,
-      //     fontSize: theme.editorFontSize,
-      //     fontFamily: theme.fontFamily
-      //   })
-      // }}
+
       components={{
         DropdownIndicator: () => null,
         IndicatorSeparator: () => null

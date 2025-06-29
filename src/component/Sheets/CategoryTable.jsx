@@ -14,7 +14,6 @@ import { useExtraCells } from '@glideapps/glide-data-grid-cells';
 import dayjs from 'dayjs';
 import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
-import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 
 function CategoryTable({

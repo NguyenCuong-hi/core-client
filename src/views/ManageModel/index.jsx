@@ -12,7 +12,7 @@ import { SearchConfigProdBy } from 'services/ModelManage/SearchBy';
 import useDynamicFilter from 'utils/hooks/useDynamicFilter';
 import { CreateListByService } from 'services/ModelManage/CreateListByService';
 import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
-import { addTab } from 'store/tabsReducer';
+import { addTab, setActiveTab } from 'store/tabsReducer';
 import { useDispatch } from 'react-redux';
 import { setSelectedRow } from '../../store/selectedRowSlice';
 
@@ -87,7 +87,7 @@ const ManageModelPage = (canCreate) => {
     },
     {
       title: t('Trạng thái'),
-      id: 'status',
+      id: 'statusConfProd',
       kind: 'Custom',
       readonly: false,
       width: 150,
@@ -101,7 +101,7 @@ const ManageModelPage = (canCreate) => {
     {
       title: t('Model'),
       id: 'modelTypeL',
-      kind: 'Text',
+      kind: 'Custom',
       readonly: true,
       width: 200,
       hasMenu: true,
@@ -114,7 +114,7 @@ const ManageModelPage = (canCreate) => {
     {
       title: t('Model'),
       id: 'modelTypeLName',
-      kind: 'Text',
+      kind: 'Custom',
       readonly: false,
       width: 200,
       hasMenu: true,
@@ -153,7 +153,7 @@ const ManageModelPage = (canCreate) => {
     {
       title: t('Model S'),
       id: 'modelTypeS',
-      kind: 'Text',
+      kind: 'Custom',
       readonly: true,
       width: 200,
       hasMenu: true,
@@ -166,7 +166,7 @@ const ManageModelPage = (canCreate) => {
     {
       title: t('Model S'),
       id: 'modelTypeSName',
-      kind: 'Text',
+      kind: 'Custom',
       readonly: false,
       width: 200,
       hasMenu: true,
@@ -406,6 +406,7 @@ const ManageModelPage = (canCreate) => {
       'description',
       'approval',
       'status',
+      'statusConfProd',
       'modelTypeL',
       'modelTypeLName',
       'modelTypeM',
@@ -441,13 +442,17 @@ const ManageModelPage = (canCreate) => {
     const resulU = filterAndSelectColumns(gridData, columns, 'U').map((row) => ({
       ...row,
       status: 'U',
-      id: row.id || ''
-    }));
+      id: row.id || '',
+      statusConfProd: { code: 1, name: "Đang họat động" }    
+    }
+    )
+    );
 
     const resulA = filterAndSelectColumns(gridData, columns, 'A').map((row) => ({
       ...row,
       status: 'A',
-      id: row.id || ''
+      id: row.id || '',
+      statusConfProd: { code: 1, name: "Đang họat động" }   
     }));
 
     const data = [...resulU, ...resulA];

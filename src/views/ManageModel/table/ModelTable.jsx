@@ -17,6 +17,7 @@ import { loadFromLocalStorageSheet, saveToLocalStorageSheet } from 'utils/local-
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
+import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 
 function ModelTable({
   setSelection,
@@ -39,7 +40,7 @@ function ModelTable({
   canEdit,
   openFilter,
   setOpenFilter,
-  onVisibleRegionChanged,
+  onVisibleRegionChanged
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -58,7 +59,6 @@ function ModelTable({
   const [keySearchText, setKeySearchText] = useState('');
   const [hoverRow, setHoverRow] = useState(undefined);
   const [contextRowIndex, setContextRowIndex] = useState(null);
-
 
   const onItemHovered = useCallback((args) => {
     const [_, row] = args.location;
@@ -109,11 +109,7 @@ function ModelTable({
     selectColumn: false
   });
 
-  const data = [
-    'A',
-    'B',  
-    'C',  
-  ]
+  const data = ['A', 'B', 'C'];
 
   const getData = useCallback(
     ([col, row]) => {
@@ -142,13 +138,27 @@ function ModelTable({
         };
       }
 
-      if (columnKey === 'isApprove') {
+      if (columnKey === 'approval') {
         const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
         return {
           kind: GridCellKind.Boolean,
           data: booleanValue,
           allowOverlay: true,
           hasMenu: column?.hasMenu || false
+        };
+      }
+
+      if (columnKey === 'modelTypeLName') {
+        const val = data.find((item) => item === value) || 'A';
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: val,
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: ['L-1', 'L-2', 'L-3'],
+            value: val
+          }
         };
       }
 
@@ -159,11 +169,39 @@ function ModelTable({
           allowOverlay: true,
           copyData: val,
           data: {
-            kind: "dropdown-cell",
-            allowedValues: ["A", "B", "C"],
+            kind: 'dropdown-cell',
+            allowedValues: ['M-1', 'M-2', 'M-3'],
             value: val
           }
-        }
+        };
+      }
+
+      if (columnKey === 'modelTypeSName') {
+        const val = data.find((item) => item === value) || 'A';
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: val,
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: ['S-1', 'S-2', 'S-3'],
+            value: val
+          }
+        };
+      }
+
+      if (columnKey === 'statusConfig') {
+        const val = data.find((item) => item === value) || 'A';
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: val,
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: ['Đang hoạt động', 'Không hoạt động'],
+            value: val
+          }
+        };
       }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
@@ -271,6 +309,76 @@ function ModelTable({
         key === 'PurCustSeq'
       ) {
         return;
+      }
+
+      if (key === 'statusConfig') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+            let selectedName = newValue.data[0];
+            const checkCopyData = newValue.copyData;
+            if (!selectedName) {
+              selectedName = ContractKindData.find((item) => item.MinorName === checkCopyData);
+            }
+            if (selectedName) {
+              product[cols[col].id] = selectedName.MinorName;
+              product['statusConfig'] = selectedName.MinorName;
+              product['statusConfig'] = selectedName.Value;
+            } else {
+              product[cols[col].id] = '';
+              product['statusConfig'] = '';
+              product['statusConfig'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      console.log('newValue', newValue)
+
+      if (key === 'modelTypeLName') {
+        if (newValue.kind === GridCellKind.Custom) {
+
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+            
+            let selectedName = newValue.data[0];
+            const checkCopyData = newValue.copyData;
+            if (!selectedName) {
+              selectedName = ContractKindData.find((item) => item.MinorName === checkCopyData);
+            }
+            if (selectedName) {
+              product[cols[col].id] = selectedName.MinorName;
+              product['modelTypeLName'] = selectedName.MinorName;
+              product['modelTypeM'] = selectedName.Value;
+            } else {
+              product[cols[col].id] = '';
+              product['modelTypeLName'] = '';
+              product['modelTypeM'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
       }
 
       // Xử lý các trường hợp khác
@@ -455,22 +563,22 @@ function ModelTable({
     if (key === 'delete') message.warning('Xoá');
   };
 
-const handleGridMouseDown = (args) => {
-  if (args.kind === "cell" && args.button === 2) {
-    setContextRowIndex(args.location.row);
-  }
-};
+  const handleGridMouseDown = (args) => {
+    if (args.kind === 'cell' && args.button === 2) {
+      setContextRowIndex(args.location.row);
+    }
+  };
 
-const [contextMenuPos, setContextMenuPos] = useState(null);
+  const [contextMenuPos, setContextMenuPos] = useState(null);
 
-const handleContextMenu = (args, event) => {
-  event.preventDefault(); // Ngăn menu mặc định của trình duyệt
+  const handleContextMenu = (args, event) => {
+    event.preventDefault(); // Ngăn menu mặc định của trình duyệt
 
-  if (args.kind === "cell") {
-    setContextRowIndex(args.location.row);
-    setContextMenuPos({ x: event.clientX, y: event.clientY });
-  }
-};
+    if (args.kind === 'cell') {
+      setContextRowIndex(args.location.row);
+      setContextMenuPos({ x: event.clientX, y: event.clientY });
+    }
+  };
 
   return (
     <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
@@ -528,7 +636,6 @@ const handleContextMenu = (args, event) => {
             onRowAppended={() => handleRowAppend(1)}
             onCellEdited={onCellEdited}
             onCellClicked={onCellClicked}
-
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
             onColumnMoved={onColumnMoved}
@@ -537,11 +644,8 @@ const handleContextMenu = (args, event) => {
             //     AsyncDropdownCellRenderer
             // ]}
             onItemHovered={onItemHovered}
-
             onVisibleRegionChanged={onVisibleRegionChanged}
             customRenderers={[DropdownRenderer]}
-
-
           />
           {/* {showMenu !== null &&
                     renderLayer(
@@ -603,7 +707,6 @@ const handleContextMenu = (args, event) => {
             <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
             <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
             <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
-            
           </div>
           <Button onClick={() => {}}>Tìm kiếm</Button>
         </Drawer>
