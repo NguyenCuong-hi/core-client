@@ -2,23 +2,23 @@ import React, { useMemo, useState } from 'react';
 import { GridCellKind, getMiddleCenterBias, TextCellEntry, useTheme } from '@glideapps/glide-data-grid';
 import Select, { components } from 'react-select';
 
-// 🧩 Component chính cho Dropdown Editor
 const DropdownEditor = ({ value: cell, onFinishedEditing, initialValue }) => {
-  const { allowedValues = [], value: selectedValue } = cell.data;
+  const { allowedValues, value: selectedValue } = cell.data;
   const [inputValue, setInputValue] = useState(initialValue ?? '');
   const theme = useTheme();
 
   const options = useMemo(() => {
     return allowedValues.map((val) => ({
-      value: val,
-      label: val
+      value: val.Value,
+      label: val.MinorName
     }));
   }, [allowedValues]);
 
-  // Nếu là readonly, chỉ hiển thị giá trị
   if (cell.readonly) {
-    return <TextCellEntry highlight autoFocus={false} disabled value={selectedValue ?? ''} onChange={() => undefined} />;
+    return <TextCellEntry highlight autoFocus={false} disabled value={typeof selectedValue === 'string' ? selectedValue : ''} onChange={() => undefined} />;
   }
+
+  
 
   return (
     <Select
@@ -26,7 +26,7 @@ const DropdownEditor = ({ value: cell, onFinishedEditing, initialValue }) => {
       inputValue={inputValue}
       onInputChange={setInputValue}
       menuPlacement="auto"
-      value={options.find((x) => x.value === selectedValue)}
+      value={options.find((x) => x.value === selectedValue) || null}
       options={options.filter((x) => x.label.toLowerCase().includes(inputValue.toLowerCase()))}
       menuPortalTarget={document.body}
       styles={{
@@ -41,7 +41,6 @@ const DropdownEditor = ({ value: cell, onFinishedEditing, initialValue }) => {
       autoFocus
       openMenuOnFocus
       placeholder=""
-
       components={{
         DropdownIndicator: () => null,
         IndicatorSeparator: () => null
@@ -56,22 +55,23 @@ const DropdownEditor = ({ value: cell, onFinishedEditing, initialValue }) => {
           primary: theme.accentColor
         }
       })}
-      onChange={async (e) => {
+      onChange={(e) => {
         if (!e) return;
-        await new Promise((r) => window.requestAnimationFrame(r));
-        onFinishedEditing({
-          ...cell,
-          data: {
-            ...cell.data,
-            value: e.value
-          }
-        });
+
+        setTimeout(() => {
+          onFinishedEditing({
+            ...cell,
+            data: {
+              ...cell.data,
+              value: e.value
+            }
+          });
+        }, 0);
       }}
     />
   );
 };
 
-// 🧩 Renderer đầy đủ cho ô dropdown
 export const DropdownRenderer = {
   kind: GridCellKind.Custom,
 
@@ -106,7 +106,7 @@ export const DropdownRenderer = {
   }),
 
   onPaste: (val, data) => ({
-    ...data,
-    value: data.allowedValues.includes(val) ? val : ''
-  })
+  ...data,
+  value: data.allowedValues.some((opt) => opt.Value === val) ? val : ''
+})
 };

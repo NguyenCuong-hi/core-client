@@ -109,7 +109,33 @@ function ModelTable({
     selectColumn: false
   });
 
-  const data = ['A', 'B', 'C'];
+  const dataL = [
+    { MinorName: 'L-1', Value: '1' },
+    { MinorName: 'L-2', Value: '2' },
+    { MinorName: 'L-3', Value: '3' }
+  ];
+  const dataM = [
+    { MinorName: 'M-1', Value: '1' },
+    { MinorName: 'M-2', Value: '2' },
+    { MinorName: 'M-3', Value: '3' }
+  ];
+  const dataS = [
+    { MinorName: 'S-1', Value: '1' },
+    { MinorName: 'S-2', Value: '2' },
+    { MinorName: 'S-3', Value: '3' }
+  ];
+
+    const dataCustomer = [
+    { MinorName: 'Samsung', Value: '1' },
+    { MinorName: 'Apple', Value: '2' },
+    { MinorName: 'Misubisi', Value: '3' }
+  ];
+
+  const dataStatus = [
+    { MinorName: 'Đang áp dụng', Value: '1' },
+    { MinorName: 'Chưa áp dụng', Value: '2' },
+    { MinorName: 'Thử nghiệm', Value: '3' }
+  ];
 
   const getData = useCallback(
     ([col, row]) => {
@@ -149,60 +175,81 @@ function ModelTable({
       }
 
       if (columnKey === 'modelTypeLName') {
-        const val = data.find((item) => item === value) || 'A';
         return {
           kind: GridCellKind.Custom,
           allowOverlay: true,
-          copyData: val,
+          copyData: String(value),
           data: {
             kind: 'dropdown-cell',
-            allowedValues: ['L-1', 'L-2', 'L-3'],
-            value: val
-          }
+            allowedValues: dataL,
+            value: value
+          },
+          displayData: String(value),
+          readonly: column?.readonly || false
         };
       }
 
       if (columnKey === 'modelTypeMName') {
-        const val = data.find((item) => item === value) || 'A';
         return {
           kind: GridCellKind.Custom,
           allowOverlay: true,
-          copyData: val,
+          copyData: String(value),
           data: {
             kind: 'dropdown-cell',
-            allowedValues: ['M-1', 'M-2', 'M-3'],
-            value: val
-          }
+            allowedValues: dataM,
+            value: value
+          },
+          displayData: String(value),
+          readonly: column?.readonly || false
         };
       }
 
       if (columnKey === 'modelTypeSName') {
-        const val = data.find((item) => item === value) || 'A';
         return {
           kind: GridCellKind.Custom,
           allowOverlay: true,
-          copyData: val,
+          copyData: String(value),
           data: {
             kind: 'dropdown-cell',
-            allowedValues: ['S-1', 'S-2', 'S-3'],
-            value: val
-          }
+            allowedValues: dataS,
+            value: value
+          },
+          displayData: String(value),
+          readonly: column?.readonly || false
         };
       }
 
-      if (columnKey === 'statusConfig') {
-        const val = data.find((item) => item === value) || 'A';
+      if (columnKey === 'customer') {
+        const val = dataCustomer.find((item) => item.Value === String(value)) || '';
+
         return {
           kind: GridCellKind.Custom,
           allowOverlay: true,
-          copyData: val,
+          copyData: value,
           data: {
             kind: 'dropdown-cell',
-            allowedValues: ['Đang hoạt động', 'Không hoạt động'],
-            value: val
-          }
+            allowedValues: dataCustomer,
+            value: val.MinorName
+          },
+          displayData: String(val.MinorName || ''),
+          readonly: column?.readonly || false
         };
       }
+
+      // if (columnKey === 'statusConfProd') {
+      //   return {
+      //     kind: GridCellKind.Custom,
+      //     allowOverlay: true,
+      //     copyData: value,
+      //     data: {
+      //       kind: 'dropdown-cell',
+      //       allowedValues: dataStatus,
+      //       value: val.MinorName
+      //     },
+      //     displayData: String(val.MinorName || ''),
+      //     readonly: column?.readonly || false
+      //   };
+      // }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
         return {
@@ -319,16 +366,15 @@ function ModelTable({
             let selectedName = newValue.data[0];
             const checkCopyData = newValue.copyData;
             if (!selectedName) {
-              selectedName = ContractKindData.find((item) => item.MinorName === checkCopyData);
+              selectedName = dataStatus.find((item) => item.MinorName === checkCopyData);
             }
             if (selectedName) {
               product[cols[col].id] = selectedName.MinorName;
-              product['statusConfig'] = selectedName.MinorName;
-              product['statusConfig'] = selectedName.Value;
+              product['statusConfProd'] = selectedName.Value;
             } else {
               product[cols[col].id] = '';
-              product['statusConfig'] = '';
-              product['statusConfig'] = '';
+
+              product['statusConfProd'] = '';
             }
 
             product.isEdited = true;
@@ -344,28 +390,112 @@ function ModelTable({
         }
       }
 
-      console.log('newValue', newValue)
-
       if (key === 'modelTypeLName') {
         if (newValue.kind === GridCellKind.Custom) {
-
           setGridData((prev) => {
             const newData = [...prev];
             const product = newData[row];
-            
-            let selectedName = newValue.data[0];
+
+            let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
-            if (!selectedName) {
-              selectedName = ContractKindData.find((item) => item.MinorName === checkCopyData);
-            }
             if (selectedName) {
-              product[cols[col].id] = selectedName.MinorName;
-              product['modelTypeLName'] = selectedName.MinorName;
-              product['modelTypeM'] = selectedName.Value;
+              const selectedValue = dataL.find((item) => item.Value === selectedName.value);
+              product['modelTypeLName'] = selectedValue.MinorName;
+              product['modelTypeL'] = selectedValue.Value;
             } else {
-              product[cols[col].id] = '';
               product['modelTypeLName'] = '';
+              product['modelTypeL'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'modelTypeMName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            
+            if (selectedName) {
+              const selectedValue = dataM.find((item) => item.Value === selectedName.value);
+              product['modelTypeMName'] = selectedValue.MinorName;
+              product['modelTypeM'] = selectedValue.Value;
+            } else {
+              product['modelTypeMName'] = '';
               product['modelTypeM'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'modelTypeSName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataS.find((item) => item.Value === selectedName.value);
+              product['modelTypeSName'] = selectedValue.MinorName;
+              product['modelTypeS'] = selectedValue.Value;
+            } else {
+              product['modelTypeSName'] = '';
+              product['modelTypeS'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'customer') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataCustomer.find((item) => item.Value === selectedName.value);
+              product['customer'] = selectedValue.Value;
+              product['customerId'] = selectedValue.Value;
+            } else {
+              product['modelTypeSName'] = '';
+              product['modelTypeS'] = '';
             }
 
             product.isEdited = true;

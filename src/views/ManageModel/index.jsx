@@ -102,7 +102,7 @@ const ManageModelPage = (canCreate) => {
       title: t('Model'),
       id: 'modelTypeL',
       kind: 'Custom',
-      readonly: true,
+      readonly: false,
       width: 200,
       hasMenu: true,
       visible: false,
@@ -179,7 +179,7 @@ const ManageModelPage = (canCreate) => {
     {
       title: t('Khách hàng'),
       id: 'customer',
-      kind: 'Text',
+      kind: 'Custom',
       readonly: false,
       width: 200,
       hasMenu: true,
@@ -192,7 +192,7 @@ const ManageModelPage = (canCreate) => {
     {
       title: t('Khách hàng'),
       id: 'customerId',
-      kind: 'Text',
+      kind: 'Custom',
       readonly: false,
       width: 200,
       hasMenu: true,
