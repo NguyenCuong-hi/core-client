@@ -27,6 +27,8 @@ import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
 import { useNotify } from 'utils/hooks/onNotify';
 import { useSelector } from 'react-redux';
 import useDynamicFilter from 'utils/hooks/useDynamicFilter';
+import { SearchConfigProdBy } from 'services/ModelManage/SearchBy';
+import { getConfigProdById } from 'services/ModelManage/GetConfigProdById';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -37,6 +39,9 @@ const ManageModelPageDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const controllers = useRef({});
   const selectedData = useSelector((state) => state.selectedRow);
   const [isAPISuccess, setIsAPISuccess] = useState(true);
+  const loadingBarRef = useRef(null);
+
+  console.log('selectedData', selectedData);
 
   const defaultCols = useMemo(() => [
     {
@@ -295,6 +300,70 @@ const ManageModelPageDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       console.log('Failed:', errorInfo);
     }
   }, [formModelBasic]);
+
+
+    const onClickSearch = useCallback(async () => {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+  
+      if (controllers.current && controllers.current.onClickSearch) {
+        controllers.current.onClickSearch.abort();
+        controllers.current.onClickSearch = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+  
+      controllers.current.onClickSearch = controller;
+  
+      setIsAPISuccess(false);
+  
+      try {
+  
+        const response = await getConfigProdById(selectedData.data.id);
+        const fetchedData = response.data || [];
+
+        formModelBasic.setFieldsValue({
+          configProdName: fetchedData.configProdName,
+          description: fetchedData.description,
+          approval: fetchedData.approval,
+          status: fetchedData.status,
+          dateExpire: fetchedData.dateExpire ? moment(selectedData.data.datePeriod) : null,
+          customer: fetchedData.customer,
+          userRegister: fetchedData.userRegister,
+          modelTypeL: fetchedData.modelTypeLName,
+          modelTypeS: fetchedData.modelTypeMName,
+          modelTypeM: fetchedData.modelTypeSName,
+          deviceCustomer: fetchedData.deviceCustomer,
+          consignee: fetchedData.consignee,
+          label: fetchedData.label,
+          projectName: fetchedData.projectName,
+        });
+  
+
+      } catch (error) {
+
+        setIsAPISuccess(true);
+      } finally {
+        setIsAPISuccess(true);
+        controllers.current.onClickSearch = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    }, [isAPISuccess, selectedData, formModelBasic]);
+
+      useEffect(() => {
+        onClickSearch();
+      }, [selectedData]);
 
   return (
     <>
