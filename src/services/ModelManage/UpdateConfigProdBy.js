@@ -2,7 +2,8 @@ import axios from 'axios';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 import { HOST_API_SERVER } from 'services/config';
 
-export const CreateRoleByService = async (role) => {
+
+export const UpdateConfigProdBy = async (id, dto) => {
   try {
     const token = accessToken();
 
@@ -13,12 +14,9 @@ export const CreateRoleByService = async (role) => {
       };
     }
 
-    const response = await axios.put(
-      `${HOST_API_SERVER}/nvc-core/api/v1/users-manage`,
-      {
-        role,
-        users,
-      },
+     const response = await axios.put(
+      `${HOST_API_SERVER}/config-prod/?id=${id}`,
+      dto,
       {
         headers: {
           Authorization: `Bearer ${token}`,

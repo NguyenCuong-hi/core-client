@@ -1,35 +1,10 @@
-import { Approval, Description, Label, Note } from '@mui/icons-material';
 import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
 import React from 'react';
 
 const ModelInfomationQuery = ({
-
   formModelBasic,
-
-  ConfigProductName,
-  setConfigProductName,
-  Description,
-  setDescription,
-  Note,
-  setNote,
-  Approval,
-  setApproval,
-  DatePeriod,
-  setDatePeriod,
-  Customer,
-  setCustomer,
-  Label,
-  setLabel,
-  CustomerDevice,
-  setCustomerDevice,
-  ProjectName,
-  setProjectName,
-  Consignee,
-  setConsignee,
-  onFinish,
-
+  onFinish
 }) => {
-  
   const onChange = (value) => {
     console.log(`selected ${value}`);
   };
@@ -39,19 +14,15 @@ const ModelInfomationQuery = ({
 
   return (
     <div className="bg-slate-50 ">
-
-      <Form 
-      form={formModelBasic}
-      onFinish={onFinish}
-      layout="vertical">
-        <Row className="gap-3 flex items-center m-2 ">
+      <Form form={formModelBasic} onFinish={onFinish} layout="vertical">
+        <Row className="gap-3 flex items-center ml-2">
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px]">Tên cấu hình sản phẩm</span>}
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'ConfigProductName'}
+              name={'configProdName'}
             >
               <Input
                 placeholder=""
@@ -68,7 +39,7 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'Description'}
+              name={'description'}
             >
               <Input
                 placeholder=""
@@ -85,20 +56,20 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'Note'}
+              name={'approval'}
             >
-              <Input 
-              placeholder="" 
-              className="w-[150px]" 
-              size="middle" 
-              // value={Note} 
-              // onChange={(e) => setNote(e.target.value)} 
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
+                // value={Note}
+                // onChange={(e) => setNote(e.target.value)}
               />
             </Form.Item>
           </Col>
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
-              name={'Approval'}
+              name={'approval'}
               label={<span className="uppercase text-[9px]">Chấp nhận</span>}
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
@@ -110,14 +81,14 @@ const ModelInfomationQuery = ({
               </Radio.Group>
             </Form.Item>
           </Col>
-         
+
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px]">Trạng thái</span>}
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'Status'}
+              name={'status'}
             >
               <Select
                 showSearch
@@ -150,7 +121,7 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'Customer'}
+              name={'customer'}
             >
               <Input placeholder="" className="w-[150px]" size="middle" />
             </Form.Item>
@@ -161,7 +132,7 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'UserRegister'}
+              name={'userRegister'}
             >
               <Input placeholder="" className="w-[150px]" size="middle" />
             </Form.Item>
@@ -169,10 +140,10 @@ const ModelInfomationQuery = ({
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px]">Hạn dùng</span>}
-              style={{ marginBottom: 0}}
+              style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'DatePeriod'}
+              name={'dateExpire'}
             >
               <DatePicker
                 // value={DatePeriod}
@@ -182,7 +153,6 @@ const ModelInfomationQuery = ({
               />
             </Form.Item>
           </Col>
-          
         </Row>
         <Row className="gap-3 flex items-center m-2 ">
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
@@ -191,7 +161,7 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'ProductTypeL'}
+              name={'modelTypeL'}
             >
               <Select
                 showSearch
@@ -223,7 +193,7 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'ProductTypeM'}
+              name={'modelTypeM'}
             >
               <Select
                 showSearch
@@ -255,7 +225,7 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'ProductTypeS'}
+              name={'modelTypeS'}
             >
               <Select
                 showSearch
@@ -281,21 +251,19 @@ const ModelInfomationQuery = ({
               />
             </Form.Item>
           </Col>
-          
+
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px]">Khách hàng</span>}
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'Customer'}
+              name={'customer'}
             >
-              <Input 
-              placeholder="" 
-              className="w-[150px]" 
-              size="middle" 
-              // value={Customer}
-              // onChange={(e) => setCustomer(e.target.value)}
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
               />
             </Form.Item>
           </Col>
@@ -306,14 +274,12 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'Label'}
+              name={'label'}
             >
-              <Input 
-              placeholder="" 
-              className="w-[150px]" 
-              size="middle" 
-              // value={Label}
-              // onChange={(e) => setLabel(e.target.value)}
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
               />
             </Form.Item>
           </Col>
@@ -323,14 +289,12 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'CustomerDevice'}
+              name={'deviceCustomer'}
             >
-              <Input 
-              placeholder="" 
-              className="w-[150px]" 
-              size="middle" 
-              // value={CustomerDevice}
-              // onChange={(e) => setCustomerDevice(e.target.value)}
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
               />
             </Form.Item>
           </Col>
@@ -340,15 +304,12 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'ProjectName'}
+              name={'projectName'}
             >
-              <Input 
-              placeholder="" 
-              className="w-[150px]" 
-              size="middle" 
-              // value={ProjectName}
-              // onChange={(e) => setProjectName(e.target.value)}
-
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
               />
             </Form.Item>
           </Col>
@@ -358,15 +319,12 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'Consignee'}
+              name={'consignee'}
             >
-              <Input 
-              
-              placeholder="" 
-              className="w-[150px]" 
-              size="middle"
-              // value={Consignee}
-              // onChange={(e) => setConsignee(e.target.value)} 
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
               />
             </Form.Item>
           </Col>

@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Menu } from 'antd';
+import * as Icons from '@ant-design/icons';
 
-import menuItems from 'menu-item';
 import { useDispatch, useSelector } from 'react-redux';
 import { addTab, setActiveTab } from 'store/tabsReducer';
 
@@ -11,6 +11,41 @@ const { Sider } = Layout;
 const Sidebar = ({ drawerOpen, drawerToggle, sidebarWidth }) => {
   const dispatch = useDispatch();
   const { tabList, activeTabKey } = useSelector((state) => state.tab);
+
+  const [menuItems, setMenuItems] = useState([]);
+
+  const mapMenuItems = (items) => {
+    return items.map((item) => {
+      const IconComponent =
+        typeof item.icon === 'string' && Icons[item.icon]
+          ? Icons[item.icon]
+          : null;
+  
+      return {
+        
+        key: item.key,
+        label: item.label,
+        icon: IconComponent ? <IconComponent /> : null,
+        component: item?.component || null,
+        children: Array.isArray(item.children)
+          ? mapMenuItems(item.children)
+          : '',
+      };
+    });
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('menu-item');
+    if (stored) {
+      try {
+        const rawItems = JSON.parse(stored);
+        const formattedMenu = mapMenuItems(rawItems);
+        setMenuItems(formattedMenu);
+      } catch (err) {
+        console.error('Failed to parse menuItems:', err);
+      }
+    }
+  }, []);
 
   const siderStyle = {
     overflowY: 'scroll',

@@ -1,12 +1,9 @@
-import axios from "axios";
-import { HOST_API_SERVER } from "services/config";
-import { ERROR_MESSAGES } from "utils/constans/sysConstans";
-import { accessToken } from "utils/cookies/CookiesUtils";
 
 export const GetUserService = async () => {
   try {
     const token = accessToken();
-    const response = await axios.get(`${HOST_API_SERVER}/nvc-core/api/v1/users/current`,{
+
+    const response = await axios.get('https://jsonplaceholder.typicode.com/posts', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -21,13 +18,15 @@ export const GetUserService = async () => {
     } else {
       return {
         success: false,
-        message: response.error || ERROR_MESSAGES ,
+        message: response.data.message || ERROR_MESSAGES.ERROR_DATA,
       };
     }
   } catch (error) {
     return {
       success: false,
-      message: error.response || ERROR_MESSAGES
+      message: error.response
+        ? error.response.data.message
+        : ERROR_MESSAGES.ERROR,
     };
   }
 };

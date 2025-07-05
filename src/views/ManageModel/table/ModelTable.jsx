@@ -16,6 +16,8 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet, saveToLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
+import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
+import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 
 function ModelTable({
   setSelection,
@@ -37,7 +39,8 @@ function ModelTable({
   defaultCols,
   canEdit,
   openFilter,
-  setOpenFilter
+  setOpenFilter,
+  onVisibleRegionChanged
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -49,14 +52,13 @@ function ModelTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', []);
+    return loadFromLocalStorageSheet('H_model_prod', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
   const [keySearchText, setKeySearchText] = useState('');
   const [hoverRow, setHoverRow] = useState(undefined);
   const [contextRowIndex, setContextRowIndex] = useState(null);
-
 
   const onItemHovered = useCallback((args) => {
     const [_, row] = args.location;
@@ -107,6 +109,34 @@ function ModelTable({
     selectColumn: false
   });
 
+  const dataL = [
+    { MinorName: 'L-1', Value: '1' },
+    { MinorName: 'L-2', Value: '2' },
+    { MinorName: 'L-3', Value: '3' }
+  ];
+  const dataM = [
+    { MinorName: 'M-1', Value: '1' },
+    { MinorName: 'M-2', Value: '2' },
+    { MinorName: 'M-3', Value: '3' }
+  ];
+  const dataS = [
+    { MinorName: 'S-1', Value: '1' },
+    { MinorName: 'S-2', Value: '2' },
+    { MinorName: 'S-3', Value: '3' }
+  ];
+
+    const dataCustomer = [
+    { MinorName: 'Samsung', Value: '1' },
+    { MinorName: 'Apple', Value: '2' },
+    { MinorName: 'Misubisi', Value: '3' }
+  ];
+
+  const dataStatus = [
+    { MinorName: 'Đang áp dụng', Value: '1' },
+    { MinorName: 'Chưa áp dụng', Value: '2' },
+    { MinorName: 'Thử nghiệm', Value: '3' }
+  ];
+
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
@@ -134,7 +164,7 @@ function ModelTable({
         };
       }
 
-      if (columnKey === 'isApprove') {
+      if (columnKey === 'approval') {
         const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
         return {
           kind: GridCellKind.Boolean,
@@ -143,6 +173,83 @@ function ModelTable({
           hasMenu: column?.hasMenu || false
         };
       }
+
+      if (columnKey === 'modelTypeLName') {
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: String(value),
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: dataL,
+            value: value
+          },
+          displayData: String(value),
+          readonly: column?.readonly || false
+        };
+      }
+
+      if (columnKey === 'modelTypeMName') {
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: String(value),
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: dataM,
+            value: value
+          },
+          displayData: String(value),
+          readonly: column?.readonly || false
+        };
+      }
+
+      if (columnKey === 'modelTypeSName') {
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: String(value),
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: dataS,
+            value: value
+          },
+          displayData: String(value),
+          readonly: column?.readonly || false
+        };
+      }
+
+      if (columnKey === 'customer') {
+        const val = dataCustomer.find((item) => item.Value === String(value)) || '';
+
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: value,
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: dataCustomer,
+            value: val.MinorName
+          },
+          displayData: String(val.MinorName || ''),
+          readonly: column?.readonly || false
+        };
+      }
+
+      // if (columnKey === 'statusConfProd') {
+      //   return {
+      //     kind: GridCellKind.Custom,
+      //     allowOverlay: true,
+      //     copyData: value,
+      //     data: {
+      //       kind: 'dropdown-cell',
+      //       allowedValues: dataStatus,
+      //       value: val.MinorName
+      //     },
+      //     displayData: String(val.MinorName || ''),
+      //     readonly: column?.readonly || false
+      //   };
+      // }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
         return {
@@ -251,6 +358,159 @@ function ModelTable({
         return;
       }
 
+      if (key === 'statusConfig') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+            let selectedName = newValue.data[0];
+            const checkCopyData = newValue.copyData;
+            if (!selectedName) {
+              selectedName = dataStatus.find((item) => item.MinorName === checkCopyData);
+            }
+            if (selectedName) {
+              product[cols[col].id] = selectedName.MinorName;
+              product['statusConfProd'] = selectedName.Value;
+            } else {
+              product[cols[col].id] = '';
+
+              product['statusConfProd'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'modelTypeLName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataL.find((item) => item.Value === selectedName.value);
+              product['modelTypeLName'] = selectedValue.MinorName;
+              product['modelTypeL'] = selectedValue.Value;
+            } else {
+              product['modelTypeLName'] = '';
+              product['modelTypeL'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'modelTypeMName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            
+            if (selectedName) {
+              const selectedValue = dataM.find((item) => item.Value === selectedName.value);
+              product['modelTypeMName'] = selectedValue.MinorName;
+              product['modelTypeM'] = selectedValue.Value;
+            } else {
+              product['modelTypeMName'] = '';
+              product['modelTypeM'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'modelTypeSName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataS.find((item) => item.Value === selectedName.value);
+              product['modelTypeSName'] = selectedValue.MinorName;
+              product['modelTypeS'] = selectedValue.Value;
+            } else {
+              product['modelTypeSName'] = '';
+              product['modelTypeS'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'customer') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataCustomer.find((item) => item.Value === selectedName.value);
+              product['customer'] = selectedValue.Value;
+              product['customerId'] = selectedValue.Value;
+            } else {
+              product['modelTypeSName'] = '';
+              product['modelTypeS'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
       // Xử lý các trường hợp khác
       setGridData((prevData) => {
         const updatedData = [...prevData];
@@ -338,7 +598,7 @@ function ModelTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+      saveToLocalStorageSheet('H_model_prod', newHidden);
       return newHidden;
     });
   };
@@ -347,7 +607,7 @@ function ModelTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_model_prod', uniqueCols);
       return uniqueCols;
     });
   };
@@ -359,7 +619,7 @@ function ModelTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_model_prod', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -370,8 +630,8 @@ function ModelTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_MODEL_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_MODEL_LIST');
+    localStorage.removeItem('S_model_prod');
+    localStorage.removeItem('H_model_prod');
     setShowMenu(null);
   };
 
@@ -380,14 +640,14 @@ function ModelTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', updatedCols);
+      saveToLocalStorageSheet('S_model_prod', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_model_prod', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -407,23 +667,23 @@ function ModelTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_model_prod', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_model_prod', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_model_prod', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_model_prod', newHidden);
         return newHidden;
       });
     }
@@ -433,22 +693,22 @@ function ModelTable({
     if (key === 'delete') message.warning('Xoá');
   };
 
-const handleGridMouseDown = (args) => {
-  if (args.kind === "cell" && args.button === 2) {
-    setContextRowIndex(args.location.row);
-  }
-};
+  const handleGridMouseDown = (args) => {
+    if (args.kind === 'cell' && args.button === 2) {
+      setContextRowIndex(args.location.row);
+    }
+  };
 
-const [contextMenuPos, setContextMenuPos] = useState(null);
+  const [contextMenuPos, setContextMenuPos] = useState(null);
 
-const handleContextMenu = (args, event) => {
-  event.preventDefault(); // Ngăn menu mặc định của trình duyệt
+  const handleContextMenu = (args, event) => {
+    event.preventDefault(); // Ngăn menu mặc định của trình duyệt
 
-  if (args.kind === "cell") {
-    setContextRowIndex(args.location.row);
-    setContextMenuPos({ x: event.clientX, y: event.clientY });
-  }
-};
+    if (args.kind === 'cell') {
+      setContextRowIndex(args.location.row);
+      setContextMenuPos({ x: event.clientX, y: event.clientY });
+    }
+  };
 
   return (
     <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
@@ -505,8 +765,7 @@ const handleContextMenu = (args, event) => {
             keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
-
+            onCellClicked={onCellClicked}
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
             onColumnMoved={onColumnMoved}
@@ -515,7 +774,8 @@ const handleContextMenu = (args, event) => {
             //     AsyncDropdownCellRenderer
             // ]}
             onItemHovered={onItemHovered}
-
+            onVisibleRegionChanged={onVisibleRegionChanged}
+            customRenderers={[DropdownRenderer]}
           />
           {/* {showMenu !== null &&
                     renderLayer(
@@ -577,7 +837,6 @@ const handleContextMenu = (args, event) => {
             <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
             <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
             <Input placeholder={`SEARCH`} value="" onChange={(e) => {}} style={{ marginRight: 8, width: 200 }} />
-            
           </div>
           <Button onClick={() => {}}>Tìm kiếm</Button>
         </Drawer>

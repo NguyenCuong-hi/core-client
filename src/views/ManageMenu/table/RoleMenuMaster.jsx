@@ -29,6 +29,8 @@ const RoleMenuMaster = ({
   handleRowAppendMenu,
   setEditedRowsMenu,
   onCellClickedMenu,
+  selectionMenu,
+  setSelectionMenu,
 
   defaultColsAuthor,
   gridDataAuthor,
@@ -122,6 +124,8 @@ const RoleMenuMaster = ({
                   handleRowAppend={handleRowAppendMenu}
                   setEditedRows={setEditedRowsMenu}
                   onCellClicked={onCellClickedMenu}
+                  selection={selectionMenu}
+                  setSelection={setSelectionMenu}
                 />
               )}
               {current === '2' && (

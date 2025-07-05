@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { TabComponents } from "menu-tabs";
+import { TabComponents } from "menu-component";
 import Default from "views/default";
 
 const DynamicTabContent = () => {

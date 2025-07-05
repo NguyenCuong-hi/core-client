@@ -2,19 +2,15 @@ import axios from "axios";
 import { HOST_API_SERVER } from "services/config";
 import { accessToken } from "utils/cookies/CookiesUtils";
 
-export const SearchMenuBy = async (data) => {
+export const SearchAuthoritiesBy = async (search) => {
   try {
     const token = accessToken();
-    const response = await axios.get(
-      `${HOST_API_SERVER}/nvc-core/api/v1/menu-item/page`,
-
-      { params: data,
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-      },
-    );
+    const response = await axios.get(`${HOST_API_SERVER}/authorities/page`,{
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
     if (response.status === 200 || response.status === 201) {
       return {
