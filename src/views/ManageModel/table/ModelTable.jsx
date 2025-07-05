@@ -18,6 +18,7 @@ import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
+import { DropDownCustomCells } from 'utils/sheets/cell-custom/DropDownCustomCells';
 
 function ModelTable({
   setSelection,
@@ -110,31 +111,31 @@ function ModelTable({
   });
 
   const dataL = [
-    { MinorName: 'L-1', Value: '1' },
-    { MinorName: 'L-2', Value: '2' },
-    { MinorName: 'L-3', Value: '3' }
+    { MinorName: 'L-1', Value: 1 },
+    { MinorName: 'L-2', Value: 2 },
+    { MinorName: 'L-3', Value: 3 }
   ];
   const dataM = [
-    { MinorName: 'M-1', Value: '1' },
-    { MinorName: 'M-2', Value: '2' },
-    { MinorName: 'M-3', Value: '3' }
+    { MinorName: 'M-1', Value: 1 },
+    { MinorName: 'M-2', Value: 2 },
+    { MinorName: 'M-3', Value: 3 }
   ];
   const dataS = [
-    { MinorName: 'S-1', Value: '1' },
-    { MinorName: 'S-2', Value: '2' },
-    { MinorName: 'S-3', Value: '3' }
+    { MinorName: 'S-1', Value: 1 },
+    { MinorName: 'S-2', Value: 2 },
+    { MinorName: 'S-3', Value: 3 }
   ];
 
-    const dataCustomer = [
-    { MinorName: 'Samsung', Value: '1' },
-    { MinorName: 'Apple', Value: '2' },
-    { MinorName: 'Misubisi', Value: '3' }
+  const dataCustomer = [
+    { label: 'SAMSUNG', value: 1 },
+    { label: 'MISUKI', value:2 },
+    { label: 'APPLE', value: 3 },
   ];
 
   const dataStatus = [
-    { MinorName: 'Đang áp dụng', Value: '1' },
-    { MinorName: 'Chưa áp dụng', Value: '2' },
-    { MinorName: 'Thử nghiệm', Value: '3' }
+    { label: 'Đang áp dụng', value: 1 },
+    { label: 'Chưa áp dụng', value: 2 },
+    { label: 'Thử nghiệm', value: 3 }
   ];
 
   const getData = useCallback(
@@ -220,36 +221,35 @@ function ModelTable({
       }
 
       if (columnKey === 'customer') {
-        const val = dataCustomer.find((item) => item.Value === String(value)) || '';
 
         return {
           kind: GridCellKind.Custom,
           allowOverlay: true,
-          copyData: value,
+          copyData: value.value,
           data: {
-            kind: 'dropdown-cell',
+            kind: 'dropdown-custom-cell',
             allowedValues: dataCustomer,
-            value: val.MinorName
+            value: value.label
           },
-          displayData: String(val.MinorName || ''),
+          displayData: String(value.label || ''),
           readonly: column?.readonly || false
         };
       }
 
-      // if (columnKey === 'statusConfProd') {
-      //   return {
-      //     kind: GridCellKind.Custom,
-      //     allowOverlay: true,
-      //     copyData: value,
-      //     data: {
-      //       kind: 'dropdown-cell',
-      //       allowedValues: dataStatus,
-      //       value: val.MinorName
-      //     },
-      //     displayData: String(val.MinorName || ''),
-      //     readonly: column?.readonly || false
-      //   };
-      // }
+      if (columnKey === 'statusConfProd') {
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: true,
+          copyData: value.value,
+          data: {
+            kind: 'dropdown-custom-cell',
+            allowedValues: dataStatus,
+            value: value.label
+          },
+          displayData: String(value.label || ''),
+          readonly: column?.readonly || false
+        };
+      }
 
       if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
         return {
@@ -358,22 +358,19 @@ function ModelTable({
         return;
       }
 
-      if (key === 'statusConfig') {
+      if (key === 'statusConfProd') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
             const product = newData[row];
-            let selectedName = newValue.data[0];
+            const selected = newValue.data;
             const checkCopyData = newValue.copyData;
-            if (!selectedName) {
-              selectedName = dataStatus.find((item) => item.MinorName === checkCopyData);
-            }
-            if (selectedName) {
-              product[cols[col].id] = selectedName.MinorName;
-              product['statusConfProd'] = selectedName.Value;
+
+            if (selected) {
+              const selectedName = dataStatus.find((item) => item.value === selected.value);
+              product['statusConfProd'] = selectedName;
             } else {
               product[cols[col].id] = '';
-
               product['statusConfProd'] = '';
             }
 
@@ -428,7 +425,7 @@ function ModelTable({
 
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
-            
+
             if (selectedName) {
               const selectedValue = dataM.find((item) => item.Value === selectedName.value);
               product['modelTypeMName'] = selectedValue.MinorName;
@@ -486,16 +483,15 @@ function ModelTable({
           setGridData((prev) => {
             const newData = [...prev];
             const product = newData[row];
-
-            let selectedName = newValue.data;
+            const selected = newValue.data;
             const checkCopyData = newValue.copyData;
-            if (selectedName) {
-              const selectedValue = dataCustomer.find((item) => item.Value === selectedName.value);
-              product['customer'] = selectedValue.Value;
-              product['customerId'] = selectedValue.Value;
+
+            if (selected) {
+              const selectedName = dataCustomer.find((item) => item.value === selected.value);
+              product['customer'] = selectedName;
             } else {
-              product['modelTypeSName'] = '';
-              product['modelTypeS'] = '';
+              product[cols[col].id] = '';
+              product['customer'] = '';
             }
 
             product.isEdited = true;
@@ -775,7 +771,7 @@ function ModelTable({
             // ]}
             onItemHovered={onItemHovered}
             onVisibleRegionChanged={onVisibleRegionChanged}
-            customRenderers={[DropdownRenderer]}
+            customRenderers={[DropdownRenderer, DropDownCustomCells]}
           />
           {/* {showMenu !== null &&
                     renderLayer(

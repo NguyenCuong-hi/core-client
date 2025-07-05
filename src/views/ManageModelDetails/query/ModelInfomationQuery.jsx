@@ -1,15 +1,58 @@
 import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
 import React from 'react';
 
-const ModelInfomationQuery = ({
-  formModelBasic,
-  onFinish
-}) => {
-  const onChange = (value) => {
-    console.log(`selected ${value}`);
+const ModelInfomationQuery = ({ formModelBasic, dataL, dataM, dataS, dataCustomer, dataStatus, onFinish }) => {
+
+  const onChangeModelTypeL = (value) => {
+    if (value !== undefined) {
+      const modelTypeL = dataL.find((x) => x.value === value);
+      formModelBasic.setFieldsValue({
+        modelTypeL: modelTypeL.value,
+        modelTypeLName: modelTypeL.label
+      });
+    }
+  };
+
+  const onChangeModelTypeM = (value) => {
+    if (value !== undefined) {
+      const modelTypeM = dataM.find((x) => x.value === value);
+      formModelBasic.setFieldsValue({
+        modelTypeM: modelTypeM.value,
+        modelTypeMName: modelTypeM.label
+      });
+    }
+  };
+
+  const onChangeModelTypeS = (value) => {
+    if (value !== undefined) {
+      const modelTypeS = dataS.find((x) => x.value === value);
+      formModelBasic.setFieldsValue({
+        modelTypeS: modelTypeS.value,
+        modelTypeSName: modelTypeS.label
+      });
+    }
   };
   const onSearch = (value) => {
     console.log('search:', value);
+  };
+
+  const onChangeStatus = (value) => {
+    if (value !== undefined) {
+      const status = dataStatus.find((x) => x.value === value);
+      formModelBasic.setFieldsValue({
+        statusConfProd: status,
+
+      });
+    }
+  };
+
+  const onChangeCustomer = (value) => {
+    if (value !== undefined) {
+      const customer = dataCustomer.find((x) => x.value === value);
+      formModelBasic.setFieldsValue({
+        customer: customer,
+      });
+    }
   };
 
   return (
@@ -88,29 +131,16 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'status'}
+              name={'statusConfProd'}
             >
               <Select
                 showSearch
                 placeholder="Trạng thái"
                 optionFilterProp="label"
-                onChange={onChange}
+                onChange={onChangeStatus}
                 onSearch={onSearch}
                 allowClear
-                options={[
-                  {
-                    value: '1',
-                    label: 'Đang hoạt động'
-                  },
-                  {
-                    value: '2',
-                    label: 'Không hoạt động'
-                  },
-                  {
-                    value: '3',
-                    label: 'Chờ duyệt'
-                  }
-                ]}
+                options={dataStatus}
               />
             </Form.Item>
           </Col>
@@ -123,9 +153,18 @@ const ModelInfomationQuery = ({
               wrapperCol={{ style: { padding: 0 } }}
               name={'customer'}
             >
-              <Input placeholder="" className="w-[150px]" size="middle" />
+              <Select
+                showSearch
+                placeholder="Khách hàng"
+                optionFilterProp="customer"
+                onChange={onChangeCustomer}
+                onSearch={onSearch}
+                allowClear
+                options={dataCustomer}
+              />
             </Form.Item>
           </Col>
+
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px]">Người đăng ký</span>}
@@ -161,29 +200,16 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'modelTypeL'}
+              name={'modelTypeLName'}
             >
               <Select
                 showSearch
                 placeholder="Loại sản phẩm"
                 optionFilterProp="label"
-                onChange={onChange}
+                onChange={onChangeModelTypeL}
                 onSearch={onSearch}
                 allowClear
-                options={[
-                  {
-                    value: 'L-1',
-                    label: 'L-1'
-                  },
-                  {
-                    value: 'L-2',
-                    label: 'L-2'
-                  },
-                  {
-                    value: 'L-3',
-                    label: 'L-3'
-                  }
-                ]}
+                options={dataL}
               />
             </Form.Item>
           </Col>
@@ -193,29 +219,16 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'modelTypeM'}
+              name={'modelTypeMName'}
             >
               <Select
                 showSearch
                 placeholder="Loại sản phẩm "
                 optionFilterProp="label"
-                onChange={onChange}
+                onChange={onChangeModelTypeM}
                 onSearch={onSearch}
                 allowClear
-                options={[
-                  {
-                    value: 'M-1',
-                    label: 'M-1'
-                  },
-                  {
-                    value: 'M-2',
-                    label: 'M-2'
-                  },
-                  {
-                    value: 'M-3',
-                    label: 'M-3'
-                  }
-                ]}
+                options={dataM}
               />
             </Form.Item>
           </Col>
@@ -225,45 +238,16 @@ const ModelInfomationQuery = ({
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'modelTypeS'}
+              name={'modelTypeSName'}
             >
               <Select
                 showSearch
                 placeholder="Loại sản phẩm"
                 optionFilterProp="label"
-                onChange={onChange}
+                onChange={onChangeModelTypeS}
                 onSearch={onSearch}
                 allowClear
-                options={[
-                  {
-                    value: 'S-1',
-                    label: 'S-1'
-                  },
-                  {
-                    value: 'S-2',
-                    label: 'S-2'
-                  },
-                  {
-                    value: 'S-3',
-                    label: 'S-3'
-                  }
-                ]}
-              />
-            </Form.Item>
-          </Col>
-
-          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
-            <Form.Item
-              label={<span className="uppercase text-[9px]">Khách hàng</span>}
-              style={{ marginBottom: 0 }}
-              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
-              wrapperCol={{ style: { padding: 0 } }}
-              name={'customer'}
-            >
-              <Input
-                placeholder=""
-                className="w-[150px]"
-                size="middle"
+                options={dataS}
               />
             </Form.Item>
           </Col>
@@ -276,11 +260,7 @@ const ModelInfomationQuery = ({
               wrapperCol={{ style: { padding: 0 } }}
               name={'label'}
             >
-              <Input
-                placeholder=""
-                className="w-[150px]"
-                size="middle"
-              />
+              <Input placeholder="" className="w-[150px]" size="middle" />
             </Form.Item>
           </Col>
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
@@ -291,11 +271,7 @@ const ModelInfomationQuery = ({
               wrapperCol={{ style: { padding: 0 } }}
               name={'deviceCustomer'}
             >
-              <Input
-                placeholder=""
-                className="w-[150px]"
-                size="middle"
-              />
+              <Input placeholder="" className="w-[150px]" size="middle" />
             </Form.Item>
           </Col>
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
@@ -306,11 +282,7 @@ const ModelInfomationQuery = ({
               wrapperCol={{ style: { padding: 0 } }}
               name={'projectName'}
             >
-              <Input
-                placeholder=""
-                className="w-[150px]"
-                size="middle"
-              />
+              <Input placeholder="" className="w-[150px]" size="middle" />
             </Form.Item>
           </Col>
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
@@ -321,11 +293,7 @@ const ModelInfomationQuery = ({
               wrapperCol={{ style: { padding: 0 } }}
               name={'consignee'}
             >
-              <Input
-                placeholder=""
-                className="w-[150px]"
-                size="middle"
-              />
+              <Input placeholder="" className="w-[150px]" size="middle" />
             </Form.Item>
           </Col>
         </Row>

@@ -471,7 +471,7 @@ function ModelRouteDetailsTable({
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
+            onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}

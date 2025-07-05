@@ -15,8 +15,12 @@ import dayjs from 'dayjs';
 import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import ContextMenuWrapper from 'component/ContextMenu';
+import { resetColumn } from 'utils/local-storage/reset-column';
+import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
+import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 
 function CategoryTable({
+  dataCategoryValue,
   setSelection,
   selection,
   setShowSearch,
@@ -35,9 +39,7 @@ function CategoryTable({
   cols,
   defaultCols,
   canEdit,
-  onCellEdited,
-  cellConfig,
-
+  cellConfig
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -49,7 +51,7 @@ function CategoryTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', []);
+    return loadFromLocalStorageSheet('H_DETAIL_CATEGORY', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -77,7 +79,6 @@ function CategoryTable({
     }
   }, []);
 
-
   const [keybindings, setKeybindings] = useState({
     downFill: true,
     rightFill: true,
@@ -91,8 +92,6 @@ function CategoryTable({
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
-
-      
 
       if (cellConfig[columnKey]) {
         return {
@@ -111,59 +110,28 @@ function CategoryTable({
         };
       }
 
-      if ( columnKey === 'isApprove') {
-        const booleanValue =
-          value === 1 || value === '1'
-            ? true
-            : value === 0 || value === '0'
-              ? false
-              : Boolean(value)
+      if (columnKey === 'mustInput') {
+        const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
         return {
           kind: GridCellKind.Boolean,
           data: booleanValue,
           allowOverlay: true,
-          hasMenu: column?.hasMenu || false,
-        }
-      }
-
-      if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
-        return {
-          kind: GridCellKind.Number,
-          data: value,
-          displayData: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 5,
-            maximumFractionDigits: 5
-          }).format(value),
-          readonly: column?.readonly || false,
-          contentAlign: 'right',
-          allowOverlay: true,
           hasMenu: column?.hasMenu || false
         };
       }
 
-      if (columnKey === 'BadRate') {
+      if (columnKey === 'promptValueName') {
         return {
-          kind: GridCellKind.Number,
-          data: value,
-          displayData: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(value),
-          readonly: column?.readonly || false,
-          contentAlign: 'right',
+          kind: GridCellKind.Custom,
           allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'TestEndDate' || columnKey === 'QCDate' || columnKey === 'DelvDate') {
-        return {
-          kind: GridCellKind.Text,
-          data: value,
-          displayData: formatDate(value) || '',
-          readonly: true,
-          allowOverlay: true,
-          hasMenu: false
+          copyData: String(value),
+          data: {
+            kind: 'dropdown-cell',
+            allowedValues: dataCategoryValue,
+            value: value
+          },
+          displayData: String(value),
+          readonly: column?.readonly || false
         };
       }
 
@@ -188,8 +156,6 @@ function CategoryTable({
     },
     [cols, gridData]
   );
-
-  
 
   const onColumnResize = useCallback(
     (column, newSize) => {
@@ -245,7 +211,7 @@ function CategoryTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+      saveToLocalStorageSheet('H_DETAIL_CATEGORY', newHidden);
       return newHidden;
     });
   };
@@ -254,7 +220,7 @@ function CategoryTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_DETAIL_CATEGORY', uniqueCols);
       return uniqueCols;
     });
   };
@@ -266,7 +232,7 @@ function CategoryTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_DETAIL_CATEGORY', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -277,8 +243,8 @@ function CategoryTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_MODEL_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_MODEL_LIST');
+    localStorage.removeItem('S_DETAIL_CATEGORY');
+    localStorage.removeItem('H_DETAIL_CATEGORY');
     setShowMenu(null);
   };
 
@@ -287,14 +253,14 @@ function CategoryTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', updatedCols);
+      saveToLocalStorageSheet('S_DETAIL_CATEGORY', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_DETAIL_CATEGORY', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -305,28 +271,29 @@ function CategoryTable({
     setOpen(false);
   };
 
-  const handleCheckboxChange = (columnId, isChecked) => {``
+  const handleCheckboxChange = (columnId, isChecked) => {
+    ``;
     if (isChecked) {
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_DETAIL_CATEGORY', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_DETAIL_CATEGORY', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_DETAIL_CATEGORY', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_DETAIL_CATEGORY', newHidden);
         return newHidden;
       });
     }
@@ -335,6 +302,119 @@ function CategoryTable({
     if (key === 'edit') message.info('Chỉnh sửa');
     if (key === 'delete') message.warning('Xoá');
   };
+
+  const onCellEdited = useCallback(
+    async (cell, newValue) => {
+      if (canEdit === false) {
+        message.warning('Bạn không có quyền chỉnh sửa dữ liệu');
+        return;
+      }
+
+      if (
+        newValue.kind !== GridCellKind.Text &&
+        newValue.kind !== GridCellKind.Custom &&
+        newValue.kind !== GridCellKind.Boolean &&
+        newValue.kind !== GridCellKind.Number
+      ) {
+        return;
+      }
+
+      const indexes = resetColumn(cols);
+      const [col, row] = cell;
+      const key = indexes[col];
+
+      if (key === 'promptValueName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
+              product['promptValueId'] = selectedValue.Value;
+              product['promptValueName'] = selectedValue.MinorName;
+            } else {
+              product['promptValueId'] = '';
+              product['promptValueName'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'promptValueName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
+              product['promptValueId'] = selectedValue.Value;
+              product['promptValueName'] = selectedValue.MinorName;
+            } else {
+              product['promptValueId'] = '';
+              product['promptValueName'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      // Xử lý các trường hợp khác
+      setGridData((prevData) => {
+        const updatedData = [...prevData];
+        if (!updatedData[row]) updatedData[row] = {};
+
+        const currentStatus = updatedData[row]['Status'] || '';
+        updatedData[row][key] = newValue.data;
+        updatedData[row]['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+        setEditedRows((prevEditedRows) => {
+          const existingIndex = prevEditedRows.findIndex((editedRow) => editedRow.rowIndex === row);
+
+          const updatedRowData = {
+            rowIndex: row,
+            updatedRow: updatedData[row],
+            status: currentStatus === 'A' ? 'A' : 'U'
+          };
+
+          if (existingIndex === -1) {
+            return [...prevEditedRows, updatedRowData];
+          } else {
+            const updatedEditedRows = [...prevEditedRows];
+            updatedEditedRows[existingIndex] = updatedRowData;
+            return updatedEditedRows;
+          }
+        });
+
+        return updatedData;
+      });
+    },
+    [canEdit, cols, gridData]
+  );
 
   return (
     <div className="w-full h-full gap-1 flex items-center justify-center ">
@@ -391,9 +471,9 @@ function CategoryTable({
             keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
-
+            onCellClicked={onCellClicked}
             onColumnResize={onColumnResize}
+            customRenderers={[DropdownRenderer]}
             // onHeaderMenuClick={onHeaderMenuClick}
             // onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}

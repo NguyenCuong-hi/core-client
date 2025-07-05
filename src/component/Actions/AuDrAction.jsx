@@ -35,13 +35,13 @@ const AuDrAction = ({
         <Button
           type="text"
           icon={<DeleteOutlined style={{ color: '#ef4444' }} />}
-          onclick={onClickDelete}>
+          onClick={onClickDelete}>
           Xóa
         </Button>
         <Button
           type="text"
           icon={<RefreshOutlined />}
-          onclick={onClickReset}>
+          onClick={onClickReset}>
           Làm mới
         </Button>
       </div>
