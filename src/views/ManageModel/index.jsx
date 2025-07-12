@@ -55,7 +55,7 @@ const ManageModelPage = (canCreate) => {
       readonly: false,
       width: 200,
       hasMenu: true,
-      visible: false,
+      visible: true,
       icon: GridColumnIcon.HeaderRowID
     },
 
@@ -443,7 +443,7 @@ const ManageModelPage = (canCreate) => {
       ...row,
       status: 'U',
       id: row.id || '',
-      statusConfProd: { code: 1, name: "Đang họat động" }    
+   
     }
     )
     );
@@ -452,7 +452,6 @@ const ManageModelPage = (canCreate) => {
       ...row,
       status: 'A',
       id: row.id || '',
-      statusConfProd: { code: 1, name: "Đang họat động" }   
     }));
 
     const data = [...resulU, ...resulA];

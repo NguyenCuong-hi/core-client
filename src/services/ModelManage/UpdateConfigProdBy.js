@@ -15,7 +15,7 @@ export const UpdateConfigProdBy = async (id, dto) => {
     }
 
      const response = await axios.put(
-      `${HOST_API_SERVER}/config-prod/?id=${id}`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/config-prod/${id}`,
       dto,
       {
         headers: {

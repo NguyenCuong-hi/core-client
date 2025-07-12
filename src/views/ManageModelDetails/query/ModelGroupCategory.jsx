@@ -1,8 +1,10 @@
 import { Typography } from 'antd';
 import CategoryTable from 'component/Sheets/CategoryTable';
-import React from 'react';
+import React, { useCallback } from 'react';
+import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 
 const ModelGroupCategory = ({
+  dataCategoryValue,
   defaultCols,
   gridData,
   setGridData,
@@ -10,7 +12,12 @@ const ModelGroupCategory = ({
   setCols,
   numRows,
   setNumRows,
-  handleRowAppend
+  handleRowAppend,
+  setEditedRows,
+  selectionCategory,
+  setSelectionCategory,
+  onCellCategoryClicked,
+  canEdit
 }) => {
   const onChange = (value) => {
     console.log(`selected ${value}`);
@@ -19,28 +26,27 @@ const ModelGroupCategory = ({
     console.log('search:', value);
   };
 
-  const onCellEdited = (cell, value) => {
-    console.log('cell', cell, 'value', value);
-  }
-  const cellConfig = {
-    
-  };
-  return (
-      <div className="bg-slate-50  h-[calc(100vh-255px)]">
-        <CategoryTable
-          defaultCols={defaultCols}
-          gridData={gridData}
-          setGridData={setGridData}
-          cols={cols}
-          setCols={setCols}
-          numRows={numRows}
-          setNumRows={setNumRows}
-          onCellEdited={onCellEdited}
-          cellConfig={cellConfig}
-          handleRowAppend = {handleRowAppend}
-        />
-      </div>
 
+  const cellConfig = {};
+  return (
+    <div className="bg-slate-50  h-[calc(100vh-255px)]">
+      <CategoryTable
+        dataCategoryValue={dataCategoryValue}
+        defaultCols={defaultCols}
+        gridData={gridData}
+        setGridData={setGridData}
+        cols={cols}
+        setCols={setCols}
+        numRows={numRows}
+        setNumRows={setNumRows}
+        cellConfig={cellConfig}
+        handleRowAppend={handleRowAppend}
+        setEditedRows={setEditedRows}
+        selection={selectionCategory}
+        setSelection={setSelectionCategory}
+        onCellClicked={onCellCategoryClicked}
+      />
+    </div>
   );
 };
 

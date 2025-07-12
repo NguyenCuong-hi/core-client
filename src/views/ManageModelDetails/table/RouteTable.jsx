@@ -35,7 +35,9 @@ function RouteTable({
   setCols,
   cols,
   defaultCols,
-  canEdit
+  canEdit,
+  onVisibleRegionChanged,
+  onCellRouteClicked,
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -470,7 +472,8 @@ function RouteTable({
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
+            onCellClicked={onCellRouteClicked}
+            onVisibleRegionChanged={onVisibleRegionChanged}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}

@@ -17,7 +17,16 @@ const ModelRouteSet = ({
   colsModels,
   setColsModels,
   numRowsModels,
-  setNumRowsModels
+  setNumRowsModels,
+  onVisibleRegionChanged,
+  onCellRouteClicked,
+  selection,
+  setSelection,
+
+
+  selectionRoute,
+  setSelectionRoute,
+  onCellRouteDetailsClicked
 }) => {
   
   return (
@@ -32,6 +41,10 @@ const ModelRouteSet = ({
               setCols={setCols}
               numRows={numRows}
               setNumRows={setNumRows}
+              onVisibleRegionChanged={onVisibleRegionChanged}
+              onCellRouteClicked={onCellRouteClicked}
+              selection={selection}
+              setSelection={setSelection}
               
               
             />
@@ -46,6 +59,9 @@ const ModelRouteSet = ({
               setCols={setColsModels}
               numRows={numRowsModels}
               setNumRows={setNumRowsModels}
+              selection={selectionRoute}
+              setSelection={setSelectionRoute}
+              onCellClicked={onCellRouteDetailsClicked}
             />
           </SplitterPanel>
         </Splitter>

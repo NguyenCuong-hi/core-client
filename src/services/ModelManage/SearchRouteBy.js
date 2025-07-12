@@ -1,13 +1,12 @@
-import axios from 'axios';
-import { HOST_API_SERVER } from 'services/config';
-import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
-import { accessToken } from 'utils/cookies/CookiesUtils';
+import axios from "axios";
+import { HOST_API_SERVER } from "services/config";
+import { accessToken } from "utils/cookies/CookiesUtils";
 
-export const getMenuByRole = async (data) => {
+export const SearchRouteBy = async (data) => {
   try {
-    const token = accessToken()
+    const token = accessToken();
     const response = await axios.get(
-      `${HOST_API_SERVER}/nvc-core/menu-item/page`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/route/page`,
 
       { params: data,
         headers: {
@@ -16,7 +15,7 @@ export const getMenuByRole = async (data) => {
         },
       },
     );
-    
+
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
@@ -25,13 +24,18 @@ export const getMenuByRole = async (data) => {
     } else {
       return {
         success: false,
-        message: response.error || ERROR_MESSAGES,
+        message: response.data.message || ERROR_MESSAGES ,
       };
     }
+
   } catch (error) {
+    console.error(error);
+
     return {
       success: false,
-      message: error.message || ERROR_MESSAGES,
+      message: error.response
+        ? error.response.data.message
+        : error.message,
     };
   }
 };
