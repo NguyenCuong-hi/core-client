@@ -14,12 +14,13 @@ import { useExtraCells } from '@glideapps/glide-data-grid-cells';
 import dayjs from 'dayjs';
 import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
-import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
-import { AsyncDropdownCellRenderer } from 'utils/sheets/cell-custom/AsyncDropdownCellRenderer';
-import { StepsCell } from 'utils/sheets/cell-custom/cellsOperationsSteps';
+import { resetColumn } from 'utils/local-storage/reset-column';
+import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
+import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 
-function RouteSetTable({
+function RouteSetOpIndicateTable({
+  dataCategoryValue,
   setSelection,
   selection,
   setShowSearch,
@@ -37,10 +38,9 @@ function RouteSetTable({
   setCols,
   cols,
   defaultCols,
-  canEdit
+  canEdit,
+  cellConfig
 }) {
-
-
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
   const cellProps = useExtraCells();
@@ -51,7 +51,7 @@ function RouteSetTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', []);
+    return loadFromLocalStorageSheet('H_ROUTE_OPERATION_REWORK', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -79,45 +79,22 @@ function RouteSetTable({
     }
   }, []);
 
-  const [dataSearch, setDataSearch] = useState([]);
-  const columnNames = [
-    'AssetName',
-    'UnitName',
-    'SMStatusName',
-    'DeptName',
-    'ItemClassSName',
-    'VatKindName',
-    'VatTypeName',
-    'MrpKind',
-    'OutKind',
-    'ProdMethod',
-    'ProdSpec',
-    'PurKind',
-    'PurProdType',
-    'SMInOutKindName',
-    'SMLimitTermKindName',
-    'SMABCName',
-    'EmpName',
-    'PurCustName'
-  ];
-
   const [keybindings, setKeybindings] = useState({
     downFill: true,
     rightFill: true,
     selectColumn: false
   });
 
-
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
-      console.log('person', person);
       const column = cols[col];
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
-
-      const cellConfig = {};
+      const cellConfig = [
+        
+      ];
 
       if (cellConfig[columnKey]) {
         return {
@@ -136,17 +113,28 @@ function RouteSetTable({
         };
       }
 
-      if (columnKey === "OperationCode") {
+      if (columnKey === 'mustInput') {
+        const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
+        return {
+          kind: GridCellKind.Boolean,
+          data: booleanValue,
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false
+        };
+      }
+
+      if (columnKey === 'promptValueName') {
         return {
           kind: GridCellKind.Custom,
-          allowOverlay: false,
-          readonly: true,
-          copyData: "",
-          displayData: "",
+          allowOverlay: true,
+          copyData: String(value),
           data: {
-            kind: "steps-cell",
-            steps: value,
+            kind: 'dropdown-cell',
+            allowedValues: dataCategoryValue,
+            value: value
           },
+          displayData: String(value),
+          readonly: column?.readonly || false
         };
       }
 
@@ -170,83 +158,6 @@ function RouteSetTable({
       }
     },
     [cols, gridData]
-  );
-
-  const onCellEdited = useCallback(
-    async (cell, newValue) => {
-      if (canEdit === false) {
-        message.warning('Bạn không có quyền chỉnh sửa dữ liệu');
-        return;
-      }
-
-      if (
-        newValue.kind !== GridCellKind.Text &&
-        newValue.kind !== GridCellKind.Custom &&
-        newValue.kind !== GridCellKind.Boolean &&
-        newValue.kind !== GridCellKind.Number
-      ) {
-        return;
-      }
-
-      const indexes = resetColumn(cols);
-      const [col, row] = cell;
-      const key = indexes[col];
-
-      if (
-        key === 'AssetSeq' ||
-        key === 'UnitSeq' ||
-        key === 'SMStatus' ||
-        key === 'ItemClassLName' ||
-        key === 'ItemClassMName' ||
-        key === 'SMVatKind' ||
-        key === 'SMVatType' ||
-        key === 'SMMrpKind' ||
-        key === 'SMOutKind' ||
-        key === 'SMProdMethod' ||
-        key === 'SMPurKind' ||
-        key === 'SMPurProdType' ||
-        key === 'SMInOutKind' ||
-        key === 'SMLimitTermKind' ||
-        key === 'SMABC' ||
-        key === 'DeptSeq' ||
-        key === 'EmpSeq' ||
-        key === 'EmpID' ||
-        key === 'PurCustSeq'
-      ) {
-        return;
-      }
-
-      // Xử lý các trường hợp khác
-      setGridData((prevData) => {
-        const updatedData = [...prevData];
-        if (!updatedData[row]) updatedData[row] = {};
-
-        const currentStatus = updatedData[row]['Status'] || '';
-        updatedData[row][key] = newValue.data;
-        updatedData[row]['Status'] = currentStatus === 'A' ? 'A' : 'U';
-
-        setEditedRows((prevEditedRows) => {
-          const existingIndex = prevEditedRows.findIndex((editedRow) => editedRow.rowIndex === row);
-
-          const updatedRowData = {
-            rowIndex: row,
-            updatedRow: updatedData[row],
-            status: currentStatus === 'A' ? 'A' : 'U'
-          };
-
-          if (existingIndex === -1) {
-            return [...prevEditedRows, updatedRowData];
-          } else {
-            const updatedEditedRows = [...prevEditedRows];
-            updatedEditedRows[existingIndex] = updatedRowData;
-            return updatedEditedRows;
-          }
-        });
-
-        return updatedData;
-      });
-    },
-    [canEdit, cols, gridData]
   );
 
   const onColumnResize = useCallback(
@@ -303,7 +214,7 @@ function RouteSetTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+      saveToLocalStorageSheet('H_ROUTE_OPERATION_REWORK', newHidden);
       return newHidden;
     });
   };
@@ -312,7 +223,7 @@ function RouteSetTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
+      saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', uniqueCols);
       return uniqueCols;
     });
   };
@@ -324,7 +235,7 @@ function RouteSetTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
+        saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -335,8 +246,8 @@ function RouteSetTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_ROUTE_TABLE');
-    localStorage.removeItem('H_ERP_COLS_PAGE_ROUTE_TABLE');
+    localStorage.removeItem('S_ROUTE_OPERATION_REWORK');
+    localStorage.removeItem('H_ROUTE_OPERATION_REWORK');
     setShowMenu(null);
   };
 
@@ -345,14 +256,14 @@ function RouteSetTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', updatedCols);
+      saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ROUTE_OPERATION_REWORK', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -364,27 +275,28 @@ function RouteSetTable({
   };
 
   const handleCheckboxChange = (columnId, isChecked) => {
+    ``;
     if (isChecked) {
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
+        saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+        saveToLocalStorageSheet('H_ROUTE_OPERATION_REWORK', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
+        saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+        saveToLocalStorageSheet('H_ROUTE_OPERATION_REWORK', newHidden);
         return newHidden;
       });
     }
@@ -394,76 +306,187 @@ function RouteSetTable({
     if (key === 'delete') message.warning('Xoá');
   };
 
-  return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
-        <ContextMenuWrapper
-          menuItems={[
-            { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
-            { key: 'delete', label: 'Xoá', icon: <DeleteOutlined /> }
-          ]}
-          onMenuClick={handleMenuClick}
-        >
-          <DataEditor
-            {...cellProps}
-            ref={gridRef}
-            columns={cols}
-            getCellContent={getData}
-            onFill={onFill}
-            rows={numRows}
-            showSearch={showSearch}
-            onSearchClose={onSearchClose}
-            rowMarkers="both"
-            width="100%"
-            height="100%"
-            headerHeight={30}
-            rowHeight={28}
-            rowSelect="multi"
-            gridSelection={selection}
-            onGridSelectionChange={setSelection}
-            getCellsForSelection={true}
-            trailingRowOptions={{
-              hint: ' ',
-              sticky: true,
-              tint: true
-            }}
-            freezeColumns={1}
-            getRowThemeOverride={(i) => {
-              let themeOverride;
-              if (i === hoverRow) {
-                themeOverride = {
-                  bgCell: '#f7f7f7',
-                  bgCellMedium: '#f0f0f0'
-                };
-              } else if (i % 2 !== 0) {
-                themeOverride = {
-                  bgCell: '#FBFBFB'
-                };
-              }
-              return themeOverride;
-            }}
-            overscrollY={0}
-            overscrollX={0}
-            smoothScrollY={true}
-            smoothScrollX={true}
-            onPaste={true}
-            fillHandle={true}
-            // keybindings={keybindings}
-            // onRowAppended={() => handleRowAppend(1)}
-            // onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
+  const onCellEdited = useCallback(
+    async (cell, newValue) => {
+      if (canEdit === false) {
+        message.warning('Bạn không có quyền chỉnh sửa dữ liệu');
+        return;
+      }
 
-            onColumnResize={onColumnResize}
-            // onHeaderMenuClick={onHeaderMenuClick}
-            // onColumnMoved={onColumnMoved}
-            // onKeyUp={onKeyUp}
-            customRenderers={[
-                AsyncDropdownCellRenderer,
-                StepsCell,
+      if (
+        newValue.kind !== GridCellKind.Text &&
+        newValue.kind !== GridCellKind.Custom &&
+        newValue.kind !== GridCellKind.Boolean &&
+        newValue.kind !== GridCellKind.Number
+      ) {
+        return;
+      }
+
+      const indexes = resetColumn(cols);
+      const [col, row] = cell;
+      const key = indexes[col];
+
+      if (key === 'promptValueName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
+              product['promptValueId'] = selectedValue.Value;
+              product['promptValueName'] = selectedValue.MinorName;
+            } else {
+              product['promptValueId'] = '';
+              product['promptValueName'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'promptValueName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
+              product['promptValueId'] = selectedValue.Value;
+              product['promptValueName'] = selectedValue.MinorName;
+            } else {
+              product['promptValueId'] = '';
+              product['promptValueName'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      // Xử lý các trường hợp khác
+      setGridData((prevData) => {
+        const updatedData = [...prevData];
+        if (!updatedData[row]) updatedData[row] = {};
+
+        const currentStatus = updatedData[row]['Status'] || '';
+        updatedData[row][key] = newValue.data;
+        updatedData[row]['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+        setEditedRows((prevEditedRows) => {
+          const existingIndex = prevEditedRows.findIndex((editedRow) => editedRow.rowIndex === row);
+
+          const updatedRowData = {
+            rowIndex: row,
+            updatedRow: updatedData[row],
+            status: currentStatus === 'A' ? 'A' : 'U'
+          };
+
+          if (existingIndex === -1) {
+            return [...prevEditedRows, updatedRowData];
+          } else {
+            const updatedEditedRows = [...prevEditedRows];
+            updatedEditedRows[existingIndex] = updatedRowData;
+            return updatedEditedRows;
+          }
+        });
+
+        return updatedData;
+      });
+    },
+    [canEdit, cols, gridData]
+  );
+
+  return (
+    <div className="bg-slate-50  h-[calc(100vh-189px)]">
+      <div className="w-full h-full gap-1 flex items-center justify-center ">
+        <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
+          <ContextMenuWrapper
+            menuItems={[
+              { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
+              { key: 'delete', label: 'Xoá', icon: <DeleteOutlined /> }
             ]}
-            // onItemHovered={onItemHovered}
-          />
-          {/* {showMenu !== null &&
+            onMenuClick={handleMenuClick}
+          >
+            <DataEditor
+              {...cellProps}
+              ref={gridRef}
+              columns={cols}
+              getCellContent={getData}
+              onFill={onFill}
+              rows={numRows}
+              showSearch={showSearch}
+              onSearchClose={onSearchClose}
+              rowMarkers="both"
+              width="100%"
+              height="100%"
+              headerHeight={32}
+              rowHeight={27}
+              rowSelect="multi"
+              gridSelection={selection}
+              onGridSelectionChange={setSelection}
+              getCellsForSelection={true}
+              trailingRowOptions={{
+                hint: ' ',
+                sticky: true,
+                tint: true
+              }}
+              freezeColumns={1}
+              getRowThemeOverride={(i) =>
+                i === hoverRow
+                  ? {
+                      bgCell: '#f7f7f7',
+                      bgCellMedium: '#f0f0f0'
+                    }
+                  : i % 2 === 0
+                    ? undefined
+                    : {
+                        bgCell: '#FBFBFB'
+                      }
+              }
+              overscrollY={0}
+              overscrollX={0}
+              smoothScrollY={true}
+              smoothScrollX={true}
+              onPaste={true}
+              fillHandle={true}
+              keybindings={keybindings}
+              onRowAppended={() => handleRowAppend(1)}
+              onCellEdited={onCellEdited}
+              onCellClicked={onCellClicked}
+              onColumnResize={onColumnResize}
+              customRenderers={[DropdownRenderer]}
+              // onHeaderMenuClick={onHeaderMenuClick}
+              // onColumnMoved={onColumnMoved}
+              // onKeyUp={onKeyUp}
+              // customRenderers={[
+              //     AsyncDropdownCellRenderer
+              // ]}
+              // onItemHovered={onItemHovered}
+            />
+            {/* {showMenu !== null &&
                     renderLayer(
                         <div
                             {...layerProps}
@@ -498,26 +521,24 @@ function RouteSetTable({
                             )}
                         </div>,
                     )} */}
-        </ContextMenuWrapper>
+          </ContextMenuWrapper>
 
-        <div className="flex justify-end px-4 py-2">
-          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
+          <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
+            {defaultCols.map(
+              (col) =>
+                col.id !== 'Status' && (
+                  <div key={col.id} style={{ marginBottom: '10px' }}>
+                    <Checkbox checked={!hiddenColumns.includes(col.id)} onChange={(e) => handleCheckboxChange(col.id, e.target.checked)}>
+                      {col.title}
+                    </Checkbox>
+                  </div>
+                )
+            )}
+          </Drawer>
         </div>
-        <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
-          {defaultCols.map(
-            (col) =>
-              col.id !== 'Status' && (
-                <div key={col.id} style={{ marginBottom: '10px' }}>
-                  <Checkbox checked={!hiddenColumns.includes(col.id)} onChange={(e) => handleCheckboxChange(col.id, e.target.checked)}>
-                    {col.title}
-                  </Checkbox>
-                </div>
-              )
-          )}
-        </Drawer>
       </div>
     </div>
   );
 }
 
-export default RouteSetTable;
+export default RouteSetOpIndicateTable;

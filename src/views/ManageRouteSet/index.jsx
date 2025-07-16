@@ -13,15 +13,18 @@ import {
   AppstoreAddOutlined,
   CaretDownFilled,
   CaretUpFilled,
+  DashboardOutlined,
   DownCircleFilled,
   LoadingOutlined,
   MinusCircleFilled,
   MinusOutlined,
   MonitorOutlined,
+  PartitionOutlined,
   PlusCircleFilled,
   PlusOutlined,
   SaveOutlined,
-  SearchOutlined
+  SearchOutlined,
+  SyncOutlined
 } from '@ant-design/icons';
 import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
 import { useNotify } from 'utils/hooks/onNotify';
@@ -42,7 +45,9 @@ import Splitter from 'antd/es/splitter/Splitter';
 import { SplitterPanel } from 'primereact/splitter';
 import RouteSetTree from './table/RouteSetTree';
 import RouteOperationSet from './query/RouteOperationSet';
-import RouteOperationRework from './query/RouteOperationRework';
+import RouteSetOperationReworkTable from './table/RouteSetOperationReworkTable';
+import RouteSetOpIndicateTable from './table/RouteSetOpIndicateTable';
+import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -73,6 +78,15 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     rows: CompactSelection.empty()
   });
 
+  const [selectionOperationRework, setSelectionOperationRework] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+    const [selectionOpIndicate, setSelectionOpIndicate] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
   const [selectionRoute, setSelectionRoute] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
@@ -362,6 +376,364 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const [numRowsCategory, setNumRowsCategory] = useState(0);
   const [numRowsToAddCategory, setNumRowsToAddCategory] = useState(null);
   const [addedRowsCategory, setAddedRowsCategory] = useState([]);
+
+  const defaultColsOperationRework = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+    {
+      title: t('Mã'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Tên công đoạn'),
+      id: 'operationName',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã dây chuyền Rework'),
+      id: 'routeIdRework',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã dây chuyền Rework'),
+      id: 'routeCodeRework',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên dây chuyền Rework'),
+      id: 'routerNameRework',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã công đoạn Rework'),
+      id: 'operationReworkId',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã công đoạn Rework'),
+      id: 'operationReworkCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên công đoạn Rework'),
+      id: 'operationReworkName',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã dây chuyền trả về'),
+      id: 'routeReturnId',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã dây chuyền trả về'),
+      id: 'routeReturnCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên dây chuyền trả về'),
+      id: 'routeReturnCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsOperationRework, setColsOperationRework] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_ROUTE_OPERATION_REWORK',
+      defaultColsOperationRework.filter((col) => col.visible)
+    )
+  );
+  const [gridDataOperationRework, setGridDataOperationRework] = useState([]);
+  const [numRowsOperationRework, setNumRowsOperationRework] = useState(0);
+  const [numRowsToAddOperationRework, setNumRowsToAddOperationRework] = useState(null);
+  const [addedRowsOperationRework, setAddedRowsOperationRework] = useState([]);
+
+  const [OperationReworkSelected, setOperationReworkSelected] = useState([]);
+  const [editedRowsOperationRework, setEditedRowsOperationRework] = useState([]);
+
+
+    const defaultColsOpIndicate = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+    {
+      title: t('Mã'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã dây chuyền'),
+      id: 'routeId',
+      kind: 'Text',
+      readonly: true,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    
+
+    {
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Đang áp dụng'),
+      id: 'isUse',
+      kind: 'Boolean',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Số lượng chờ'),
+      id: 'queueNumber',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Số lượng tiến hành'),
+      id: 'processNumber',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Năng suất'),
+      id: 'yield',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+  ]);
+
+  const [colsOpIndicate, setColsOpIndicate] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_ROUTE_OP_INDICATE',
+      defaultColsOpIndicate.filter((col) => col.visible)
+    )
+  );
+  const [gridDataOpIndicate, setGridDataOpIndicate] = useState([]);
+  const [numRowsOpIndicate, setNumRowsOpIndicate] = useState(0);
+  const [numRowsToAddOpIndicate, setNumRowsToAddOpIndicate] = useState(null);
+  const [addedRowsOpIndicate, setAddedRowsOpIndicate] = useState([]);
+
+  const [OpIndicateSelected, setOpIndicateSelected] = useState([]);
+  const [editedRowsOpIndicate, setEditedRowsOpIndicate] = useState([]);
 
   const [isSent, setIsSent] = useState(false);
   const [count, setCount] = useState(0);
@@ -678,7 +1050,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
-      const response = await SearchRouteBy(data);
+      const response = await SearchOperationBy(data);
       const fetchedData = response.data || [];
 
       setGridData(fetchedData);
@@ -1004,6 +1376,28 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     [colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAddCategory]
   );
 
+  const handleRowAppendOperationRework = useCallback(
+    (numRowsToAdd) => {
+      if (canCreate === false) {
+        message.warning('Bạn không có quyền thêm dữ liệu');
+        return;
+      }
+      onRowAppended(colsOperationRework, setGridDataOperationRework, setNumRowsOperationRework, setAddedRowsOperationRework, numRowsToAdd);
+    },
+    [colsOperationRework, setGridDataOperationRework, setNumRowsOperationRework, setAddedRowsOperationRework, numRowsToAddOperationRework]
+  );
+
+    const handleRowAppendOpIndicate = useCallback(
+    (numRowsToAdd) => {
+      if (canCreate === false) {
+        message.warning('Bạn không có quyền thêm dữ liệu');
+        return;
+      }
+      onRowAppended(colsOpIndicate, setGridDataOpIndicate, setNumRowsOpIndicate, setAddedRowsOpIndicate, numRowsToAdd);
+    },
+    [colsOpIndicate, setGridDataOpIndicate, setNumRowsOpIndicate, setAddedRowsOpIndicate, numRowsToAddOpIndicate]
+  );
+
   const onClickDelete = useCallback(async () => {
     if (!selectedData || !selectedData.data || !selectedData.data.id) {
       message.warning('Vui lòng chọn dữ liệu để xóa');
@@ -1129,14 +1523,14 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
               <Menu.Item key="2">
                 <span className="flex items-center gap-1 text-sm">
-                  <AppstoreAddOutlined style={{ fontSize: 12 }} />
+                  <SyncOutlined style={{ fontSize: 12 }} />
                   {t('Thao tác lại')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="3">
                 <span className="flex items-center gap-1 text-sm">
-                  <AppstoreAddOutlined style={{ fontSize: 12 }} />
+                  <DashboardOutlined style={{ fontSize: 12 }} />
                   {t('Thông tin hiệu suất')}
                 </span>
               </Menu.Item>
@@ -1213,21 +1607,37 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
               />
             )}
             {current === '2' && (
-              <RouteOperationRework
+              <RouteSetOperationReworkTable
                 dataCategoryValue={dataCategoryValue}
-                defaultCols={defaultColsCategory}
-                gridData={gridDataCategory}
-                setGridData={setGridDataCategory}
-                cols={colsCategory}
-                setCols={setColsCategory}
-                numRows={numRowsCategory}
-                setNumRows={setNumRowsCategory}
-                handleRowAppend={handleRowAppendCategory}
-                setEditedRows={setEditedRowsCategory}
-                editedRows={editedRowsCategory}
-                selectionCategory={selectionCategory}
-                setSelectionCategory={setSelectionCategory}
-                onCellCategoryClicked={onCellCategoryClicked}
+                defaultCols={defaultColsOperationRework}
+                gridData={gridDataOperationRework}
+                setGridData={setGridDataOperationRework}
+                cols={colsOperationRework}
+                setCols={setColsOperationRework}
+                numRows={numRowsOperationRework}
+                setNumRows={setNumRowsOperationRework}
+                handleRowAppend={handleRowAppendOperationRework}
+                setEditedRows={setEditedRowsOperationRework}
+                selection={selectionOperationRework}
+                setSelection={setSelectionOperationRework}
+                onCellClicked={onCellCategoryClicked}
+              />
+            )}
+            {current === '3' && (
+              <RouteSetOpIndicateTable
+                dataCategoryValue={dataCategoryValue}
+                defaultCols={defaultColsOpIndicate}
+                gridData={gridDataOpIndicate}
+                setGridData={setGridDataOpIndicate}
+                cols={colsOpIndicate}
+                setCols={setColsOpIndicate}
+                numRows={numRowsOpIndicate}
+                setNumRows={setNumRowsOpIndicate}
+                handleRowAppend={handleRowAppendOpIndicate}
+                setEditedRows={setEditedRowsOpIndicate}
+                selection={selectionOpIndicate}
+                setSelection={setSelectionOpIndicate}
+                onCellClicked={onCellCategoryClicked}
               />
             )}
             {current === '4' && (

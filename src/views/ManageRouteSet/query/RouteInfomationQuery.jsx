@@ -1,59 +1,8 @@
 import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
 import React from 'react';
 
-const RouteInfomationQuery = ({ formModelBasic, dataL, dataM, dataS, dataCustomer, dataStatus, onFinish }) => {
+const RouteInfomationQuery = ({ formModelBasic,  onFinish }) => {
 
-  const onChangeModelTypeL = (value) => {
-    if (value !== undefined) {
-      const modelTypeL = dataL.find((x) => x.value === value);
-      formModelBasic.setFieldsValue({
-        modelTypeL: modelTypeL.value,
-        modelTypeLName: modelTypeL.label
-      });
-    }
-  };
-
-  const onChangeModelTypeM = (value) => {
-    if (value !== undefined) {
-      const modelTypeM = dataM.find((x) => x.value === value);
-      formModelBasic.setFieldsValue({
-        modelTypeM: modelTypeM.value,
-        modelTypeMName: modelTypeM.label
-      });
-    }
-  };
-
-  const onChangeModelTypeS = (value) => {
-    if (value !== undefined) {
-      const modelTypeS = dataS.find((x) => x.value === value);
-      formModelBasic.setFieldsValue({
-        modelTypeS: modelTypeS.value,
-        modelTypeSName: modelTypeS.label
-      });
-    }
-  };
-  const onSearch = (value) => {
-    console.log('search:', value);
-  };
-
-  const onChangeStatus = (value) => {
-    if (value !== undefined) {
-      const status = dataStatus.find((x) => x.value === value);
-      formModelBasic.setFieldsValue({
-        statusConfProd: status,
-
-      });
-    }
-  };
-
-  const onChangeCustomer = (value) => {
-    if (value !== undefined) {
-      const customer = dataCustomer.find((x) => x.value === value);
-      formModelBasic.setFieldsValue({
-        customer: customer,
-      });
-    }
-  };
 
   return (
     <div className="bg-slate-50 ">

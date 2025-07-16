@@ -1,7 +1,5 @@
-import { Typography } from 'antd';
 import CategoryTable from 'component/Sheets/CategoryTable';
 import React, { useCallback } from 'react';
-import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 
 const RouteOperationRework = ({
   dataCategoryValue,
