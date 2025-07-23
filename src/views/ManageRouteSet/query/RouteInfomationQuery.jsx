@@ -1,12 +1,12 @@
 import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
 import React from 'react';
 
-const RouteInfomationQuery = ({ formModelBasic,  onFinish }) => {
+const RouteInfomationQuery = ({ formBasic, }) => {
 
 
   return (
     <div className="bg-slate-50 ">
-      <Form form={formModelBasic} onFinish={onFinish} layout="vertical">
+      <Form form={formBasic} layout="vertical">
         <Row className="gap-3 flex items-center ml-2">
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
@@ -14,7 +14,7 @@ const RouteInfomationQuery = ({ formModelBasic,  onFinish }) => {
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'configProdName'}
+              name={'routeName'}
             >
               <Input
                 placeholder=""

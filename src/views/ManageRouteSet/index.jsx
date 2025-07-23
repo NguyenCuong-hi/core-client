@@ -7,12 +7,14 @@ import { useTranslation } from 'react-i18next';
 import ModelRouteSet from './query/RouteOperationSet';
 import AuDrAction from 'component/Actions/AuDrAction';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
-import { Button, Form, Menu, message, Spin } from 'antd';
+import { Button, Form, Menu, message, Spin, TreeSelect } from 'antd';
 import {
   ApartmentOutlined,
+  ApiOutlined,
   AppstoreAddOutlined,
   CaretDownFilled,
   CaretUpFilled,
+  ClusterOutlined,
   DashboardOutlined,
   DownCircleFilled,
   LoadingOutlined,
@@ -47,6 +49,8 @@ import RouteSetTree from './table/RouteSetTree';
 import RouteOperationSet from './query/RouteOperationSet';
 import RouteSetOperationReworkTable from './table/RouteSetOperationReworkTable';
 import RouteSetOpIndicateTable from './table/RouteSetOpIndicateTable';
+import { SearchRouteTree } from 'services/RouteSetManage/SearchRouteTree';
+import { getRouteById } from 'services/RouteSetManage/GetRouteById';
 import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
@@ -83,7 +87,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     rows: CompactSelection.empty()
   });
 
-    const [selectionOpIndicate, setSelectionOpIndicate] = useState({
+  const [selectionOpIndicate, setSelectionOpIndicate] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
@@ -102,6 +106,11 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const [routeDetailSelected, setRouteDetailSelected] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+
+  const [routeTree, setRouteTree] = useState([]);
+  const [routeTreeSelected, setRouteTreeSelected] = useState([]);
+  const [checkedKeys, setCheckedKeys] = useState([]);
+  const [selectNode, setSelectNode] = useState(null);
 
   const defaultCols = useMemo(() => [
     {
@@ -268,7 +277,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
 
-  const [gridDataRoute, setGridDataRoute] = useState([]);
+  const [gridDataOpRoute, setGridDataOpRoute] = useState([]);
   const [numRowsRoute, setNumRowsRoute] = useState(0);
 
   const defaultColsCategory = useMemo(() => [
@@ -584,8 +593,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const [OperationReworkSelected, setOperationReworkSelected] = useState([]);
   const [editedRowsOperationRework, setEditedRowsOperationRework] = useState([]);
 
-
-    const defaultColsOpIndicate = useMemo(() => [
+  const defaultColsOpIndicate = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -652,7 +660,6 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
-    
 
     {
       title: t('Mô tả'),
@@ -718,7 +725,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       trailingRowOptions: {
         disabled: true
       }
-    },
+    }
   ]);
 
   const [colsOpIndicate, setColsOpIndicate] = useState(() =>
@@ -742,7 +749,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
 
   //  Data Input
-  const [formModelBasic] = Form.useForm();
+  const [formBasic] = Form.useForm();
 
   // Data
   const dataL = [
@@ -827,13 +834,13 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       return;
     }
 
-    const resulU = filterAndSelectColumns(gridDataRoute, columnsRoute, 'U').map((row) => ({
+    const resulU = filterAndSelectColumns(gridDataOpRoute, columnsRoute, 'U').map((row) => ({
       ...row,
       Status: 'U',
       id: row.id || ''
     }));
 
-    const resulA = filterAndSelectColumns(gridDataRoute, columnsRoute, 'A').map((row) => ({
+    const resulA = filterAndSelectColumns(gridDataOpRoute, columnsRoute, 'A').map((row) => ({
       ...row,
       Status: 'A',
       id: row.id || ''
@@ -865,7 +872,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       const signal = controller.signal;
 
       controllers.current.onClickSave = controller;
-      const data = await formModelBasic.getFieldValue();
+      const data = await formBasic.getFieldValue();
 
       const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
         ...row,
@@ -918,7 +925,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
-  }, [formModelBasic, gridDataCategory, gridDataRoute, isAPISuccess]);
+  }, [formBasic, gridDataCategory, gridDataOpRoute, isAPISuccess]);
 
   const onClickSearch = useCallback(async () => {
     if (!isAPISuccess) {
@@ -948,7 +955,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       const response = await getConfigProdById(selectedData.data.id);
       const fetchedData = response.data || [];
 
-      formModelBasic.setFieldsValue({
+      formBasic.setFieldsValue({
         id: fetchedData.id,
         statusConfProd: fetchedData.statusConfProd,
         configProdName: fetchedData.configProdName,
@@ -973,12 +980,12 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       setGridDataCategory(fetchedData.promptCategories || []);
       setNumRowsCategory(fetchedData.promptCategories?.length || 0);
 
-      setGridDataRoute(fetchedData.routes || []);
+      setGridDataOpRoute(fetchedData.routes || []);
       setNumRowsRoute(fetchedData.routes?.length || 0);
     } catch (error) {
       setGridDataCategory([]);
       setNumRowsCategory(0);
-      setGridDataRoute([]);
+      setGridDataOpRoute([]);
       setNumRowsRoute(0);
       setIsAPISuccess(true);
     } finally {
@@ -988,7 +995,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         loadingBarRef.current.complete();
       }
     }
-  }, [isAPISuccess, selectedData, formModelBasic]);
+  }, [isAPISuccess, selectedData, formBasic]);
 
   const onVisibleRegionChanged = useCallback(
     ({ y, height }) => {
@@ -1050,6 +1057,71 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
+      const response = await SearchRouteTree(data);
+      const fetchedData = response.data || [];
+
+      const dataTree = fetchedData.map((item) => ({
+        title: item.route.routeCode,
+        value: item.route.id,
+        key: item.route.id,
+        icon: <ClusterOutlined />,
+        children: item.routeOperations.map((operation) => ({
+          title: operation.operationCode,
+          value: operation.id,
+          key: operation.id,
+          icon: <ApiOutlined />
+        }))
+      }));
+
+      setRouteTree(dataTree);
+    } catch (error) {
+      setRouteTree([]);
+      setIsAPISuccess(true);
+      notify({
+        type: 'false',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchRoute = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, [keyword, pageIndex, pageSize, isAPISuccess]);
+
+  const onFetchOperation = useCallback(async () => {
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onFetchOperation) {
+      controllers.current.onFetchOperation.abort();
+      controllers.current.onFetchOperation = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onFetchOperation = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      const data = {
+        Keyword: keyword,
+        PageIndex: pageIndex,
+        PageSize: pageSize
+      };
+
       const response = await SearchOperationBy(data);
       const fetchedData = response.data || [];
 
@@ -1066,12 +1138,12 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       });
     } finally {
       setIsAPISuccess(true);
-      controllers.current.onFetchRoute = null;
+      controllers.current.onFetchOperation = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.complete();
       }
     }
-  }, [keyword, pageIndex, pageSize, isAPISuccess]);
+  }, [gridData, numRows, keyword, pageIndex, pageSize, isAPISuccess]);
 
   const getSelectedRowsData = () => {
     const selectedRows = selection.rows.items;
@@ -1093,7 +1165,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     const selectedRows = selectionRoute.rows.items;
 
     return selectedRows.flatMap(([start, end]) =>
-      Array.from({ length: end - start }, (_, i) => gridDataRoute[start + i]).filter((row) => row !== undefined)
+      Array.from({ length: end - start }, (_, i) => gridDataOpRoute[start + i]).filter((row) => row !== undefined)
     );
   };
 
@@ -1150,7 +1222,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         return;
       }
       if (cell[0] === -1) {
-        if (rowIndex >= 0 && rowIndex < gridDataRoute.length) {
+        if (rowIndex >= 0 && rowIndex < gridDataOpRoute.length) {
           const isSelected = selectionRoute.rows.hasIndex(rowIndex);
 
           let newSelected;
@@ -1164,7 +1236,67 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         }
       }
     },
-    [gridDataRoute, getSelectedRowsRouteDetailsData, routeDetailSelected]
+    [gridDataOpRoute, getSelectedRowsRouteDetailsData, routeDetailSelected]
+  );
+
+  const onTreeClicked = useCallback(
+    async (selectedKeys, info) => {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+
+      if (controllers.current && controllers.current.onFetchRoute) {
+        controllers.current.onFetchRoute.abort();
+        controllers.current.onFetchRoute = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      controllers.current.onFetchRoute = controller;
+
+      setIsAPISuccess(false);
+
+      try {
+        const response = await getRouteById(info.node.value);
+        const fetchedData = response.data || [];
+
+        formBasic.setFieldsValue({
+          routeName: fetchedData.route.routeCode,
+          description: fetchedData.route.description
+        });
+
+        setGridDataOpRoute(fetchedData.routeOperation);
+        setGridDataOperationRework(fetchedData.reworkOperation);
+        setGridDataOpIndicate(fetchedData.indicatesOperation);
+        setGridDataCategory(fetchedData.promptCategoryResDto);
+      } catch (error) {
+        setGridDataOpRoute([]);
+        setGridDataOperationRework([]);
+        setGridDataOpIndicate([]);
+        setGridDataCategory([]);
+        setIsAPISuccess(true);
+        notify({
+          type: 'false',
+          message: 'Lỗi',
+          description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+        });
+      } finally {
+        setIsAPISuccess(true);
+        controllers.current.onFetchRoute = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    },
+    [routeTree, routeTreeSelected, formBasic]
   );
 
   const onCellCategoryClicked = useCallback(
@@ -1203,8 +1335,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 
   useEffect(() => {
-    onClickSearch();
     onFetchRoute();
+    onFetchOperation();
   }, [selectedData]);
 
   const onInsertRow = useCallback(async () => {
@@ -1246,7 +1378,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       return;
     }
 
-    setGridDataRoute((prevGridData) => {
+    setGridDataOpRoute((prevGridData) => {
       const updatedGridData = [...prevGridData];
 
       let addedCount = 0;
@@ -1308,7 +1440,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         if (routeDetailSelected.length > 0) {
           const idConfigRoute = routeDetailSelected.map((item) => item.id).filter((id) => id !== undefined);
           response = await DeleteConfigRouteBy(idConfigRoute);
-          setGridDataRoute((prevGridData) => {
+          setGridDataOpRoute((prevGridData) => {
             const updatedGridData = [...prevGridData];
             updatedGridData.splice(rowIndex, 1);
             setNumRowsRoute((prevNumRows) => prevNumRows - 1);
@@ -1362,7 +1494,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         }
       }
     },
-    [gridDataRoute, gridDataCategory, categorySelected, routeDetailSelected]
+    [gridDataOpRoute, gridDataCategory, categorySelected, routeDetailSelected]
   );
 
   const handleRowAppendCategory = useCallback(
@@ -1387,7 +1519,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     [colsOperationRework, setGridDataOperationRework, setNumRowsOperationRework, setAddedRowsOperationRework, numRowsToAddOperationRework]
   );
 
-    const handleRowAppendOpIndicate = useCallback(
+  const handleRowAppendOpIndicate = useCallback(
     (numRowsToAdd) => {
       if (canCreate === false) {
         message.warning('Bạn không có quyền thêm dữ liệu');
@@ -1440,9 +1572,9 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       } else {
         setGridDataCategory([]);
         setNumRowsCategory(0);
-        setGridDataRoute([]);
+        setGridDataOpRoute([]);
         setNumRowsRoute(0);
-        formModelBasic.resetFields();
+        formBasic.resetFields();
 
         notify({
           type: 'success',
@@ -1469,7 +1601,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         loadingBarRef.current.complete();
       }
     }
-  }, [selectedData, gridDataRoute, gridDataCategory, formModelBasic, isAPISuccess]);
+  }, [selectedData, gridDataOpRoute, gridDataCategory, formBasic, isAPISuccess]);
 
   return (
     <>
@@ -1483,11 +1615,11 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         />
         <Splitter className="w-full h-full border border-gray-300 ">
           <SplitterPanel size={25} minSize={10}>
-            <RouteSetTree />
+            <RouteSetTree routeTree={routeTree} setRouteTree={setRouteTree} onSelect={onTreeClicked} />
           </SplitterPanel>
           <SplitterPanel size={75} minSize={10}>
             <RouteInfomationQuery
-              formModelBasic={formModelBasic}
+              formBasic={formBasic}
               dataL={dataL}
               dataM={dataM}
               dataS={dataS}
@@ -1589,8 +1721,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                 numRows={numRows}
                 setNumRows={setNumRows}
                 defaultColsModels={defaultCols}
-                gridDataModels={gridDataRoute}
-                setGridDataModels={setGridDataRoute}
+                gridDataModels={gridDataOpRoute}
+                setGridDataModels={setGridDataOpRoute}
                 colsModels={colsRoute}
                 setColsModels={setColsRoute}
                 numRowsModels={numRowsRoute}

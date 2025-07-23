@@ -28,103 +28,14 @@ import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
 import { AsyncDropdownCellRenderer } from 'utils/sheets/cell-custom/AsyncDropdownCellRenderer';
 import { StepsCell } from 'utils/sheets/cell-custom/cellsOperationsSteps';
 
-const treeData = [
-  {
-    title: 'parent 1',
-    key: '0-0',
-    icon: <CarryOutOutlined />,
-    children: [
-      {
-        title: 'parent 1-0',
-        key: '0-0-0',
-        icon: <CarryOutOutlined />,
-        children: [
-          { title: 'leaf', key: '0-0-0-0', icon: <CarryOutOutlined /> },
-          {
-            title: (
-              <>
-                <div>multiple line title</div>
-                <div>multiple line title</div>
-              </>
-            ),
-            key: '0-0-0-1',
-            icon: <CarryOutOutlined />
-          },
-          { title: 'leaf', key: '0-0-0-2', icon: <CarryOutOutlined /> }
-        ]
-      },
-      {
-        title: 'parent 1-1',
-        key: '0-0-1',
-        icon: <CarryOutOutlined />,
-        children: [{ title: 'leaf', key: '0-0-1-0', icon: <CarryOutOutlined /> }]
-      },
-      {
-        title: 'parent 1-2',
-        key: '0-0-2',
-        icon: <CarryOutOutlined />,
-        children: [
-          { title: 'leaf', key: '0-0-2-0', icon: <CarryOutOutlined /> },
-          {
-            title: 'leaf',
-            key: '0-0-2-1',
-            icon: <CarryOutOutlined />,
-            switcherIcon: <FormOutlined />
-          }
-        ]
-      }
-    ]
-  },
-  {
-    title: 'parent 2',
-    key: '0-1',
-    icon: <CarryOutOutlined />,
-    children: [
-      {
-        title: 'parent 2-0',
-        key: '0-1-0',
-        icon: <CarryOutOutlined />,
-        children: [
-          { title: 'leaf', key: '0-1-0-0', icon: <CarryOutOutlined /> },
-          { title: 'leaf', key: '0-1-0-1', icon: <CarryOutOutlined /> }
-        ]
-      }
-    ]
-  }
-];
 
-function RouteSetTree({
-  setSelection,
-  selection,
-  setShowSearch,
-  onCellClicked,
-  showSearch,
-  setEditedRows,
-  setOnSelectRow,
-  setOpenHelp,
-  openHelp,
-  setGridData,
-  gridData,
-  handleRestSheet,
-  numRows,
-  handleRowAppend,
-  setCols,
-  cols,
-  defaultCols,
-  canEdit,
-  keyword,
-  setKeyword,
-  onSearch,
-  onKeyDown
-}) {
+function RouteSetTree({ routeTree, setRouteTree,  onSelect, onTreeClicked, keyword, setKeyword, onSearch, onKeyDown }) {
   const [showLine, setShowLine] = useState(true);
   const [showIcon, setShowIcon] = useState(false);
   const [showLeafIcon, setShowLeafIcon] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const onSelect = (selectedKeys, info) => {
-    console.log('selected', selectedKeys, info);
-  };
+
   const handleLeafIconChange = (value) => {
     if (value === 'custom') {
       return setShowLeafIcon(<CheckOutlined />);
@@ -138,11 +49,7 @@ function RouteSetTree({
     <div className="w-full h-full bg-white  overflow-x-hidden overflow-hidden  ">
       <div className="w-full h-[30px] flex items-center px-2 border-b border-gray-200 ">
         <div className="w-full flex gap-2">
-          {isLoading ? (
-            <LoadingOutlined className="animate-spin" />
-          ) : (
-            <SearchOutlined />
-          )}
+          {isLoading ? <LoadingOutlined className="animate-spin" /> : <SearchOutlined />}
           <input
             value={keyword}
             onChange={onSearch}
@@ -153,7 +60,7 @@ function RouteSetTree({
           />
         </div>
       </div>
-      <Tree showLine={true} showIcon={true} defaultExpandedKeys={['0-0-0']} onSelect={onSelect} treeData={treeData} />
+      <Tree showLine={true} showIcon={true} defaultExpandedKeys={['0-0-0']} onSelect={onSelect} treeData={routeTree} />
     </div>
   );
 }
