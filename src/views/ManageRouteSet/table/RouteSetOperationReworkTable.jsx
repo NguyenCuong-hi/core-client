@@ -18,6 +18,11 @@ import ContextMenuWrapper from 'component/ContextMenu';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
+import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
+import { SearchRouteBy } from 'services/ModelManage/SearchRouteBy';
+import { CellsOperation } from 'utils/sheets/cell-custom/cellsOperation';
+import { CellsRoute } from 'utils/sheets/cell-custom/cellsRoute';
+import { reorderColumns } from 'utils/sheets/reorderColumns';
 
 function RouteSetOperationReworkTable({
   dataCategoryValue,
@@ -39,7 +44,10 @@ function RouteSetOperationReworkTable({
   cols,
   defaultCols,
   canEdit,
-  
+  controllers,
+  loadingBarRef,
+  setIsAPISuccess,
+  isAPISuccess
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -50,9 +58,16 @@ function RouteSetOperationReworkTable({
   const [isCell, setIsCell] = useState(null);
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
+  const [keyword, setKeyword] = useState('');
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const [hiddenColumns, setHiddenColumns] = useState(() => {
     return loadFromLocalStorageSheet('H_ROUTE_OPERATION_REWORK', []);
   });
+
+  const [dataRoute, setDataRoute] = useState([]);
+  const [dataOperation, setDataOperation] = useState([]);
 
   const [typeSearch, setTypeSearch] = useState('');
   const [keySearchText, setKeySearchText] = useState('');
@@ -62,6 +77,22 @@ function RouteSetOperationReworkTable({
     const [_, row] = args.location;
     setHoverRow(args.kind !== 'cell' ? undefined : row);
   }, []);
+
+  const columnNames = [
+    'operationName',
+    'routerNameRework',
+    'routeReturnName',
+
+  ]
+  const highlightRegions = columnNames.map((columnName) => ({
+    color: '#e8f0ff',
+    range: {
+      x: reorderColumns(cols).indexOf(columnName),
+      y: 0,
+      width: 1,
+      height: numRows,
+    },
+  }))
 
   const onHeaderMenuClick = useCallback((col, bounds) => {
     if (cols[col]?.id === 'Status') {
@@ -85,6 +116,62 @@ function RouteSetOperationReworkTable({
     selectColumn: false
   });
 
+  const onFetchCellData = useCallback(async () => {
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onFetchCellData) {
+      controllers.current.onFetchCellData.abort();
+      controllers.current.onFetchCellData = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onFetchCellData = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      const promises = [];
+
+      const searchParam = {
+        Keyword: keyword,
+        PageIndex: pageIndex,
+        PageSize: pageSize
+      };
+      const [dataOperation, dataRoute] = await Promise.all([SearchOperationBy(searchParam, signal), SearchRouteBy(searchParam, signal)]);
+      setDataOperation(dataOperation.data);
+      setDataRoute(dataRoute.data);
+    } catch (error) {
+      setRouteTree([]);
+      setIsAPISuccess(true);
+      notify({
+        type: 'false',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchRoute = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    onFetchCellData();
+  }, []);
+
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
@@ -92,9 +179,29 @@ function RouteSetOperationReworkTable({
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
-      const cellConfig = [{
-        
-      }];
+      const cellConfig = {
+        operationName: {
+          kind: 'cells-operation',
+          allowedValues: dataOperation,
+          setCacheData: setDataOperation
+        },
+        routerNameRework: {
+          kind: 'cells-route',
+          allowedValues: dataRoute,
+          setCacheData: setDataRoute
+        },
+
+        operationReworkName: {
+          kind: 'cells-operation',
+          allowedValues: dataOperation,
+          setCacheData: setDataOperation
+        },
+        routeReturnName: {
+          kind: 'cells-route',
+          allowedValues: dataRoute,
+          setCacheData: setDataRoute
+        }
+      };
 
       if (cellConfig[columnKey]) {
         return {
@@ -105,36 +212,12 @@ function RouteSetOperationReworkTable({
             kind: cellConfig[columnKey].kind,
             allowedValues: cellConfig[columnKey].allowedValues,
             value: value,
-            boundingBox: boundingBox
+            boundingBox: boundingBox,
+            setCacheData: setDataOperation
           },
           displayData: String(value),
           readonly: column?.readonly || false,
           hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'mustInput') {
-        const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
-        return {
-          kind: GridCellKind.Boolean,
-          data: booleanValue,
-          allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'promptValueName') {
-        return {
-          kind: GridCellKind.Custom,
-          allowOverlay: true,
-          copyData: String(value),
-          data: {
-            kind: 'dropdown-cell',
-            allowedValues: dataCategoryValue,
-            value: value
-          },
-          displayData: String(value),
-          readonly: column?.readonly || false
         };
       }
 
@@ -326,7 +409,7 @@ function RouteSetOperationReworkTable({
       const [col, row] = cell;
       const key = indexes[col];
 
-      if (key === 'promptValueName') {
+      if (key === 'operationName') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -335,12 +418,14 @@ function RouteSetOperationReworkTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
+              const selectedValue = dataOperation.find((item) => item.id === selectedName[0].id);
+              product['operationId'] = selectedValue.id;
+              product['operationCode'] = selectedValue.operationCode;
+              product['operationName'] = selectedValue.operationName;
             } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
+              product['operationId'] = '';
+              product['operationCode'] = '';
+              product['operationName'] = '';
             }
 
             product.isEdited = true;
@@ -356,7 +441,7 @@ function RouteSetOperationReworkTable({
         }
       }
 
-      if (key === 'promptValueName') {
+      if (key === 'routerNameRework') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -365,12 +450,14 @@ function RouteSetOperationReworkTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
+              const selectedValue = dataRoute.find((item) => item.id === selectedName[0].id);
+              product['routeIdRework'] = selectedValue.id;
+              product['routerNameRework'] = selectedValue.routeName;
+              product['routeCodeRework'] = selectedValue.routeCode;
             } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
+              product['routeIdRework'] = '';
+              product['routerNameRework'] = '';
+              product['routeCodeRework'] = '';
             }
 
             product.isEdited = true;
@@ -386,6 +473,69 @@ function RouteSetOperationReworkTable({
         }
       }
 
+      if (key === 'operationReworkName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataOperation.find((item) => item.id === selectedName[0].id);
+              product['operationReworkId'] = selectedValue.id;
+              product['operationReworkCode'] = selectedValue.operationCode;
+              product['operationReworkName'] = selectedValue.operationName;
+            } else {
+              product['operationReworkId'] = '';
+              product['operationReworkCode'] = '';
+              product['operationReworkName'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'routeReturnName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataRoute.find((item) => item.id === selectedName[0].id);
+              product['routeReturnId'] = selectedValue.id;
+              product['routeReturnCode'] = selectedValue.routeCode;
+              product['routeReturnName'] = selectedValue.routeName;
+            } else {
+              product['routeReturnId'] = '';
+              product['routeReturnCode'] = '';
+              product['routeReturnName'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
       // Xử lý các trường hợp khác
       setGridData((prevData) => {
         const updatedData = [...prevData];
@@ -416,7 +566,7 @@ function RouteSetOperationReworkTable({
         return updatedData;
       });
     },
-    [canEdit, cols, gridData]
+    [canEdit, cols, gridData, dataOperation, dataRoute]
   );
 
   return (
@@ -477,7 +627,8 @@ function RouteSetOperationReworkTable({
               onCellEdited={onCellEdited}
               onCellClicked={onCellClicked}
               onColumnResize={onColumnResize}
-              customRenderers={[DropdownRenderer]}
+              customRenderers={[DropdownRenderer, CellsOperation, CellsRoute]}
+              highlightRegions={highlightRegions}
               // onHeaderMenuClick={onHeaderMenuClick}
               // onColumnMoved={onColumnMoved}
               // onKeyUp={onKeyUp}

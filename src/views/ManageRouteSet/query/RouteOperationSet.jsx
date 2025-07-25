@@ -13,23 +13,23 @@ const RouteOperationSet = ({
   setCols,
   numRows,
   setNumRows,
-  defaultColsModels,
-  gridDataModels,
-  setGridDataModels,
-  colsModels,
-  setColsModels,
-  numRowsModels,
-  setNumRowsModels,
+  defaultColsOpRoute,
+  gridDataOpRoute,
+  setGridDataOpRoute,
+  colsRouteOp,
+  setColsRouteOp,
+  numRowsRouteOp,
+  setNumRowsRouteOp,
   onVisibleRegionChanged,
   onCellRouteClicked,
   selection,
   setSelection,
 
-
-  selectionRoute,
-  setSelectionRoute,
-  onCellRouteDetailsClicked
+  selectionRouteOp,
+  setSelectionRouteOp,
+  onCellRouteOpClicked
 }) => {
+
   
   return (
       <div className="bg-slate-50  h-[calc(100vh-189px)]">
@@ -54,16 +54,16 @@ const RouteOperationSet = ({
 
           <SplitterPanel size={50} minSize={10}>
             <RouteOperationDetailsTable
-              defaultCols={defaultColsModels}
-              gridData={gridDataModels}
-              setGridData={setGridDataModels}
-              cols={colsModels}
-              setCols={setColsModels}
-              numRows={numRowsModels}
-              setNumRows={setNumRowsModels}
-              selection={selectionRoute}
-              setSelection={setSelectionRoute}
-              onCellClicked={onCellRouteDetailsClicked}
+              defaultCols={defaultColsOpRoute}
+              gridData={gridDataOpRoute}
+              setGridData={setGridDataOpRoute}
+              cols={colsRouteOp}
+              setCols={setColsRouteOp}
+              numRows={numRowsRouteOp}
+              setNumRows={setNumRowsRouteOp}
+              selection={selectionRouteOp}
+              setSelection={setSelectionRouteOp}
+              onCellClicked={onCellRouteOpClicked}
             />
           </SplitterPanel>
         </Splitter>

@@ -52,6 +52,10 @@ import RouteSetOpIndicateTable from './table/RouteSetOpIndicateTable';
 import { SearchRouteTree } from 'services/RouteSetManage/SearchRouteTree';
 import { getRouteById } from 'services/RouteSetManage/GetRouteById';
 import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
+import { CreateRouteOperationByService } from 'services/RouteSetManage/CreateRouteOperationBy';
+import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
+import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId';
+import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -91,19 +95,19 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
-  const [selectionRoute, setSelectionRoute] = useState({
+  const [selectionRouteOp, setSelectionRouteOp] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
 
-  const [routeSelected, setRouteSelected] = useState([]);
+  const [operationSelected, setOperationSelected] = useState([]);
   const [addedRows, setAddedRows] = useState([]);
   const [numRowsToAdd, setNumRowsToAdd] = useState(null);
   const [editedRows, setEditedRows] = useState([]);
   const [editedRowsCategory, setEditedRowsCategory] = useState([]);
 
   const [categorySelected, setCategorySelected] = useState([]);
-  const [routeDetailSelected, setRouteDetailSelected] = useState([]);
+  const [routeOpSelected, setRouteOpSelected] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
@@ -268,7 +272,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   ]);
 
-  const [colsRoute, setColsRoute] = useState(() =>
+  const [colsRouteOp, setColsRouteOp] = useState(() =>
     loadFromLocalStorageSheet(
       'S_OPERTATION_LIST',
       defaultColsOperation.filter((col) => col.visible)
@@ -278,7 +282,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const [numRows, setNumRows] = useState(0);
 
   const [gridDataOpRoute, setGridDataOpRoute] = useState([]);
-  const [numRowsRoute, setNumRowsRoute] = useState(0);
+  const [numRowsRouteOp, setNumRowsRouteOp] = useState(0);
 
   const defaultColsCategory = useMemo(() => [
     {
@@ -466,6 +470,19 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
+    {
+      title: t('Tên dây chuyền Rework'),
+      id: 'routerNameRework',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
 
     {
       title: t('Mã dây chuyền Rework'),
@@ -482,8 +499,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Tên dây chuyền Rework'),
-      id: 'routerNameRework',
+      title: t('Tên công đoạn Rework'),
+      id: 'operationReworkName',
       kind: 'Custom',
       readonly: false,
       width: 250,
@@ -524,20 +541,6 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Tên công đoạn Rework'),
-      id: 'operationReworkName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
       title: t('Mã dây chuyền trả về'),
       id: 'routeReturnId',
       kind: 'Custom',
@@ -551,8 +554,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã dây chuyền trả về'),
-      id: 'routeReturnCode',
+      title: t('Tên dây chuyền trả về'),
+      id: 'routeReturnName',
       kind: 'Custom',
       readonly: false,
       width: 250,
@@ -563,9 +566,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
-
     {
-      title: t('Tên dây chuyền trả về'),
+      title: t('Mã dây chuyền trả về'),
       id: 'routeReturnCode',
       kind: 'Custom',
       readonly: false,
@@ -650,11 +652,11 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     {
       title: t('Mã công đoạn'),
       id: 'operationCode',
-      kind: 'Custom',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
-      visible: false,
+      visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
@@ -748,6 +750,10 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const fieldsToTrack = ['IdxNo'];
   const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
 
+  const [routeId, setRouteId] = useState(null);
+  const [routeCode, setRouteCode] = useState(null);
+  const [routeName, setRouteName] = useState(null);
+
   //  Data Input
   const [formBasic] = Form.useForm();
 
@@ -801,7 +807,34 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const onClickSave = useCallback(async () => {
     const requiredColumns = ['configProdName'];
 
-    const columnsRoute = ['IdxNo', 'id', 'routeId', 'routeCode', 'routeName', 'description', 'status', 'IDX_NO'];
+     const columnOpRework = [
+      "id",
+      "operationId",
+      "operationCode",
+      "operationName",
+      "routeIdRework",
+      "routeCodeRework",
+      "routerNameRework",
+      "operationReworkId",
+      "operationReworkCode",
+      "operationReworkName",
+      "routeReturnId",
+      "routeReturnCode",
+      "routeReturnName"
+    ];
+
+    const columnOpIndicate = [
+      "id",
+      "routeId",
+      "operationId",
+      "operationCode",
+      "operationName",
+      "description",
+      "isUse",
+      "queueNumber",
+      "processNumber",
+      "yield"
+    ];
 
     const columnsCategory = [
       'IdxNo',
@@ -834,20 +867,6 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       return;
     }
 
-    const resulU = filterAndSelectColumns(gridDataOpRoute, columnsRoute, 'U').map((row) => ({
-      ...row,
-      Status: 'U',
-      id: row.id || ''
-    }));
-
-    const resulA = filterAndSelectColumns(gridDataOpRoute, columnsRoute, 'A').map((row) => ({
-      ...row,
-      Status: 'A',
-      id: row.id || ''
-    }));
-
-    const dataRoute = [...resulU, ...resulA];
-
     if (isSent) return;
     setIsSent(true);
 
@@ -874,6 +893,34 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       controllers.current.onClickSave = controller;
       const data = await formBasic.getFieldValue();
 
+      const dataOpReworkA = filterAndSelectColumns(gridDataOperationRework, columnOpRework, 'A').map((row) => ({
+        ...row,
+        Status: 'A',
+        id: row.id || '',
+        routeId: data.id || ''
+      }));
+
+      const dataOpReworkU = filterAndSelectColumns(gridDataOperationRework, columnOpRework, 'U').map((row) => ({
+        ...row,
+        Status: 'U',
+        id: row.id || '',
+        routeId: data.id || ''
+      }));
+
+      const dataOpIndicateA = filterAndSelectColumns(gridDataOpIndicate, columnOpIndicate, 'A').map((row) => ({
+        ...row,
+        Status: 'A',
+        id: row.id || '',
+        routeId: data.id || ''
+      }));
+
+      const dataOpIndicateU = filterAndSelectColumns(gridDataOpIndicate, columnOpIndicate, 'U').map((row) => ({
+        ...row,
+        Status: 'U',
+        id: row.id || '',
+        routeId: data.id || ''
+      }));
+
       const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
         ...row,
         Status: 'A',
@@ -888,14 +935,18 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         configProdNameId: data.id || ''
       }));
 
+      const dataRework = [...dataOpReworkA, ...dataOpReworkU];
+      const dataIndicate = [...dataOpIndicateA, ...dataOpIndicateU];
+
       const dataCategory = [...dataCategoryA, ...dataCategoryU];
       const dto = {
         ...data,
-        routes: dataRoute,
-        promptCategories: dataCategory
+        promptCategories: dataCategory,
+        operationReworks: dataRework,
+        operationIndicates: dataIndicate,
       };
       try {
-        const result = await UpdateConfigProdBy(data.id, dto);
+        const result = await CreateRouteByService(data.id, dto);
 
         if (result.success) {
           notify({
@@ -981,12 +1032,12 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       setNumRowsCategory(fetchedData.promptCategories?.length || 0);
 
       setGridDataOpRoute(fetchedData.routes || []);
-      setNumRowsRoute(fetchedData.routes?.length || 0);
+      setNumRowsRouteOp(fetchedData.routes?.length || 0);
     } catch (error) {
       setGridDataCategory([]);
       setNumRowsCategory(0);
       setGridDataOpRoute([]);
-      setNumRowsRoute(0);
+      setNumRowsRouteOp(0);
       setIsAPISuccess(true);
     } finally {
       setIsAPISuccess(true);
@@ -1162,7 +1213,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   };
 
   const getSelectedRowsRouteDetailsData = () => {
-    const selectedRows = selectionRoute.rows.items;
+    const selectedRows = selectionRouteOp.rows.items;
 
     return selectedRows.flatMap(([start, end]) =>
       Array.from({ length: end - start }, (_, i) => gridDataOpRoute[start + i]).filter((row) => row !== undefined)
@@ -1193,18 +1244,18 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
           let newSelected;
           if (isSelected) {
             newSelected = selection.rows.remove(rowIndex);
-            setRouteSelected(getSelectedRowsData());
+            setOperationSelected(getSelectedRowsData());
           } else {
             newSelected = selection.rows.add(rowIndex);
-            setRouteSelected([]);
+            setOperationSelected([]);
           }
         }
       }
     },
-    [gridData, getSelectedRowsData, routeSelected]
+    [gridData, getSelectedRowsData, operationSelected]
   );
 
-  const onCellRouteDetailsClicked = useCallback(
+  const onCellRouteOpClicked = useCallback(
     (cell, event) => {
       let rowIndex;
 
@@ -1223,20 +1274,20 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       }
       if (cell[0] === -1) {
         if (rowIndex >= 0 && rowIndex < gridDataOpRoute.length) {
-          const isSelected = selectionRoute.rows.hasIndex(rowIndex);
+          const isSelected = selectionRouteOp.rows.hasIndex(rowIndex);
 
           let newSelected;
           if (isSelected) {
-            newSelected = selectionRoute.rows.remove(rowIndex);
-            setRouteDetailSelected(getSelectedRowsRouteDetailsData());
+            newSelected = selectionRouteOp.rows.remove(rowIndex);
+            setRouteOpSelected(getSelectedRowsRouteDetailsData());
           } else {
-            newSelected = selectionRoute.rows.add(rowIndex);
-            setRouteDetailSelected([]);
+            newSelected = selectionRouteOp.rows.add(rowIndex);
+            setRouteOpSelected([]);
           }
         }
       }
     },
-    [gridDataOpRoute, getSelectedRowsRouteDetailsData, routeDetailSelected]
+    [gridDataOpRoute, getSelectedRowsRouteDetailsData, routeOpSelected]
   );
 
   const onTreeClicked = useCallback(
@@ -1273,18 +1324,34 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
           description: fetchedData.route.description
         });
 
-        setGridDataOpRoute(fetchedData.routeOperation);
-        setGridDataOperationRework(fetchedData.reworkOperation);
-        setGridDataOpIndicate(fetchedData.indicatesOperation);
-        setGridDataCategory(fetchedData.promptCategoryResDto);
+        setRouteId(fetchedData.route.id);
+        setRouteCode(fetchedData.route.routeCode);
+        setRouteName(fetchedData.route.routeName);
+
+        setGridDataOpRoute(fetchedData.routeOperation || []);
+        setNumRowsRouteOp(fetchedData.routeOperation?.length || 0);
+
+        setGridDataOperationRework(fetchedData.reworkOperation || []);
+        setNumRowsOperationRework(fetchedData.reworkOperation?.length || 0);
+
+        setGridDataOpIndicate(fetchedData.indicatesOperation || []);
+        setNumRowsOpIndicate(fetchedData.indicatesOperation?.length || 0);
+
+        setGridDataCategory(fetchedData.promptCategoryResDto || []);
+        setNumRowsCategory(fetchedData.promptCategoryResDto?.length || 0);
       } catch (error) {
+        console.log(error);
         setGridDataOpRoute([]);
+        setNumRowsRouteOp(0);
         setGridDataOperationRework([]);
+        setNumRowsOperationRework(0);
         setGridDataOpIndicate([]);
+        setNumRowsOpIndicate(0);
         setGridDataCategory([]);
+        setNumRowsCategory(0);
         setIsAPISuccess(true);
         notify({
-          type: 'false',
+          type: 'error',
           message: 'Lỗi',
           description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
         });
@@ -1296,7 +1363,24 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         }
       }
     },
-    [routeTree, routeTreeSelected, formBasic]
+    [
+      routeTree,
+      routeTreeSelected,
+      formBasic,
+      routeId,
+      routeCode,
+      routeName,
+      gridDataOpRoute,
+      gridDataOperationRework,
+      gridDataOpIndicate,
+      gridDataCategory,
+      isAPISuccess,
+      numRows,
+      numRowsRouteOp,
+      numRowsOperationRework,
+      numRowsOpIndicate,
+      numRowsCategory
+    ]
   );
 
   const onCellCategoryClicked = useCallback(
@@ -1340,24 +1424,24 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   }, [selectedData]);
 
   const onInsertRow = useCallback(async () => {
-    if (!Array.isArray(routeSelected) || routeSelected.length === 0) {
-      console.warn('routeSelected is empty or invalid');
+    if (!Array.isArray(operationSelected) || operationSelected.length === 0) {
+      console.warn('operationSelected is empty or invalid');
       return;
     }
 
     try {
-      const dto = routeSelected.map((item) => ({
-        routeId: item.id,
-        routeCode: item.routeCode,
-        routeName: item.routeName,
-        description: item.description,
-        status: item.status || 'A',
-        IdxNo: item.IdxNo || 0,
-        configProdNameId: selectedData.data.id || '',
-        configProdName: selectedData.data.configProdName || ''
+      const dto = operationSelected.map((item) => ({
+        routeId: routeId,
+        routeCode: routeCode,
+        routeName: routeName,
+
+        operationId: item.id,
+        operationCode: item.operationCode,
+        operationName: item.operationName,
+        description: item.description
       }));
 
-      const result = await CreateConfigRouteByService(dto);
+      const result = await CreateRouteOperationByService(dto);
 
       if (result.success) {
         notify({
@@ -1376,6 +1460,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       console.error('Error in onInsertRow:', error);
       message.error('Có lỗi xảy ra khi thêm dòng mới');
       return;
+    } finally {
+      onFetchRoute();
     }
 
     setGridDataOpRoute((prevGridData) => {
@@ -1383,7 +1469,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
       let addedCount = 0;
 
-      routeSelected.forEach((newItem) => {
+      operationSelected.forEach((newItem) => {
         const existingIndex = updatedGridData.findIndex((item) => item.id === newItem.routeId || item.routeCode === newItem.routeCode);
 
         if (existingIndex !== -1) {
@@ -1400,11 +1486,11 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         }
       });
 
-      setNumRowsRoute((prevNumRows) => prevNumRows + addedCount);
+      setNumRowsRouteOp((prevNumRows) => prevNumRows + addedCount);
 
       return updatedGridData;
     });
-  }, [routeSelected]);
+  }, [operationSelected, routeId, routeCode, routeName]);
 
   const removeRow = useCallback(
     async (rowIndex) => {
@@ -1432,20 +1518,17 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       setIsAPISuccess(false);
 
       try {
-        if (routeDetailSelected.length === 0 && categorySelected.length === 0) {
+        if (routeOpSelected.length === 0 && categorySelected.length === 0) {
           message.warning('Vui lòng chọn ít nhất một dòng để xóa');
           return;
         }
         let response;
-        if (routeDetailSelected.length > 0) {
-          const idConfigRoute = routeDetailSelected.map((item) => item.id).filter((id) => id !== undefined);
-          response = await DeleteConfigRouteBy(idConfigRoute);
-          setGridDataOpRoute((prevGridData) => {
-            const updatedGridData = [...prevGridData];
-            updatedGridData.splice(rowIndex, 1);
-            setNumRowsRoute((prevNumRows) => prevNumRows - 1);
-            return updatedGridData;
-          });
+        if (routeOpSelected.length > 0) {
+          const ids = routeOpSelected.map((item) => item.id).filter((id) => id !== undefined);
+          response = await DeleteRouteOpBy(ids);
+          const Ops = await getRouteOpByRouteId(routeId);
+          setGridDataOpRoute(Ops.data);
+          setNumRowsRouteOp(Ops.data.length);
         }
         if (categorySelected.length > 0) {
           const idCategory = categorySelected.map((item) => item.id).filter((id) => id !== undefined);
@@ -1488,13 +1571,14 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         });
       } finally {
         setIsAPISuccess(true);
+        onFetchRoute();
         controllers.current.removeRow = null;
         if (loadingBarRef.current) {
           loadingBarRef.current.complete();
         }
       }
     },
-    [gridDataOpRoute, gridDataCategory, categorySelected, routeDetailSelected]
+    [gridDataOpRoute, gridDataCategory, categorySelected, routeOpSelected]
   );
 
   const handleRowAppendCategory = useCallback(
@@ -1560,7 +1644,11 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     setIsAPISuccess(false);
 
     try {
-      let response = await DeleteConfigProd(selectedData.data.id);
+      let response = {};
+      if (selectedData.length > 0) {
+        const ids = selectedData.map((item) => item.id).filter((id) => id !== undefined);
+        response = await DeleteRouteOpBy(ids);
+      }
 
       if (!response.success) {
         notify({
@@ -1573,7 +1661,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         setGridDataCategory([]);
         setNumRowsCategory(0);
         setGridDataOpRoute([]);
-        setNumRowsRoute(0);
+        setNumRowsRouteOp(0);
         formBasic.resetFields();
 
         notify({
@@ -1673,43 +1761,44 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                   {t('Danh mục')}
                 </span>
               </Menu.Item>
-
-              <Menu.Item
-                key="buttons"
-                disabled
-                style={{
-                  marginLeft: 'auto',
-                  cursor: 'default',
-                  background: 'transparent'
-                }}
-              >
-                <div className="flex gap-1 items-center">
-                  <div className="w-[185px] h-[20px] flex items-center px-2 border-b border-gray-200 ">
-                    <div className="w-full flex gap-2">
-                      {isLoading ? <LoadingOutlined className="animate-spin" /> : <SearchOutlined />}
-                      <input
-                        value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
-                        highlight={true}
-                        autoFocus={true}
-                        className="h-full w-full border-none focus:outline-none hover:border-none bg-inherit"
-                      />
+              {current === '1' && (
+                <Menu.Item
+                  key="buttons"
+                  disabled
+                  style={{
+                    marginLeft: 'auto',
+                    cursor: 'default',
+                    background: 'transparent'
+                  }}
+                >
+                  <div className="flex gap-1 items-center">
+                    <div className="w-[185px] h-[20px] flex items-center px-2 border-b border-gray-200 ">
+                      <div className="w-full flex gap-2">
+                        {isLoading ? <LoadingOutlined className="animate-spin" /> : <SearchOutlined />}
+                        <input
+                          value={keyword}
+                          onChange={(e) => setKeyword(e.target.value)}
+                          highlight={true}
+                          autoFocus={true}
+                          className="h-full w-full border-none focus:outline-none hover:border-none bg-inherit"
+                        />
+                      </div>
                     </div>
+                    <Button type="text" icon={<PlusCircleFilled style={{ color: '#10b981', padding: 0 }} />} onClick={onInsertRow}>
+                      Chèn
+                    </Button>
+                    <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
+                      Xóa
+                    </Button>
+                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
+                      Up
+                    </Button>
+                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
+                      Down
+                    </Button>
                   </div>
-                  <Button type="text" icon={<PlusCircleFilled style={{ color: '#10b981', padding: 0 }} />} onClick={onInsertRow}>
-                    Chèn
-                  </Button>
-                  <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
-                    Xóa
-                  </Button>
-                  <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
-                    Up
-                  </Button>
-                  <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
-                    Down
-                  </Button>
-                </div>
-              </Menu.Item>
+                </Menu.Item>
+              )}
             </Menu>
             {current === '1' && (
               <RouteOperationSet
@@ -1720,22 +1809,22 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                 setCols={setCols}
                 numRows={numRows}
                 setNumRows={setNumRows}
-                defaultColsModels={defaultCols}
-                gridDataModels={gridDataOpRoute}
-                setGridDataModels={setGridDataOpRoute}
-                colsModels={colsRoute}
-                setColsModels={setColsRoute}
-                numRowsModels={numRowsRoute}
-                setNumRowsModels={setNumRowsRoute}
+                defaultColsOpRoute={defaultCols}
+                gridDataOpRoute={gridDataOpRoute}
+                setGridDataOpRoute={setGridDataOpRoute}
+                colsRouteOp={colsRouteOp}
+                setColsRouteOp={setColsRouteOp}
+                numRowsRouteOp={numRowsRouteOp}
+                setNumRowsRouteOp={setNumRowsRouteOp}
                 onVisibleRegionChanged={onVisibleRegionChanged}
                 onCellRouteClicked={onCellRouteClicked}
                 selection={selection}
                 setSelection={setSelection}
                 selectionCategory={selectionCategory}
                 setSelectionCategory={setSelectionCategory}
-                selectionRoute={selectionRoute}
-                setSelectionRoute={setSelectionRoute}
-                onCellRouteDetailsClicked={onCellRouteDetailsClicked}
+                selectionRouteOp={selectionRouteOp}
+                setSelectionRouteOp={setSelectionRouteOp}
+                onCellRouteOpClicked={onCellRouteOpClicked}
               />
             )}
             {current === '2' && (
@@ -1753,6 +1842,10 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                 selection={selectionOperationRework}
                 setSelection={setSelectionOperationRework}
                 onCellClicked={onCellCategoryClicked}
+                controllers={controllers}
+                loadingBarRef={loadingBarRef}
+                setIsAPISuccess={setIsAPISuccess}
+                isAPISuccess={isAPISuccess}
               />
             )}
             {current === '3' && (

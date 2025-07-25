@@ -114,7 +114,7 @@ function RouteSetOpIndicateTable({
         };
       }
 
-      if (columnKey === 'mustInput') {
+      if (columnKey === 'isUse') {
         const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
         return {
           kind: GridCellKind.Boolean,
@@ -122,6 +122,25 @@ function RouteSetOpIndicateTable({
           allowOverlay: true,
           hasMenu: column?.hasMenu || false
         };
+      }
+
+      if (
+        columnKey === 'queueNumber' ||
+        columnKey === 'processNumber' ||
+        columnKey === 'yield' 
+      ) {
+        return {
+          kind: GridCellKind.Number,
+          data: value,
+          displayData: new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 5,
+          }).format(value),
+          readonly: column?.readonly || false,
+          contentAlign: 'right',
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false,
+        }
       }
 
       if (columnKey === 'promptValueName') {

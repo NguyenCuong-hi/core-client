@@ -3,11 +3,11 @@ import { HOST_API_SERVER } from 'services/config';
 import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 
-export const CreateConfigRouteByService = async (dto) => {
+export const CreateRouteIndicateByService = async (dto) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/mes-admin/api/v1/config-prod-route/create-list`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/route-indication/create-list`,
       dto
         
       ,

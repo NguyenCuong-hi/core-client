@@ -3,22 +3,20 @@ import { HOST_API_SERVER } from 'services/config';
 import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 
-export const CreateByService = async (dto) => {
+export const getRouteOpByRouteId = async (id) => {
   try {
     const token = accessToken()
-    const response = await axios.post(
-      `${HOST_API_SERVER}/mes-admin/api/v1/config-prod`,
-      dto
-        
-      ,
-      {
+    const response = await axios.get(
+      `${HOST_API_SERVER}/mes-admin/api/v1/route-operation/route/${id}`,
+
+      { 
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         },
       },
     );
-
+    
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
@@ -27,13 +25,18 @@ export const CreateByService = async (dto) => {
     } else {
       return {
         success: false,
-        message: response.error || ERROR_MESSAGES,
+        message: response.data.message || ERROR_MESSAGES ,
       };
     }
+
   } catch (error) {
+    console.error(error);
+
     return {
       success: false,
-      message: error.message || ERROR_MESSAGES,
+      message: error.response
+        ? error.response.data.message
+        : error.message,
     };
   }
 };
