@@ -1,15 +1,13 @@
 import axios from 'axios';
 import { HOST_API_SERVER } from 'services/config';
+import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
-import qs from 'qs';
 
-export const DeleteConfigProd = async (id) => {
-
-
+export const getCategoryByRouteId = async (id) => {
   try {
     const token = accessToken()
-    const response = await axios.delete(
-      `${HOST_API_SERVER}/mes-admin/api/v1/config-prod/${id}`,
+    const response = await axios.get(
+      `${HOST_API_SERVER}/mes-admin/api/v1/prompt-category/route/${id}`,
 
       { 
         headers: {
@@ -41,6 +39,4 @@ export const DeleteConfigProd = async (id) => {
         : error.message,
     };
   }
-
-
 };

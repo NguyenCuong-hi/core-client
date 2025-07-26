@@ -7,7 +7,7 @@ export const CreateRouteByService = async (dto) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/mes-admin/api/v1/route`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/route/set`,
       dto
         
       ,

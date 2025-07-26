@@ -23,9 +23,9 @@ import { SearchRouteBy } from 'services/ModelManage/SearchRouteBy';
 import { CellsOperation } from 'utils/sheets/cell-custom/cellsOperation';
 import { CellsRoute } from 'utils/sheets/cell-custom/cellsRoute';
 import { reorderColumns } from 'utils/sheets/reorderColumns';
+import { useNotify } from 'utils/hooks/onNotify';
 
 function RouteSetOperationReworkTable({
-  dataCategoryValue,
   setSelection,
   selection,
   setShowSearch,
@@ -57,6 +57,8 @@ function RouteSetOperationReworkTable({
   const [showMenu, setShowMenu] = useState(null);
   const [isCell, setIsCell] = useState(null);
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
+  const { notify, contextHolder } = useNotify();
+  
 
   const [keyword, setKeyword] = useState('');
   const [pageIndex, setPageIndex] = useState(1);
@@ -81,6 +83,7 @@ function RouteSetOperationReworkTable({
   const columnNames = [
     'operationName',
     'routerNameRework',
+    'operationReworkName',
     'routeReturnName',
 
   ]
@@ -231,7 +234,7 @@ function RouteSetOperationReworkTable({
         hasMenu: column?.hasMenu || false
       };
     },
-    [gridData, cols]
+    [gridData, cols, dataOperation, dataRoute]
   );
 
   const onKeyUp = useCallback(

@@ -18,9 +18,12 @@ import ContextMenuWrapper from 'component/ContextMenu';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
+import { CellsOperation } from 'utils/sheets/cell-custom/cellsOperation';
+import { reorderColumns } from 'utils/sheets/reorderColumns';
+import { useNotify } from 'utils/hooks/onNotify';
+import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
 
 function RouteSetOpIndicateTable({
-  dataCategoryValue,
   setSelection,
   selection,
   setShowSearch,
@@ -39,7 +42,11 @@ function RouteSetOpIndicateTable({
   cols,
   defaultCols,
   canEdit,
-  cellConfig
+  cellConfig,
+  controllers,
+  loadingBarRef,
+  setIsAPISuccess,
+  isAPISuccess
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -49,14 +56,19 @@ function RouteSetOpIndicateTable({
   const [showMenu, setShowMenu] = useState(null);
   const [isCell, setIsCell] = useState(null);
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
+  const { notify, contextHolder } = useNotify();
+  
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
     return loadFromLocalStorageSheet('H_ROUTE_OPERATION_REWORK', []);
   });
-
+  const [keyword, setKeyword] = useState('');
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [typeSearch, setTypeSearch] = useState('');
   const [keySearchText, setKeySearchText] = useState('');
   const [hoverRow, setHoverRow] = useState(undefined);
+  const [dataOperation, setDataOperation] = useState([]);
 
   const onItemHovered = useCallback((args) => {
     const [_, row] = args.location;
@@ -79,11 +91,80 @@ function RouteSetOpIndicateTable({
     }
   }, []);
 
+  const columnNames = [
+      'operationName',
+    ]
+    const highlightRegions = columnNames.map((columnName) => ({
+      color: '#e8f0ff',
+      range: {
+        x: reorderColumns(cols).indexOf(columnName),
+        y: 0,
+        width: 1,
+        height: numRows,
+      },
+    }))
+  
+
   const [keybindings, setKeybindings] = useState({
     downFill: true,
     rightFill: true,
     selectColumn: false
   });
+
+    const onFetchCellData = useCallback(async () => {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+  
+      if (controllers.current && controllers.current.onFetchCellData) {
+        controllers.current.onFetchCellData.abort();
+        controllers.current.onFetchCellData = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+  
+      controllers.current.onFetchCellData = controller;
+  
+      setIsAPISuccess(false);
+  
+      try {
+        const promises = [];
+  
+        const searchParam = {
+          Keyword: keyword,
+          PageIndex: pageIndex,
+          PageSize: pageSize
+        };
+        const [dataOperation, ] = await Promise.all([SearchOperationBy(searchParam, signal), ]);
+        setDataOperation(dataOperation.data);
+      } catch (error) {
+        setIsAPISuccess(true);
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+        });
+      } finally {
+        setIsAPISuccess(true);
+        controllers.current.onFetchRoute = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    }, []);
+  
+    useEffect(() => {
+      onFetchCellData();
+    }, []);
+  
 
   const getData = useCallback(
     ([col, row]) => {
@@ -92,10 +173,14 @@ function RouteSetOpIndicateTable({
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
-      const cellConfig = [
-         
+      const cellConfig = {
+        operationName: {
+          kind: 'cells-operation',
+          allowedValues: dataOperation,
+          setCacheData: setDataOperation
+        },
         
-      ];
+      };
 
       if (cellConfig[columnKey]) {
         return {
@@ -106,7 +191,8 @@ function RouteSetOpIndicateTable({
             kind: cellConfig[columnKey].kind,
             allowedValues: cellConfig[columnKey].allowedValues,
             value: value,
-            boundingBox: boundingBox
+            boundingBox: boundingBox,
+            setCacheData: setDataOperation
           },
           displayData: String(value),
           readonly: column?.readonly || false,
@@ -143,21 +229,6 @@ function RouteSetOpIndicateTable({
         }
       }
 
-      if (columnKey === 'promptValueName') {
-        return {
-          kind: GridCellKind.Custom,
-          allowOverlay: true,
-          copyData: String(value),
-          data: {
-            kind: 'dropdown-cell',
-            allowedValues: dataCategoryValue,
-            value: value
-          },
-          displayData: String(value),
-          readonly: column?.readonly || false
-        };
-      }
-
       return {
         kind: GridCellKind.Text,
         data: value,
@@ -168,7 +239,7 @@ function RouteSetOpIndicateTable({
         hasMenu: column?.hasMenu || false
       };
     },
-    [gridData, cols]
+    [gridData, cols, dataOperation]
   );
 
   const onKeyUp = useCallback(
@@ -346,7 +417,7 @@ function RouteSetOpIndicateTable({
       const [col, row] = cell;
       const key = indexes[col];
 
-      if (key === 'promptValueName') {
+      if (key === 'operationName') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -355,12 +426,14 @@ function RouteSetOpIndicateTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
+              const selectedValue = dataOperation.find((item) => item.id === selectedName[0].id);
+              product['operationId'] = selectedValue.id;
+              product['operationCode'] = selectedValue.operationCode;
+              product['operationName'] = selectedValue.operationName;
             } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
+              product['operationId'] = '';
+              product['operationCode'] = '';
+              product['operationName'] = '';
             }
 
             product.isEdited = true;
@@ -376,37 +449,6 @@ function RouteSetOpIndicateTable({
         }
       }
 
-      if (key === 'promptValueName') {
-        if (newValue.kind === GridCellKind.Custom) {
-          setGridData((prev) => {
-            const newData = [...prev];
-            const product = newData[row];
-
-            let selectedName = newValue.data;
-            const checkCopyData = newValue.copyData;
-            if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
-            } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
-            }
-
-            product.isEdited = true;
-            product['IdxNo'] = row + 1;
-            const currentStatus = product['Status'] || 'U';
-            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
-
-            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
-
-            return newData;
-          });
-          return;
-        }
-      }
-
-      // Xử lý các trường hợp khác
       setGridData((prevData) => {
         const updatedData = [...prevData];
         if (!updatedData[row]) updatedData[row] = {};
@@ -436,7 +478,7 @@ function RouteSetOpIndicateTable({
         return updatedData;
       });
     },
-    [canEdit, cols, gridData]
+    [canEdit, cols, gridData, dataOperation, setEditedRows, setGridData]
   );
 
   return (
@@ -497,7 +539,8 @@ function RouteSetOpIndicateTable({
               onCellEdited={onCellEdited}
               onCellClicked={onCellClicked}
               onColumnResize={onColumnResize}
-              customRenderers={[DropdownRenderer]}
+              customRenderers={[DropdownRenderer, CellsOperation]}
+              highlightRegions={highlightRegions}
               // onHeaderMenuClick={onHeaderMenuClick}
               // onColumnMoved={onColumnMoved}
               // onKeyUp={onKeyUp}

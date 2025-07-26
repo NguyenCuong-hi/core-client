@@ -25,6 +25,24 @@ const RouteInfomationQuery = ({ formBasic, }) => {
               />
             </Form.Item>
           </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[300px]">Mã quy trình sản xuất</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'routeCode'}
+            >
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
+                // value={ConfigProductName}
+                // onChange={(e) => setConfigProductName(e.target.value)}
+              />
+            </Form.Item>
+          </Col>
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px] w-[300px]">Mô tả</span>}

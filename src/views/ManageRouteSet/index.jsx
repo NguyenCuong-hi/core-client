@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import dayjs from 'dayjs';
 // project import
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { CompactSelection, GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
-import ModelRouteSet from './query/RouteOperationSet';
 import AuDrAction from 'component/Actions/AuDrAction';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
 import { Button, Form, Menu, message, Spin, TreeSelect } from 'antd';
@@ -32,15 +30,10 @@ import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
 import { useNotify } from 'utils/hooks/onNotify';
 import { useSelector } from 'react-redux';
 import useDynamicFilter from 'utils/hooks/useDynamicFilter';
-import { getConfigProdById } from 'services/ModelManage/GetConfigProdById';
 import { SearchRouteBy } from 'services/ModelManage/SearchRouteBy';
 import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
 
-import { DeleteConfigRouteBy } from 'services/ModelManage/DeleteConfigRouteBy';
 import { DeleteCategoryBy } from 'services/ModelManage/DeleteCategoryBy';
-import { CreateConfigRouteByService } from 'services/ModelManage/CreateConfigRouteByService';
-import { DeleteConfigProd } from 'services/ModelManage/DeleteConfigProd';
-import { UpdateConfigProdBy } from 'services/ModelManage/UpdateConfigProdBy';
 import ModelGroupCategory from './query/ModelGroupCategory';
 import RouteInfomationQuery from './query/RouteInfomationQuery';
 import Splitter from 'antd/es/splitter/Splitter';
@@ -56,6 +49,7 @@ import { CreateRouteOperationByService } from 'services/RouteSetManage/CreateRou
 import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
 import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId';
 import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
+import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -650,10 +644,24 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
+      title: t('Tên công đoạn'),
+      id: 'operationName',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
       title: t('Mã công đoạn'),
       id: 'operationCode',
       kind: 'Text',
-      readonly: false,
+      readonly: true,
       width: 250,
       hasMenu: true,
       visible: true,
@@ -757,49 +765,11 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   //  Data Input
   const [formBasic] = Form.useForm();
 
-  // Data
-  const dataL = [
-    { label: 'L-1', value: 1 },
-    { label: 'L-2', value: 2 },
-    { label: 'L-3', value: 3 }
-  ];
-  const dataM = [
-    { label: 'M-1', value: 1 },
-    { label: 'M-2', value: 2 },
-    { label: 'M-3', value: 3 }
-  ];
-  const dataS = [
-    { label: 'S-1', value: 1 },
-    { label: 'S-2', value: 2 },
-    { label: 'S-3', value: 3 }
-  ];
-
-  const dataCustomer = [
-    { label: 'SAMSUNG', value: 1 },
-    { label: 'MISUKI', value: 2 },
-    { label: 'APPLE', value: 3 }
-  ];
-
-  const dataStatus = [
-    { label: 'Đang áp dụng', value: 1 },
-    { label: 'Chưa áp dụng', value: 2 },
-    { label: 'Thử nghiệm', value: 3 }
-  ];
-
   const dataCategoryValue = [
     { MinorName: '8080', Value: 1 },
     { MinorName: '8000', Value: 2 },
     { MinorName: '3000', Value: 3 }
   ];
-
-  const onFinish = (values) => {
-    const formattedValues = {
-      ...values,
-      DatePeriod: values.DatePeriod?.format('YYYY-MM-DD') || null
-    };
-
-    console.log('Giá trị sau khi format:', formattedValues);
-  };
 
   const [checkPageA, setCheckPageA] = useState(false);
   const [current, setCurrent] = useState('1');
@@ -807,33 +777,33 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   const onClickSave = useCallback(async () => {
     const requiredColumns = ['configProdName'];
 
-     const columnOpRework = [
-      "id",
-      "operationId",
-      "operationCode",
-      "operationName",
-      "routeIdRework",
-      "routeCodeRework",
-      "routerNameRework",
-      "operationReworkId",
-      "operationReworkCode",
-      "operationReworkName",
-      "routeReturnId",
-      "routeReturnCode",
-      "routeReturnName"
+    const columnOpRework = [
+      'id',
+      'operationId',
+      'operationCode',
+      'operationName',
+      'routeIdRework',
+      'routeCodeRework',
+      'routerNameRework',
+      'operationReworkId',
+      'operationReworkCode',
+      'operationReworkName',
+      'routeReturnId',
+      'routeReturnCode',
+      'routeReturnName'
     ];
 
     const columnOpIndicate = [
-      "id",
-      "routeId",
-      "operationId",
-      "operationCode",
-      "operationName",
-      "description",
-      "isUse",
-      "queueNumber",
-      "processNumber",
-      "yield"
+      'id',
+      'routeId',
+      'operationId',
+      'operationCode',
+      'operationName',
+      'description',
+      'isUse',
+      'queueNumber',
+      'processNumber',
+      'yield'
     ];
 
     const columnsCategory = [
@@ -911,28 +881,28 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         ...row,
         Status: 'A',
         id: row.id || '',
-        routeId: data.id || ''
+        routeId: routeId || ''
       }));
 
       const dataOpIndicateU = filterAndSelectColumns(gridDataOpIndicate, columnOpIndicate, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        routeId: data.id || ''
+        routeId: routeId || ''
       }));
 
       const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
         ...row,
         Status: 'A',
         id: row.id || '',
-        configProdNameId: data.id || ''
+        routeId: routeId || ''
       }));
 
       const dataCategoryU = filterAndSelectColumns(gridDataCategory, columnsCategory, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        configProdNameId: data.id || ''
+        routeId: routeId || ''
       }));
 
       const dataRework = [...dataOpReworkA, ...dataOpReworkU];
@@ -940,13 +910,16 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
       const dataCategory = [...dataCategoryA, ...dataCategoryU];
       const dto = {
-        ...data,
-        promptCategories: dataCategory,
-        operationReworks: dataRework,
-        operationIndicates: dataIndicate,
+        route: {
+          id: routeId || '',
+          ...data
+        },
+        prompts: dataCategory,
+        reworks: dataRework,
+        indications: dataIndicate
       };
       try {
-        const result = await CreateRouteByService(data.id, dto);
+        const result = await CreateRouteByService(dto);
 
         if (result.success) {
           notify({
@@ -957,7 +930,9 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
           setIsSent(false);
           setEditedRows([]);
-          resetTable();
+          console.log('routeId', routeId);
+          fetchDataRoutById(routeId);
+          
         } else {
           setIsSent(false);
           notify({
@@ -971,82 +946,16 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         setIsSent(false);
         message.error(error.message || 'Có lỗi xảy ra khi lưu dữ liệu');
       } finally {
-        onClickSearch();
+        onFetchRoute();
+        
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
       }
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
-  }, [formBasic, gridDataCategory, gridDataOpRoute, isAPISuccess]);
-
-  const onClickSearch = useCallback(async () => {
-    if (!isAPISuccess) {
-      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
-      return;
-    }
-
-    if (controllers.current && controllers.current.onClickSearch) {
-      controllers.current.onClickSearch.abort();
-      controllers.current.onClickSearch = null;
-      if (loadingBarRef.current) {
-        loadingBarRef.current.continuousStart();
-      }
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    if (loadingBarRef.current) {
-      loadingBarRef.current.continuousStart();
-    }
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    controllers.current.onClickSearch = controller;
-
-    setIsAPISuccess(false);
-
-    try {
-      const response = await getConfigProdById(selectedData.data.id);
-      const fetchedData = response.data || [];
-
-      formBasic.setFieldsValue({
-        id: fetchedData.id,
-        statusConfProd: fetchedData.statusConfProd,
-        configProdName: fetchedData.configProdName,
-        description: fetchedData.description,
-        approval: fetchedData.approval,
-        status: fetchedData.status,
-        dateExpire: fetchedData.dateExpire ? dayjs(selectedData.data.datePeriod) : null,
-        customer: fetchedData.customer,
-        userRegister: fetchedData.userRegister,
-        modelTypeLName: fetchedData.modelTypeLName,
-        modelTypeL: fetchedData.modelTypeL,
-        modelTypeM: fetchedData.modelTypeM,
-        modelTypeMName: fetchedData.modelTypeMName,
-        modelTypeS: fetchedData.modelTypeS,
-        modelTypeSName: fetchedData.modelTypeSName,
-        deviceCustomer: fetchedData.deviceCustomer,
-        consignee: fetchedData.consignee,
-        label: fetchedData.label,
-        projectName: fetchedData.projectName
-      });
-
-      setGridDataCategory(fetchedData.promptCategories || []);
-      setNumRowsCategory(fetchedData.promptCategories?.length || 0);
-
-      setGridDataOpRoute(fetchedData.routes || []);
-      setNumRowsRouteOp(fetchedData.routes?.length || 0);
-    } catch (error) {
-      setGridDataCategory([]);
-      setNumRowsCategory(0);
-      setGridDataOpRoute([]);
-      setNumRowsRouteOp(0);
-      setIsAPISuccess(true);
-    } finally {
-      setIsAPISuccess(true);
-      controllers.current.onClickSearch = null;
-      if (loadingBarRef.current) {
-        loadingBarRef.current.complete();
-      }
-    }
-  }, [isAPISuccess, selectedData, formBasic]);
+  }, [formBasic, gridDataCategory, gridDataOpRoute, isAPISuccess, routeId, gridDataOperationRework, gridDataOpIndicate]);
 
   const onVisibleRegionChanged = useCallback(
     ({ y, height }) => {
@@ -1291,79 +1200,88 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 
   const onTreeClicked = useCallback(
-    async (selectedKeys, info) => {
-      if (!isAPISuccess) {
-        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
-        return;
+     (selectedKeys, info) => {
+      if (info.node.value) {
+        fetchDataRoutById(info.node.value);
       }
+    },
+    []
+  );
 
-      if (controllers.current && controllers.current.onFetchRoute) {
-        controllers.current.onFetchRoute.abort();
-        controllers.current.onFetchRoute = null;
-        if (loadingBarRef.current) {
-          loadingBarRef.current.continuousStart();
-        }
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
+  const fetchDataRoutById = useCallback(async (routeId) => {
+
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.fetchDataRoutById) {
+      controllers.current.fetchDataRoutById.abort();
+      controllers.current.fetchDataRoutById = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.continuousStart();
       }
-      const controller = new AbortController();
-      const signal = controller.signal;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-      controllers.current.onFetchRoute = controller;
+    controllers.current.fetchDataRoutById = controller;
 
-      setIsAPISuccess(false);
+    setIsAPISuccess(false);
 
-      try {
-        const response = await getRouteById(info.node.value);
-        const fetchedData = response.data || [];
+    try {
+      const response = await getRouteById(routeId);
+      const fetchedData = response.data || [];
 
-        formBasic.setFieldsValue({
-          routeName: fetchedData.route.routeCode,
-          description: fetchedData.route.description
-        });
+      formBasic.setFieldsValue({
+        routeName: fetchedData.route.routeCode,
+        description: fetchedData.route.description,
+        routeCode: fetchedData.route.routeCode
+      });
 
-        setRouteId(fetchedData.route.id);
-        setRouteCode(fetchedData.route.routeCode);
-        setRouteName(fetchedData.route.routeName);
+      setRouteId(fetchedData.route.id);
+      setRouteCode(fetchedData.route.routeCode);
+      setRouteName(fetchedData.route.routeName);
 
-        setGridDataOpRoute(fetchedData.routeOperation || []);
-        setNumRowsRouteOp(fetchedData.routeOperation?.length || 0);
+      setGridDataOpRoute(fetchedData.routeOperation || []);
+      setNumRowsRouteOp(fetchedData.routeOperation?.length || 0);
 
-        setGridDataOperationRework(fetchedData.reworkOperation || []);
-        setNumRowsOperationRework(fetchedData.reworkOperation?.length || 0);
+      setGridDataOperationRework(fetchedData.reworkOperation || []);
+      setNumRowsOperationRework(fetchedData.reworkOperation?.length || 0);
 
-        setGridDataOpIndicate(fetchedData.indicatesOperation || []);
-        setNumRowsOpIndicate(fetchedData.indicatesOperation?.length || 0);
+      setGridDataOpIndicate(fetchedData.indicatesOperation || []);
+      setNumRowsOpIndicate(fetchedData.indicatesOperation?.length || 0);
 
-        setGridDataCategory(fetchedData.promptCategoryResDto || []);
-        setNumRowsCategory(fetchedData.promptCategoryResDto?.length || 0);
-      } catch (error) {
-        console.log(error);
-        setGridDataOpRoute([]);
-        setNumRowsRouteOp(0);
-        setGridDataOperationRework([]);
-        setNumRowsOperationRework(0);
-        setGridDataOpIndicate([]);
-        setNumRowsOpIndicate(0);
-        setGridDataCategory([]);
-        setNumRowsCategory(0);
-        setIsAPISuccess(true);
-        notify({
-          type: 'error',
-          message: 'Lỗi',
-          description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
-        });
-      } finally {
-        setIsAPISuccess(true);
-        controllers.current.onFetchRoute = null;
-        if (loadingBarRef.current) {
-          loadingBarRef.current.complete();
-        }
+      setGridDataCategory(fetchedData.promptCategoryResDto || []);
+      setNumRowsCategory(fetchedData.promptCategoryResDto?.length || 0);
+    } catch (error) {
+      console.log(error);
+      setGridDataOpRoute([]);
+      setNumRowsRouteOp(0);
+      setGridDataOperationRework([]);
+      setNumRowsOperationRework(0);
+      setGridDataOpIndicate([]);
+      setNumRowsOpIndicate(0);
+      setGridDataCategory([]);
+      setNumRowsCategory(0);
+      setIsAPISuccess(true);
+      notify({
+        type: 'error',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchRoute = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
       }
-    },
-    [
+    }
+  }, [
       routeTree,
       routeTreeSelected,
       formBasic,
@@ -1380,8 +1298,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       numRowsOperationRework,
       numRowsOpIndicate,
       numRowsCategory
-    ]
-  );
+    ]);
 
   const onCellCategoryClicked = useCallback(
     (cell, event) => {
@@ -1462,6 +1379,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       return;
     } finally {
       onFetchRoute();
+      fetchDataRoutById(routeId);
     }
 
     setGridDataOpRoute((prevGridData) => {
@@ -1533,12 +1451,9 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         if (categorySelected.length > 0) {
           const idCategory = categorySelected.map((item) => item.id).filter((id) => id !== undefined);
           response = await DeleteCategoryBy(idCategory);
-          setGridDataCategory((prevGridData) => {
-            const updatedGridData = [...prevGridData];
-            updatedGridData.splice(rowIndex, 1);
-            setNumRowsCategory((prevNumRows) => prevNumRows - 1);
-            return updatedGridData;
-          });
+          const category = await getCategoryByRouteId(routeId);
+          setGridDataCategory(category.data);
+          setNumRowsCategory(category.data.length);
         }
         const fetchedData = response || [];
 
@@ -1706,15 +1621,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
             <RouteSetTree routeTree={routeTree} setRouteTree={setRouteTree} onSelect={onTreeClicked} />
           </SplitterPanel>
           <SplitterPanel size={75} minSize={10}>
-            <RouteInfomationQuery
-              formBasic={formBasic}
-              dataL={dataL}
-              dataM={dataM}
-              dataS={dataS}
-              dataCustomer={dataCustomer}
-              dataStatus={dataStatus}
-              onFinish={onFinish}
-            />
+            <RouteInfomationQuery formBasic={formBasic} />
 
             <Menu
               mode="horizontal"
@@ -1762,6 +1669,44 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                 </span>
               </Menu.Item>
               {current === '1' && (
+                <Menu.Item
+                  key="buttons"
+                  disabled
+                  style={{
+                    marginLeft: 'auto',
+                    cursor: 'default',
+                    background: 'transparent'
+                  }}
+                >
+                  <div className="flex gap-1 items-center">
+                    <div className="w-[185px] h-[20px] flex items-center px-2 border-b border-gray-200 ">
+                      <div className="w-full flex gap-2">
+                        {isLoading ? <LoadingOutlined className="animate-spin" /> : <SearchOutlined />}
+                        <input
+                          value={keyword}
+                          onChange={(e) => setKeyword(e.target.value)}
+                          highlight={true}
+                          autoFocus={true}
+                          className="h-full w-full border-none focus:outline-none hover:border-none bg-inherit"
+                        />
+                      </div>
+                    </div>
+                    <Button type="text" icon={<PlusCircleFilled style={{ color: '#10b981', padding: 0 }} />} onClick={onInsertRow}>
+                      Chèn
+                    </Button>
+                    <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
+                      Xóa
+                    </Button>
+                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
+                      Up
+                    </Button>
+                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
+                      Down
+                    </Button>
+                  </div>
+                </Menu.Item>
+              )}
+              {current === '4' && (
                 <Menu.Item
                   key="buttons"
                   disabled
@@ -1850,7 +1795,6 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
             )}
             {current === '3' && (
               <RouteSetOpIndicateTable
-                dataCategoryValue={dataCategoryValue}
                 defaultCols={defaultColsOpIndicate}
                 gridData={gridDataOpIndicate}
                 setGridData={setGridDataOpIndicate}
@@ -1863,6 +1807,10 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                 selection={selectionOpIndicate}
                 setSelection={setSelectionOpIndicate}
                 onCellClicked={onCellCategoryClicked}
+                controllers={controllers}
+                loadingBarRef={loadingBarRef}
+                setIsAPISuccess={setIsAPISuccess}
+                isAPISuccess={isAPISuccess}
               />
             )}
             {current === '4' && (
