@@ -50,6 +50,8 @@ import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
 import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId';
 import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
 import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
+import { DeleteRouteById } from 'services/RouteSetManage/DeleteRouteById';
+import { NULL } from 'sass';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -930,9 +932,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
           setIsSent(false);
           setEditedRows([]);
-          console.log('routeId', routeId);
-          fetchDataRoutById(routeId);
-          
+          fetchDataRoutById(result.data.route.id);
+
         } else {
           setIsSent(false);
           notify({
@@ -947,7 +948,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         message.error(error.message || 'Có lỗi xảy ra khi lưu dữ liệu');
       } finally {
         onFetchRoute();
-        
+
         if (loadingBarRef.current) {
           loadingBarRef.current.complete();
         }
@@ -1088,6 +1089,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       setGridData(fetchedData);
       setNumRows(fetchedData.length);
     } catch (error) {
+      console.log(error);
       setGridData([]);
       setNumRows(0);
       setIsAPISuccess(true);
@@ -1200,7 +1202,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 
   const onTreeClicked = useCallback(
-     (selectedKeys, info) => {
+    (selectedKeys, info) => {
       if (info.node.value) {
         fetchDataRoutById(info.node.value);
       }
@@ -1282,23 +1284,23 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     }
   }, [
-      routeTree,
-      routeTreeSelected,
-      formBasic,
-      routeId,
-      routeCode,
-      routeName,
-      gridDataOpRoute,
-      gridDataOperationRework,
-      gridDataOpIndicate,
-      gridDataCategory,
-      isAPISuccess,
-      numRows,
-      numRowsRouteOp,
-      numRowsOperationRework,
-      numRowsOpIndicate,
-      numRowsCategory
-    ]);
+    routeTree,
+    routeTreeSelected,
+    formBasic,
+    routeId,
+    routeCode,
+    routeName,
+    gridDataOpRoute,
+    gridDataOperationRework,
+    gridDataOpIndicate,
+    gridDataCategory,
+    isAPISuccess,
+    numRows,
+    numRowsRouteOp,
+    numRowsOperationRework,
+    numRowsOpIndicate,
+    numRowsCategory
+  ]);
 
   const onCellCategoryClicked = useCallback(
     (cell, event) => {
@@ -1342,7 +1344,20 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const onInsertRow = useCallback(async () => {
     if (!Array.isArray(operationSelected) || operationSelected.length === 0) {
-      console.warn('operationSelected is empty or invalid');
+      notify({
+          type: 'error',
+          message: 'Loi',
+          description: 'Hay lua chon cong doan!'
+        });
+      return;
+    }
+
+    if (!routeId) {
+      notify({
+          type: 'error',
+          message: 'Loi',
+          description: 'Luu du lieu quy trinh truoc khi chon!'
+        });
       return;
     }
 
@@ -1360,7 +1375,9 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
       const result = await CreateRouteOperationByService(dto);
 
+
       if (result.success) {
+        fetchDataRoutById(routeId);
         notify({
           type: 'success',
           message: 'Thành công',
@@ -1368,9 +1385,9 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
         });
       } else {
         notify({
-          type: 'success',
-          message: 'Thành công',
-          description: 'Cập nhật thành công!'
+          type: 'error',
+          message: 'Loi',
+          description: 'Có lỗi xảy ra khi thêm dòng mới!'
         });
       }
     } catch (error) {
@@ -1379,7 +1396,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       return;
     } finally {
       onFetchRoute();
-      fetchDataRoutById(routeId);
+      
     }
 
     setGridDataOpRoute((prevGridData) => {
@@ -1530,10 +1547,6 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 
   const onClickDelete = useCallback(async () => {
-    if (!selectedData || !selectedData.data || !selectedData.data.id) {
-      message.warning('Vui lòng chọn dữ liệu để xóa');
-      return;
-    }
 
     if (!isAPISuccess) {
       message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
@@ -1559,11 +1572,16 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
     setIsAPISuccess(false);
 
     try {
-      let response = {};
-      if (selectedData.length > 0) {
-        const ids = selectedData.map((item) => item.id).filter((id) => id !== undefined);
-        response = await DeleteRouteOpBy(ids);
+      if (routeId === '' || routeId === undefined) {
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
+        });
+        return;
       }
+
+      const response = await DeleteRouteById(routeId);
 
       if (!response.success) {
         notify({
@@ -1599,12 +1617,17 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
       });
     } finally {
       setIsAPISuccess(true);
+      onFetchRoute();
       controllers.current.onClickDelete = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.complete();
       }
     }
-  }, [selectedData, gridDataOpRoute, gridDataCategory, formBasic, isAPISuccess]);
+  }, [routeId, gridDataOpRoute, gridDataCategory, formBasic, isAPISuccess]);
+
+    const onClickCopy= useCallback(async () => {
+      setRouteId('');
+  }, [routeId, gridDataOpRoute, gridDataCategory, formBasic, isAPISuccess]);
 
   return (
     <>
@@ -1613,8 +1636,8 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
           titlePage={'Đăng ký quy trình sản xuất'}
           onClickDelete={onClickDelete}
           onClickSave={onClickSave}
-          onClickUpdate={() => {}}
-          onClickReset={() => {}}
+          onClickUpdate={() => { }}
+          onClickReset={onClickCopy}
         />
         <Splitter className="w-full h-full border border-gray-300 ">
           <SplitterPanel size={25} minSize={10}>
@@ -1697,10 +1720,10 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                     <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
                       Xóa
                     </Button>
-                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
+                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => { }}>
                       Up
                     </Button>
-                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
+                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => { }}>
                       Down
                     </Button>
                   </div>
@@ -1735,10 +1758,10 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
                     <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
                       Xóa
                     </Button>
-                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
+                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => { }}>
                       Up
                     </Button>
-                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
+                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => { }}>
                       Down
                     </Button>
                   </div>

@@ -42,7 +42,7 @@ const AuDrAction = ({
           type="text"
           icon={<RefreshOutlined />}
           onClick={onClickReset}>
-          Làm mới
+          Sao chep
         </Button>
       </div>
     </div>
