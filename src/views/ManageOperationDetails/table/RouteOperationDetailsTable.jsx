@@ -17,10 +17,8 @@ import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
-import { AsyncDropdownCellRenderer } from 'utils/sheets/cell-custom/AsyncDropdownCellRenderer';
-import { StepsCell } from 'utils/sheets/cell-custom/cellsOperationsSteps';
 
-function RouteSetTable({
+function RouteOperationDetailsTable({
   setSelection,
   selection,
   setShowSearch,
@@ -40,8 +38,6 @@ function RouteSetTable({
   defaultCols,
   canEdit
 }) {
-
-
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
   const cellProps = useExtraCells();
@@ -52,7 +48,7 @@ function RouteSetTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -108,11 +104,9 @@ function RouteSetTable({
     selectColumn: false
   });
 
-
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
-      console.log('person', person);
       const column = cols[col];
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
@@ -137,17 +131,44 @@ function RouteSetTable({
         };
       }
 
-      if (columnKey === "OperationCode") {
+      if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
         return {
-          kind: GridCellKind.Custom,
-          allowOverlay: false,
+          kind: GridCellKind.Number,
+          data: value,
+          displayData: new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 5,
+            maximumFractionDigits: 5
+          }).format(value),
+          readonly: column?.readonly || false,
+          contentAlign: 'right',
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false
+        };
+      }
+
+      if (columnKey === 'BadRate') {
+        return {
+          kind: GridCellKind.Number,
+          data: value,
+          displayData: new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }).format(value),
+          readonly: column?.readonly || false,
+          contentAlign: 'right',
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false
+        };
+      }
+
+      if (columnKey === 'TestEndDate' || columnKey === 'QCDate' || columnKey === 'DelvDate') {
+        return {
+          kind: GridCellKind.Text,
+          data: value,
+          displayData: formatDate(value) || '',
           readonly: true,
-          copyData: "",
-          displayData: "",
-          data: {
-            kind: "steps-cell",
-            steps: value,
-          },
+          allowOverlay: true,
+          hasMenu: false
         };
       }
 
@@ -304,7 +325,7 @@ function RouteSetTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
       return newHidden;
     });
   };
@@ -313,7 +334,7 @@ function RouteSetTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
       return uniqueCols;
     });
   };
@@ -325,7 +346,7 @@ function RouteSetTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -336,8 +357,8 @@ function RouteSetTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_ROUTE_TABLE');
-    localStorage.removeItem('H_ERP_COLS_PAGE_ROUTE_TABLE');
+    localStorage.removeItem('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
+    localStorage.removeItem('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
     setShowMenu(null);
   };
 
@@ -346,14 +367,14 @@ function RouteSetTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', updatedCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -369,23 +390,23 @@ function RouteSetTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
         return newHidden;
       });
     }
@@ -396,8 +417,8 @@ function RouteSetTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center">
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -418,7 +439,7 @@ function RouteSetTable({
             width="100%"
             height="100%"
             headerHeight={30}
-            rowHeight={28}
+            rowHeight={27}
             rowSelect="multi"
             gridSelection={selection}
             onGridSelectionChange={setSelection}
@@ -429,20 +450,18 @@ function RouteSetTable({
               tint: true
             }}
             freezeColumns={1}
-            getRowThemeOverride={(i) => {
-              let themeOverride;
-              if (i === hoverRow) {
-                themeOverride = {
-                  bgCell: '#f7f7f7',
-                  bgCellMedium: '#f0f0f0'
-                };
-              } else if (i % 2 !== 0) {
-                themeOverride = {
-                  bgCell: '#FBFBFB'
-                };
-              }
-              return themeOverride;
-            }}
+            getRowThemeOverride={(i) =>
+              i === hoverRow
+                ? {
+                    bgCell: '#f7f7f7',
+                    bgCellMedium: '#f0f0f0'
+                  }
+                : i % 2 === 0
+                  ? undefined
+                  : {
+                      bgCell: '#FBFBFB'
+                    }
+            }
             overscrollY={0}
             overscrollX={0}
             smoothScrollY={true}
@@ -450,18 +469,17 @@ function RouteSetTable({
             onPaste={true}
             fillHandle={true}
             // keybindings={keybindings}
-            // onRowAppended={() => handleRowAppend(1)}
+            onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
+            onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
             // onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}
-            customRenderers={[
-                AsyncDropdownCellRenderer,
-                StepsCell,
-            ]}
+            // customRenderers={[
+            //     AsyncDropdownCellRenderer
+            // ]}
             // onItemHovered={onItemHovered}
           />
           {/* {showMenu !== null &&
@@ -501,9 +519,7 @@ function RouteSetTable({
                     )} */}
         </ContextMenuWrapper>
 
-        <div className="flex justify-end px-4 py-2">
-          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
-        </div>
+
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
             (col) =>
@@ -521,4 +537,4 @@ function RouteSetTable({
   );
 }
 
-export default RouteSetTable;
+export default RouteOperationDetailsTable;

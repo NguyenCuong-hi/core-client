@@ -16,8 +16,9 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
+import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
 
-function OperationsTable({
+function OperationPropertiesTable({
   setSelection,
   selection,
   setShowSearch,
@@ -47,7 +48,7 @@ function OperationsTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []);
+    return loadFromLocalStorageSheet('H_OPERTATION_PROPERTY', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -324,7 +325,7 @@ function OperationsTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+      saveToLocalStorageSheet('H_OPERTATION_PROPERTY', newHidden);
       return newHidden;
     });
   };
@@ -333,7 +334,7 @@ function OperationsTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_OPERTATION_PROPERTY', uniqueCols);
       return uniqueCols;
     });
   };
@@ -345,7 +346,7 @@ function OperationsTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_OPERTATION_PROPERTY', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -356,8 +357,8 @@ function OperationsTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST');
+    localStorage.removeItem('S_OPERTATION_PROPERTY');
+    localStorage.removeItem('H_OPERTATION_PROPERTY');
     setShowMenu(null);
   };
 
@@ -366,14 +367,14 @@ function OperationsTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', updatedCols);
+      saveToLocalStorageSheet('S_OPERTATION_PROPERTY', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_OPERTATION_PROPERTY', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -389,23 +390,23 @@ function OperationsTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_PROPERTY', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_PROPERTY', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_PROPERTY', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_IQC_OUTSOURCE_STATUS_LIST', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_PROPERTY', newHidden);
         return newHidden;
       });
     }
@@ -416,8 +417,8 @@ function OperationsTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center">
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -426,10 +427,8 @@ function OperationsTable({
           onMenuClick={handleMenuClick}
         >
           <DataEditor
-            style={{}}
             {...cellProps}
             ref={gridRef}
-            scrollbarSize={4}
             columns={cols}
             getCellContent={getData}
             onFill={onFill}
@@ -440,7 +439,7 @@ function OperationsTable({
             width="100%"
             height="100%"
             headerHeight={30}
-            rowHeight={28}
+            rowHeight={27}
             rowSelect="multi"
             gridSelection={selection}
             onGridSelectionChange={setSelection}
@@ -470,9 +469,9 @@ function OperationsTable({
             onPaste={true}
             fillHandle={true}
             // keybindings={keybindings}
-            // onRowAppended={() => handleRowAppend(1)}
+            onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
+            onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
@@ -520,9 +519,7 @@ function OperationsTable({
                     )} */}
         </ContextMenuWrapper>
 
-        <div className="flex justify-end px-4 py-2">
-          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
-        </div>
+
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
             (col) =>
@@ -540,4 +537,4 @@ function OperationsTable({
   );
 }
 
-export default OperationsTable;
+export default OperationPropertiesTable;

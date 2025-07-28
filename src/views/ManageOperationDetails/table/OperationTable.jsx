@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DataEditor, GridCellKind } from '@glideapps/glide-data-grid';
-import { DeleteOutlined, EditOutlined, TableOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, LoadingOutlined, TableOutlined } from '@ant-design/icons';
 import { useLayer } from 'react-laag';
 // import LayoutMenuSheet from '../../sheet/jsx/layoutMenu'
 // import LayoutStatusMenuSheet from '../../sheet/jsx/layoutStatusMenu'
@@ -17,7 +17,7 @@ import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 
-function OperationIndicateTable({
+function OperationTable({
   setSelection,
   selection,
   setShowSearch,
@@ -36,9 +36,8 @@ function OperationIndicateTable({
   cols,
   defaultCols,
   canEdit,
-  onCellEdited,
-  cellConfig,
-
+  onVisibleRegionChanged,
+  onCellRouteClicked,
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -50,7 +49,7 @@ function OperationIndicateTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', []);
+    return loadFromLocalStorageSheet('H_OPERTATION_LIST', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -78,6 +77,27 @@ function OperationIndicateTable({
     }
   }, []);
 
+  const [dataSearch, setDataSearch] = useState([]);
+  const columnNames = [
+    'AssetName',
+    'UnitName',
+    'SMStatusName',
+    'DeptName',
+    'ItemClassSName',
+    'VatKindName',
+    'VatTypeName',
+    'MrpKind',
+    'OutKind',
+    'ProdMethod',
+    'ProdSpec',
+    'PurKind',
+    'PurProdType',
+    'SMInOutKindName',
+    'SMLimitTermKindName',
+    'SMABCName',
+    'EmpName',
+    'PurCustName'
+  ];
 
   const [keybindings, setKeybindings] = useState({
     downFill: true,
@@ -93,7 +113,7 @@ function OperationIndicateTable({
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
 
-      
+      const cellConfig = {};
 
       if (cellConfig[columnKey]) {
         return {
@@ -112,61 +132,6 @@ function OperationIndicateTable({
         };
       }
 
-      if ( columnKey === 'isApprove') {
-        const booleanValue =
-          value === 1 || value === '1'
-            ? true
-            : value === 0 || value === '0'
-              ? false
-              : Boolean(value)
-        return {
-          kind: GridCellKind.Boolean,
-          data: booleanValue,
-          allowOverlay: true,
-          hasMenu: column?.hasMenu || false,
-        }
-      }
-
-      if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
-        return {
-          kind: GridCellKind.Number,
-          data: value,
-          displayData: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 5,
-            maximumFractionDigits: 5
-          }).format(value),
-          readonly: column?.readonly || false,
-          contentAlign: 'right',
-          allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'BadRate') {
-        return {
-          kind: GridCellKind.Number,
-          data: value,
-          displayData: new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(value),
-          readonly: column?.readonly || false,
-          contentAlign: 'right',
-          allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'TestEndDate' || columnKey === 'QCDate' || columnKey === 'DelvDate') {
-        return {
-          kind: GridCellKind.Text,
-          data: value,
-          displayData: formatDate(value) || '',
-          readonly: true,
-          allowOverlay: true,
-          hasMenu: false
-        };
-      }
 
       return {
         kind: GridCellKind.Text,
@@ -190,7 +155,82 @@ function OperationIndicateTable({
     [cols, gridData]
   );
 
-  
+  const onCellEdited = useCallback(
+    async (cell, newValue) => {
+      if (canEdit === false) {
+        message.warning('Bạn không có quyền chỉnh sửa dữ liệu');
+        return;
+      }
+
+      if (
+        newValue.kind !== GridCellKind.Text &&
+        newValue.kind !== GridCellKind.Custom &&
+        newValue.kind !== GridCellKind.Boolean &&
+        newValue.kind !== GridCellKind.Number
+      ) {
+        return;
+      }
+
+      const indexes = resetColumn(cols);
+      const [col, row] = cell;
+      const key = indexes[col];
+
+      if (
+        key === 'AssetSeq' ||
+        key === 'UnitSeq' ||
+        key === 'SMStatus' ||
+        key === 'ItemClassLName' ||
+        key === 'ItemClassMName' ||
+        key === 'SMVatKind' ||
+        key === 'SMVatType' ||
+        key === 'SMMrpKind' ||
+        key === 'SMOutKind' ||
+        key === 'SMProdMethod' ||
+        key === 'SMPurKind' ||
+        key === 'SMPurProdType' ||
+        key === 'SMInOutKind' ||
+        key === 'SMLimitTermKind' ||
+        key === 'SMABC' ||
+        key === 'DeptSeq' ||
+        key === 'EmpSeq' ||
+        key === 'EmpID' ||
+        key === 'PurCustSeq'
+      ) {
+        return;
+      }
+
+      // Xử lý các trường hợp khác
+      setGridData((prevData) => {
+        const updatedData = [...prevData];
+        if (!updatedData[row]) updatedData[row] = {};
+
+        const currentStatus = updatedData[row]['Status'] || '';
+        updatedData[row][key] = newValue.data;
+        updatedData[row]['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+        setEditedRows((prevEditedRows) => {
+          const existingIndex = prevEditedRows.findIndex((editedRow) => editedRow.rowIndex === row);
+
+          const updatedRowData = {
+            rowIndex: row,
+            updatedRow: updatedData[row],
+            status: currentStatus === 'A' ? 'A' : 'U'
+          };
+
+          if (existingIndex === -1) {
+            return [...prevEditedRows, updatedRowData];
+          } else {
+            const updatedEditedRows = [...prevEditedRows];
+            updatedEditedRows[existingIndex] = updatedRowData;
+            return updatedEditedRows;
+          }
+        });
+
+        return updatedData;
+      });
+    },
+    [canEdit, cols, gridData]
+  );
 
   const onColumnResize = useCallback(
     (column, newSize) => {
@@ -246,7 +286,7 @@ function OperationIndicateTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+      saveToLocalStorageSheet('H_OPERTATION_LIST', newHidden);
       return newHidden;
     });
   };
@@ -255,7 +295,7 @@ function OperationIndicateTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+      saveToLocalStorageSheet('S_OPERTATION_LIST', uniqueCols);
       return uniqueCols;
     });
   };
@@ -267,7 +307,7 @@ function OperationIndicateTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', uniqueCols);
+        saveToLocalStorageSheet('S_OPERTATION_LIST', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -278,8 +318,8 @@ function OperationIndicateTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ERP_COLS_PAGE_MODEL_LIST');
-    localStorage.removeItem('H_ERP_COLS_PAGE_MODEL_LIST');
+    localStorage.removeItem('S_OPERTATION_LIST');
+    localStorage.removeItem('H_OPERTATION_LIST');
     setShowMenu(null);
   };
 
@@ -288,14 +328,14 @@ function OperationIndicateTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', updatedCols);
+      saveToLocalStorageSheet('S_OPERTATION_LIST', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_OPERTATION_LIST', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -306,28 +346,28 @@ function OperationIndicateTable({
     setOpen(false);
   };
 
-  const handleCheckboxChange = (columnId, isChecked) => {``
+  const handleCheckboxChange = (columnId, isChecked) => {
     if (isChecked) {
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_LIST', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ERP_COLS_PAGE_MODEL_LIST', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ERP_COLS_PAGE_MODEL_LIST', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_LIST', newHidden);
         return newHidden;
       });
     }
@@ -338,8 +378,8 @@ function OperationIndicateTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center pb-2">
-      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center mb-2 "> 
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -360,7 +400,7 @@ function OperationIndicateTable({
             width="100%"
             height="100%"
             headerHeight={30}
-            rowHeight={28}
+            rowHeight={27}
             rowSelect="multi"
             gridSelection={selection}
             onGridSelectionChange={setSelection}
@@ -383,16 +423,17 @@ function OperationIndicateTable({
                       bgCell: '#FBFBFB'
                     }
             }
-            // overscrollY={0}
-            // overscrollX={0}
-            // smoothScrollY={true}
-            // smoothScrollX={true}
+            overscrollY={0}
+            overscrollX={0}
+            smoothScrollY={true}
+            smoothScrollX={true}
             onPaste={true}
             fillHandle={true}
-            keybindings={keybindings}
+            // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
-            onCellEdited={onCellEdited}
-            // onCellClicked={onCellClicked}
+            // onCellEdited={onCellEdited}
+            onCellClicked={onCellRouteClicked}
+            onVisibleRegionChanged={onVisibleRegionChanged}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
@@ -440,9 +481,7 @@ function OperationIndicateTable({
                     )} */}
         </ContextMenuWrapper>
 
-        <div className="flex justify-end px-4 py-1">
-          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
-        </div>
+
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
             (col) =>
@@ -460,4 +499,4 @@ function OperationIndicateTable({
   );
 }
 
-export default OperationIndicateTable;
+export default OperationTable;
