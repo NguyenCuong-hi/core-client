@@ -14,11 +14,8 @@ export const CreateRoleByService = async (role) => {
     }
 
     const response = await axios.put(
-      `${HOST_API_SERVER}/users-manage`,
-      {
-        role,
-        users,
-      },
+      `${HOST_API_SERVER}/nvc-core/api/v1/roles/create-list`,
+      role,
       {
         headers: {
           Authorization: `Bearer ${token}`,

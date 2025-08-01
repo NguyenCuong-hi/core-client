@@ -13,6 +13,8 @@ import Spinner from 'component/Loader/load';
 import AuthLogin from 'views/Login/AuthLogin';
 import { GetUserService } from 'services/Auth/GetUserService';
 import LoadingBlur from 'component/Loader/LoadingBlur';
+
+
 const DynamicTabContent = lazy(() => import('layout/MainLayout/DynamicTabs'));
 
 // ==============================|| MAIN ROUTES ||============================== //
@@ -25,8 +27,6 @@ const MainRoutes = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingLogin, setCheckingLogin] = useState(true);
 
-  const rolesMenu = localStorage.getItem('roles_menu');
-  const [keyLanguage, setKeyLanguage] = useState(null);
   // const [collapsed, setCollapsed] = useState(() => {
   //   const savedState = localStorage.getItem('COLLAPSED_STATE')
   //   return savedState ? JSON.parse(savedState) : false
@@ -53,24 +53,22 @@ const MainRoutes = () => {
   const sidebarWidth = drawerOpen === false ? 0 : 260;
 
   useEffect(() => {
-    checkLogin();
-  });
-
-  const checkLogin = async () => {
-    try {
-      if (isLoggedIn || checkingLogin) return;
-      const loginResponse = await GetUserService();
-      if (loginResponse.success) {
-        setIsLoggedIn(true);
-      } else {
+    const checkLogin = async () => {
+      try {
+        const res = await GetUserService();
+        if (res.success) {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
         setIsLoggedIn(false);
+      } finally {
+        setCheckingLogin(false);
       }
-    } catch (error) {
-      setIsLoggedIn(false);
-    } finally {
-      setCheckingLogin(false);
-    }
-  };
+    };
+    checkLogin();
+  }, []);
 
   if (checkingLogin) {
     return <LoadingBlur />;
