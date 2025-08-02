@@ -10,23 +10,16 @@ import Sidebar from 'layout/MainLayout/Sidebar';
 import Header from 'layout/MainLayout/Header';
 import { useDispatch, useSelector } from 'react-redux';
 import Spinner from 'component/Loader/load';
-import AuthLogin from 'views/Login/AuthLogin';
-import { GetUserService } from 'services/Auth/GetUserService';
-import LoadingBlur from 'component/Loader/LoadingBlur';
+
 const DynamicTabContent = lazy(() => import('layout/MainLayout/DynamicTabs'));
 
 // ==============================|| MAIN ROUTES ||============================== //
 
 const MainRoutes = () => {
-  const controllers = useRef({});
 
-  const navigate = useNavigate();
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [checkingLogin, setCheckingLogin] = useState(true);
 
-  const rolesMenu = localStorage.getItem('roles_menu');
-  const [keyLanguage, setKeyLanguage] = useState(null);
+
   // const [collapsed, setCollapsed] = useState(() => {
   //   const savedState = localStorage.getItem('COLLAPSED_STATE')
   //   return savedState ? JSON.parse(savedState) : false
@@ -51,33 +44,6 @@ const MainRoutes = () => {
   }, [location.search, tabList, dispatch]);
 
   const sidebarWidth = drawerOpen === false ? 0 : 260;
-
-  useEffect(() => {
-    checkLogin();
-  });
-
-  const checkLogin = async () => {
-    try {
-      if (isLoggedIn || checkingLogin) return;
-      const loginResponse = await GetUserService();
-      if (loginResponse.success) {
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-      }
-    } catch (error) {
-      setIsLoggedIn(false);
-    } finally {
-      setCheckingLogin(false);
-    }
-  };
-
-  if (checkingLogin) {
-    return <LoadingBlur />;
-  }
-  if (!isLoggedIn) {
-    return <AuthLogin setIsLoggedIn={setIsLoggedIn} />;
-  }
 
   return (
     <Layout className="h-screen w-full overflow-hidden">

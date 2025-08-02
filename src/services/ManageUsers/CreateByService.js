@@ -7,7 +7,7 @@ export const CreateByService = async (users) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/users/create-users`,
+      `${HOST_API_SERVER}/nvc-core/api/v1/users/create-users`,
       
         users
       ,
