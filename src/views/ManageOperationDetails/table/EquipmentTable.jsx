@@ -17,7 +17,7 @@ import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 
-function OperationTable({
+function EquipmentTable({
   setSelection,
   selection,
   setShowSearch,
@@ -499,4 +499,4 @@ function OperationTable({
   );
 }
 
-export default OperationTable;
+export default EquipmentTable;

@@ -18,7 +18,7 @@ import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
 
-function RouteOperationDetailsTable({
+function OperationEquipTable({
   setSelection,
   selection,
   setShowSearch,
@@ -537,4 +537,4 @@ function RouteOperationDetailsTable({
   );
 }
 
-export default RouteOperationDetailsTable;
+export default OperationEquipTable;

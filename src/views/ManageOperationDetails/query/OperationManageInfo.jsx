@@ -96,6 +96,82 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
               />
             </Form.Item>
           </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số đầu vào</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'successTable'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số đầu vào"
+                optionFilterProp="label"
+                onChange={onChangeSuccessTable}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số đầu ra</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'successTable'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số đầu ra"
+                optionFilterProp="label"
+                onChange={onChangeSuccessTable}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số thao tác lại</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'successTable'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số thao tác lại"
+                optionFilterProp="label"
+                onChange={onChangeSuccessTable}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số thao bổ sung</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'successTable'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số thao bổ sung"
+                optionFilterProp="label"
+                onChange={onChangeSuccessTable}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
         </Row>
       </Form>
     </div>

@@ -25,7 +25,7 @@ import { CellsRoute } from 'utils/sheets/cell-custom/cellsRoute';
 import { reorderColumns } from 'utils/sheets/reorderColumns';
 import { useNotify } from 'utils/hooks/onNotify';
 
-function RouteSetOperationReworkTable({
+function OperationStepTable({
   setSelection,
   selection,
   setShowSearch,
@@ -695,4 +695,4 @@ function RouteSetOperationReworkTable({
   );
 }
 
-export default RouteSetOperationReworkTable;
+export default OperationStepTable;
