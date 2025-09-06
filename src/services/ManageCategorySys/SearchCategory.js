@@ -2,8 +2,17 @@ import axios from "axios";
 import { HOST_API_SERVER } from "services/config";
 import { accessToken } from "utils/cookies/CookiesUtils";
 
-export const SearchCategory = async (data) => {
+export const SearchCategory = async (type, form, name, value, PageIndex, PageSize, Keyword) => {
   try {
+    const data = {
+      type,
+      form,
+      name,
+      value,
+      PageIndex,
+      PageSize,
+      Keyword
+    }
     const token = accessToken();
     const response = await axios.get(
       `${HOST_API_SERVER}/mes-admin/api/v1/category-sys/list`,
@@ -19,7 +28,7 @@ export const SearchCategory = async (data) => {
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
-        data: response.data.data.content,
+        data: response.data.data,
       };
     } else {
       return {

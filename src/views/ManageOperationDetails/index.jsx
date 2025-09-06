@@ -54,6 +54,9 @@ import OperationManageInfo from './query/OperationManageInfo';
 import OperationPropertiesTable from './table/OperationPropertiesTable';
 import OperationStepTable from './table/OperationStepTable';
 import CategoryTable from 'component/Sheets/CategoryTable';
+import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
+import { set } from 'lodash';
+import { unstable_unsupportedProp } from '@mui/utils';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -119,6 +122,9 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const [dataStep, setDataStep] = useState([]);
   const [dataUnit, setDataUnit] = useState([]);
   const [dataReworkTable, setDataReworkTable] = useState([]);
+  const [dataBonusTable, setDataBonusTable] = useState([]);
+  const [inParameterData, setInParameterData] = useState([]);
+  const [outParameterData, setOutParameterData] = useState([]);
 
   const defaultCols = useMemo(() => [
     {
@@ -474,9 +480,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       trailingRowOptions: {
         disabled: true
       }
-    },
-
-    
+    }
   ]);
 
   const [colsOperationEqp, setColsOperationEqp] = useState(() =>
@@ -1280,15 +1284,87 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     [gridDataCategory, getSelectedRowsCategoryData, categorySelected]
   );
 
+  const onFetchDropdownData = useCallback(async () => {
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onFetchDropdownData) {
+      controllers.current.onFetchDropdownData.abort();
+      controllers.current.onFetchDropdownData = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onFetchDropdownData = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      const [unitData, stepData, lostData, successData, inParameterData, outParameterData, reworkParameterData, bonusParameterData] =
+        await Promise.all([SearchCategory(1, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword)]);
+
+      setDataUnit(unitData.data);
+      // setDataStep(stepData.data.data.content);
+      // setDataLossTable(lostData.data.data.content);
+      // setDataSuccessTable(successData.data.data.content);
+      // setInParameterData(inParameterData.data.data.content);
+      // setOutParameterData(outParameterData.data.data.content);
+      // setDataReworkTable(reworkParameterData.data.data.content);
+      // setDataBonusTable(bonusParameterData.data.data.content);
+    } catch (error) {
+      setDataUnit([]);
+      setDataStep([]);
+      setDataLossTable([]);
+      setDataSuccessTable([]);
+      setInParameterData([]);
+      setOutParameterData([]);
+      setDataReworkTable([]);
+      setDataBonusTable([]);
+      setIsAPISuccess(true);
+      notify({
+        type: 'error',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchDropdownData = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, [
+    loadingBarRef,
+    dataUnit,
+    dataStep,
+    dataLossTable,
+    dataSuccessTable,
+    inParameterData,
+    outParameterData,
+    dataReworkTable,
+    dataBonusTable,
+    keyword,
+    pageIndex,
+    pageSize,
+    isAPISuccess
+  ]);
+
   useEffect(() => {
-    onFetchRoute();
     onFetchOperation();
   }, [selectedData]);
 
-    useEffect(() => {
-
+  useEffect(() => {
+    onFetchDropdownData();
   }, []);
-
 
   const onInsertRow = useCallback(async () => {
     if (!Array.isArray(operationSelected) || operationSelected.length === 0) {
