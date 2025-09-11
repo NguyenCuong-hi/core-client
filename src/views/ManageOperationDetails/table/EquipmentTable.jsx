@@ -378,7 +378,7 @@ function EquipmentTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center mb-2 "> 
+    <div className="w-full h-full gap-1 flex items-center justify-center "> 
       <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[

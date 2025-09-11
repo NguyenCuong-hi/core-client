@@ -35,7 +35,6 @@ import { SearchRouteBy } from 'services/ModelManage/SearchRouteBy';
 import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
 
 import { DeleteCategoryBy } from 'services/ModelManage/DeleteCategoryBy';
-import ModelGroupCategory from './query/ModelGroupCategory';
 import Splitter from 'antd/es/splitter/Splitter';
 import { SplitterPanel } from 'primereact/splitter';
 
@@ -49,14 +48,13 @@ import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByServi
 import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
 import OperationTable from './table/EquipmentTable';
 import OperationInfoQuery from './query/OperationInfoQuery';
-import OperationEquipment from './query/OperationEquipment';
 import OperationManageInfo from './query/OperationManageInfo';
 import OperationPropertiesTable from './table/OperationPropertiesTable';
 import OperationStepTable from './table/OperationStepTable';
 import CategoryTable from 'component/Sheets/CategoryTable';
 import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
-import { set } from 'lodash';
-import { unstable_unsupportedProp } from '@mui/utils';
+import OperationEquipTable from './table/OperationEquipTable';
+import EquipmentTable from './table/EquipmentTable';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -97,6 +95,11 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     rows: CompactSelection.empty()
   });
   const [selectionOpProperties, setSelectionOpProperties] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const [selectionOpEqp, setSelectionOpEqp] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
@@ -493,6 +496,15 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const [numRowsOpEqp, setNumRowsOpEqp] = useState(0);
   const [numRowsToAddOpProperties, setNumRowsToAddOpEqp] = useState(null);
   const [addedRowsOpProperties, setAddedRowsOpProperties] = useState([]);
+
+  const [colsEqp, setColsEqp] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_ROUTE_OPERATION_EQP',
+      defaultColsOpEqp.filter((col) => col.visible)
+    )
+  );
+  const [gridDataEqp, setGridDataEqp] = useState([]);
+  const [numRowsEqp, setNumRowsEqp] = useState(0);
 
   const [OperationReworkSelected, setOperationReworkSelected] = useState([]);
   const [editedRowsOperationRework, setEditedRowsOperationRework] = useState([]);
@@ -1731,33 +1743,9 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                   {t('Danh mục')}
                 </span>
               </Menu.Item>
-              {current === '1' && (
-                <Menu.Item
-                  key="buttons"
-                  disabled
-                  style={{
-                    marginLeft: 'auto',
-                    cursor: 'default',
-                    background: 'transparent'
-                  }}
-                >
-                  <div className="flex gap-1 items-center">
-                    <Button type="text" icon={<PlusCircleFilled style={{ color: '#10b981', padding: 0 }} />} onClick={onInsertRow}>
-                      Chèn
-                    </Button>
-                    <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
-                      Xóa
-                    </Button>
-                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
-                      Up
-                    </Button>
-                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
-                      Down
-                    </Button>
-                  </div>
-                </Menu.Item>
-              )}
-              {current === '4' && (
+              
+              
+              {current === '2' && (
                 <Menu.Item
                   key="buttons"
                   disabled
@@ -1815,31 +1803,39 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               </div>
             )}
             {current === '2' && (
-              <OperationEquipment
-                defaultCols={defaultColsOpEqp}
-                gridData={gridData}
-                setGridData={setGridData}
-                cols={colsOperationEqp}
-                setCols={setColsOperationEqp}
-                numRows={numRows}
-                setNumRows={setNumRows}
-                defaultColsOpEqp={defaultColsOpEqp}
-                gridDataOpProperties={gridDataOpProperties}
-                setGridDataOpProperties={setGridDataOpProperties}
-                colsOpProperties={colsOpProperties}
-                setColsOpProperties={setColsOpProperties}
-                numRowsOpProperties={numRowsOpProperties}
-                setNumRowsOpProperties={setNumRowsOpProperties}
-                onVisibleRegionChanged={onVisibleRegionChanged}
-                onCellRouteClicked={onCellRouteClicked}
-                selection={selection}
-                setSelection={setSelection}
-                selectionCategory={selectionCategory}
-                setSelectionCategory={setSelectionCategory}
-                selectionOpProperties={selectionOpProperties}
-                setSelectionOpProperties={setSelectionOpProperties}
-                onCellOpPropertiesClicked={onCellOpPropertiesClicked}
-              />
+              <div className="bg-slate-50  h-[calc(100vh-188px)]">
+                <Splitter className="w-full h-full ">
+                  <SplitterPanel size={50} minSize={10}>
+                    <EquipmentTable
+                      defaultCols={defaultColsOpEqp}
+                      gridData={gridDataEqp}
+                      setGridData={setGridDataEqp}
+                      cols={colsEqp}
+                      setCols={setColsEqp}
+                      numRows={numRowsEqp}
+                      setNumRows={setNumRowsEqp}
+                      onVisibleRegionChanged={onVisibleRegionChanged}
+                      onCellRouteClicked={onCellRouteClicked}
+                      selection={selection}
+                      setSelection={setSelection}
+                    />
+                  </SplitterPanel>
+
+                  <SplitterPanel size={50} minSize={10}>
+                    <OperationEquipTable
+                      defaultCols={defaultColsOpEqp}
+                      gridData={gridDataOpEqp}
+                      setGridData={setGridDataOpEqp}
+                      cols={colsOperationEqp}
+                      setCols={setColsOperationEqp}
+                      numRows={numRowsOpEqp}
+                      setNumRows={setNumRowsOpEqp}
+                      selection={selectionOpEqp}
+                      setSelection={setSelectionOpEqp}
+                    />
+                  </SplitterPanel>
+                </Splitter>
+              </div>
             )}
 
             {current === '3' && (
@@ -1864,7 +1860,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               </div>
             )}
             {current === '4' && (
-              <div className="bg-slate-50  h-[calc(100vh-189px)]">
+              <div className="bg-slate-50  h-[calc(100vh-190px)]">
                 <CategoryTable
                   dataCategoryValue={dataCategoryValue}
                   defaultCols={defaultColsCategory}
