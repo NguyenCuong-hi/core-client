@@ -506,9 +506,6 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const [gridDataEqp, setGridDataEqp] = useState([]);
   const [numRowsEqp, setNumRowsEqp] = useState(0);
 
-  const [OperationReworkSelected, setOperationReworkSelected] = useState([]);
-  const [editedRowsOperationRework, setEditedRowsOperationRework] = useState([]);
-
   const defaultColsOpStep = useMemo(() => [
     {
       title: '',
@@ -1656,7 +1653,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
   return (
     <>
-      <div className="h-full pt-4">
+      <div className="h-full mt-4">
         <AuDrAction
           titlePage={'Đăng ký công đoạn sản xuất'}
           onClickDelete={onClickDelete}
@@ -1717,28 +1714,28 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               }}
             >
               <Menu.Item key="1">
-                <span className="flex items-center gap-1 text-sm">
-                  <ApartmentOutlined style={{ fontSize: 12 }} />
+                <span className="flex items-center gap-1 text-sm font-bold">
+                  <ApartmentOutlined style={{ fontSize: 12,  }} />
                   {t('Thông tin')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="2">
-                <span className="flex items-center gap-1 text-sm">
+                <span className="flex items-center gap-1 text-sm font-bold">
                   <SyncOutlined style={{ fontSize: 12 }} />
                   {t('Thiết bị')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="3">
-                <span className="flex items-center gap-1 text-sm">
+                <span className="flex items-center gap-1 text-sm font-bold">
                   <AppstoreAddOutlined style={{ fontSize: 12 }} />
                   {t('Trình tự công đoạn')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="4">
-                <span className="flex items-center gap-1 text-sm">
+                <span className="flex items-center gap-1 text-sm font-bold">
                   <DashboardOutlined style={{ fontSize: 12 }} />
                   {t('Danh mục')}
                 </span>
@@ -1773,7 +1770,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               )}
             </Menu>
             {current === '1' && (
-              <div className="bg-slate-50  h-[calc(100vh-188px)]">
+              <div className="bg-slate-50  h-[calc(100vh-170px)]">
                 <Splitter className="w-full h-full ">
                   <SplitterPanel size={50} minSize={10}>
                     <OperationManageInfo
@@ -1803,7 +1800,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               </div>
             )}
             {current === '2' && (
-              <div className="bg-slate-50  h-[calc(100vh-188px)]">
+              <div className="bg-slate-50  h-[calc(100vh-170px)]">
                 <Splitter className="w-full h-full ">
                   <SplitterPanel size={50} minSize={10}>
                     <EquipmentTable
@@ -1839,7 +1836,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
             )}
 
             {current === '3' && (
-              <div className="bg-slate-50  h-[calc(100vh-188px)]">
+              <div className="bg-slate-50  h-[calc(100vh-170px)]">
                 <OperationStepTable
                   setSelection={setSelectionOperationStep}
                   selection={selectionOperationStep}
@@ -1860,7 +1857,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               </div>
             )}
             {current === '4' && (
-              <div className="bg-slate-50  h-[calc(100vh-190px)]">
+              <div className="bg-slate-50  h-[calc(100vh-170px)]">
                 <CategoryTable
                   dataCategoryValue={dataCategoryValue}
                   defaultCols={defaultColsCategory}

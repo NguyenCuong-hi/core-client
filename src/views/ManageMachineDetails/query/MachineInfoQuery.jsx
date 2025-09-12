@@ -1,7 +1,7 @@
 import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
 import React from 'react';
 
-const OperationInfoQuery = ({ formBasic, }) => {
+const MachineInfoQuery = ({ formBasic, }) => {
 
 
   return (
@@ -10,11 +10,11 @@ const OperationInfoQuery = ({ formBasic, }) => {
         <Row className="gap-3 flex items-center ml-2">
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
-              label={<span className="uppercase text-[9px] w-[300px]">Tên công đoạn</span>}
+              label={<span className="uppercase text-[9px] w-[300px]">Tên thiết bị</span>}
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'operationName'}
+              name={'eqpName'}
             >
               <Input
                 placeholder=""
@@ -28,11 +28,11 @@ const OperationInfoQuery = ({ formBasic, }) => {
 
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
-              label={<span className="uppercase text-[9px] w-[300px]">Mã công đoạn</span>}
+              label={<span className="uppercase text-[9px] w-[300px]">Mã thiết bị</span>}
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'operationCode'}
+              name={'eqpCode'}
             >
               <Input
                 placeholder=""
@@ -67,4 +67,4 @@ const OperationInfoQuery = ({ formBasic, }) => {
   );
 };
 
-export default OperationInfoQuery;
+export default MachineInfoQuery;
