@@ -4,7 +4,7 @@ import { Button, Col, DatePicker, Form, Image, Input, Radio, Row, Select, Toolti
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const MachineManageInfo = ({ formBasic, dataUnit, dataVendor, dataType, dataLocation, dataReworkTable,  }) => {
+const EventManageInfo = ({ formBasic, dataUnit, dataVendor, dataType, dataLocation, dataReworkTable,  }) => {
   
   const {t} = useTranslation();
   const [previewImage, setPreviewImage] = useState(false);
@@ -146,7 +146,7 @@ const MachineManageInfo = ({ formBasic, dataUnit, dataVendor, dataType, dataLoca
   return (
     <div className="bg-slate-50 ">
       <Form form={formBasic} layout="vertical">
-        <Row gutter={[6, 2]} align={"center"} className="ml-2">
+        <Row gutter={[8, 2]} align={"middle"} className="ml-2">
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px] w-[150px]">Model</span>}
@@ -454,160 +454,7 @@ const MachineManageInfo = ({ formBasic, dataUnit, dataVendor, dataType, dataLoca
               />
             </Form.Item>
           </Col>
-          <Col style={{ marginBottom: 2 }}>
-            <Form.Item
-              label={<span className="uppercase text-[9px]">{t('Image')}</span>}
-            >
-              <div
-                style={{
-                  width: 150,
-                  height: 150,
-                  border: '1px solid #d9d9d9',
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                  backgroundColor: '#fafafa',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {previewImage ? (
-                  <Image
-                    src={previewImage}
-                    alt="Avatar1"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                    preview={true}
-                  />
-                ) : (
-                  <Upload
-                    accept="image/*"
-                    showUploadList={false}
-                    beforeUpload={handleImageChange}
-                  >
-                    <Button
-                      type="text"
-                      icon={<PlusOutlined />}
-                    >
-                      {t('Chọn ảnh')}
-                    </Button>
-                  </Upload>
-                )}
-              </div>
-              <div className="mt-1 gap-3 flex items-center">
-                <Tooltip title="Cập nhật">
-                  <Button
-                    shape="circle"
-                    loading={loading}
-                    onClick={handleUploadImage}
-                    icon={<UploadOutlined />}
-                  />
-                </Tooltip>
-                <Upload
-                  accept="image/*"
-                  showUploadList={false}
-                  beforeUpload={handleImageChange}
-                >
-                  <Tooltip title="Thêm ảnh">
-                    <Button
-                      // disabled={dataSheetSearch.length === 0}
-                      shape="circle"
-                      icon={<PlusOutlined />}
-                    />
-                  </Tooltip>
-                </Upload>
-                <Tooltip title="Xóa ảnh">
-                  <Button
-                    shape="circle"
-                    loading={loading2}
-                    onClick={handleDeleteImage}
-                    icon={<DeleteOutline />}
-                  />
-                </Tooltip>
-              </div>
-            </Form.Item>
-          </Col>
 
-
-          <Col style={{ marginBottom: 4 }}>
-            <Form.Item
-              label={<span className="uppercase text-[9px]">{t('Image')}</span>}
-            >
-              <div
-                style={{
-                  width: 150,
-                  height: 150,
-                  border: '1px solid #d9d9d9',
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                  backgroundColor: '#fafafa',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {previewImage ? (
-                  <Image
-                    src={previewImage}
-                    alt="Avatar1"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                    preview={true}
-                  />
-                ) : (
-                  <Upload
-                    accept="image/*"
-                    showUploadList={false}
-                    beforeUpload={handleImageChange}
-                  >
-                    <Button
-                      type="text"
-                      icon={<PlusOutlined />}
-                    >
-                      {t('Chọn ảnh')}
-                    </Button>
-                  </Upload>
-                )}
-              </div>
-              <div className="mt-1 gap-3 flex items-center">
-                <Tooltip title="Cập nhật">
-                  <Button
-                    shape="circle"
-                    loading={loading}
-                    onClick={handleUploadImage}
-                    icon={<UploadOutlined />}
-                  />
-                </Tooltip>
-                <Upload
-                  accept="image/*"
-                  showUploadList={false}
-                  beforeUpload={handleImageChange}
-                >
-                  <Tooltip title="Thêm ảnh">
-                    <Button
-                      // disabled={dataSheetSearch.length === 0}
-                      shape="circle"
-                      icon={<PlusOutlined />}
-                    />
-                  </Tooltip>
-                </Upload>
-                <Tooltip title="Xóa ảnh">
-                  <Button
-                    shape="circle"
-                    loading={loading2}
-                    onClick={handleDeleteImage}
-                    icon={<DeleteOutline />}
-                  />
-                </Tooltip>
-              </div>
-            </Form.Item>
-          </Col>
 
          
         </Row>
@@ -616,4 +463,4 @@ const MachineManageInfo = ({ formBasic, dataUnit, dataVendor, dataType, dataLoca
   );
 };
 
-export default MachineManageInfo;
+export default EventManageInfo;

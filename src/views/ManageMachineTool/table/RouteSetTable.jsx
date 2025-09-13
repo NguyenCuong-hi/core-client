@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DataEditor, GridCellKind } from '@glideapps/glide-data-grid';
-import { DeleteOutlined, EditOutlined, LoadingOutlined, TableOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, TableOutlined } from '@ant-design/icons';
 import { useLayer } from 'react-laag';
 // import LayoutMenuSheet from '../../sheet/jsx/layoutMenu'
 // import LayoutStatusMenuSheet from '../../sheet/jsx/layoutStatusMenu'
@@ -16,8 +16,10 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
+import { AsyncDropdownCellRenderer } from 'utils/sheets/cell-custom/AsyncDropdownCellRenderer';
+import { StepsCell } from 'utils/sheets/cell-custom/cellsOperationsSteps';
 
-function EquipmentTable({
+function RouteSetTable({
   setSelection,
   selection,
   setShowSearch,
@@ -35,10 +37,10 @@ function EquipmentTable({
   setCols,
   cols,
   defaultCols,
-  canEdit,
-  onVisibleRegionChanged,
-  onCellRouteClicked,
+  canEdit
 }) {
+
+
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
   const cellProps = useExtraCells();
@@ -49,7 +51,7 @@ function EquipmentTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_EQUIPMENT', []);
+    return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -105,9 +107,11 @@ function EquipmentTable({
     selectColumn: false
   });
 
+
   const getData = useCallback(
     ([col, row]) => {
       const person = gridData[row] || {};
+      console.log('person', person);
       const column = cols[col];
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
@@ -132,6 +136,19 @@ function EquipmentTable({
         };
       }
 
+      if (columnKey === "OperationCode") {
+        return {
+          kind: GridCellKind.Custom,
+          allowOverlay: false,
+          readonly: true,
+          copyData: "",
+          displayData: "",
+          data: {
+            kind: "steps-cell",
+            steps: value,
+          },
+        };
+      }
 
       return {
         kind: GridCellKind.Text,
@@ -286,7 +303,7 @@ function EquipmentTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+      saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
       return newHidden;
     });
   };
@@ -295,7 +312,7 @@ function EquipmentTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_EQUIPMENT', uniqueCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
       return uniqueCols;
     });
   };
@@ -307,7 +324,7 @@ function EquipmentTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_EQUIPMENT', uniqueCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -318,8 +335,8 @@ function EquipmentTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_EQUIPMENT');
-    localStorage.removeItem('H_EQUIPMENT');
+    localStorage.removeItem('S_ERP_COLS_PAGE_ROUTE_TABLE');
+    localStorage.removeItem('H_ERP_COLS_PAGE_ROUTE_TABLE');
     setShowMenu(null);
   };
 
@@ -328,14 +345,14 @@ function EquipmentTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_EQUIPMENT', updatedCols);
+      saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_EQUIPMENT', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -351,23 +368,23 @@ function EquipmentTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_EQUIPMENT', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_EQUIPMENT', newCols);
+        saveToLocalStorageSheet('S_ERP_COLS_PAGE_ROUTE_TABLE', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+        saveToLocalStorageSheet('H_ERP_COLS_PAGE_ROUTE_TABLE', newHidden);
         return newHidden;
       });
     }
@@ -378,8 +395,8 @@ function EquipmentTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center "> 
-      <div className="w-full h-full flex flex-col  overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center pb-8">
+      <div className="w-full h-full flex flex-col border bg-white rounded-lg overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -400,7 +417,7 @@ function EquipmentTable({
             width="100%"
             height="100%"
             headerHeight={30}
-            rowHeight={27}
+            rowHeight={28}
             rowSelect="multi"
             gridSelection={selection}
             onGridSelectionChange={setSelection}
@@ -410,19 +427,21 @@ function EquipmentTable({
               sticky: true,
               tint: true
             }}
-            freezeColumns={0}
-            getRowThemeOverride={(i) =>
-              i === hoverRow
-                ? {
-                    bgCell: '#f7f7f7',
-                    bgCellMedium: '#f0f0f0'
-                  }
-                : i % 2 === 0
-                  ? undefined
-                  : {
-                      bgCell: '#FBFBFB'
-                    }
-            }
+            freezeColumns={1}
+            getRowThemeOverride={(i) => {
+              let themeOverride;
+              if (i === hoverRow) {
+                themeOverride = {
+                  bgCell: '#f7f7f7',
+                  bgCellMedium: '#f0f0f0'
+                };
+              } else if (i % 2 !== 0) {
+                themeOverride = {
+                  bgCell: '#FBFBFB'
+                };
+              }
+              return themeOverride;
+            }}
             overscrollY={0}
             overscrollX={0}
             smoothScrollY={true}
@@ -430,18 +449,18 @@ function EquipmentTable({
             onPaste={true}
             fillHandle={true}
             // keybindings={keybindings}
-            onRowAppended={() => handleRowAppend(1)}
+            // onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            onCellClicked={onCellRouteClicked}
-            onVisibleRegionChanged={onVisibleRegionChanged}
+            // onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
             // onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}
-            // customRenderers={[
-            //     AsyncDropdownCellRenderer
-            // ]}
+            customRenderers={[
+                AsyncDropdownCellRenderer,
+                StepsCell,
+            ]}
             // onItemHovered={onItemHovered}
           />
           {/* {showMenu !== null &&
@@ -481,7 +500,9 @@ function EquipmentTable({
                     )} */}
         </ContextMenuWrapper>
 
-
+        <div className="flex justify-end px-4 py-2">
+          <Pagination total={85} defaultPageSize={20} defaultCurrent={1} />
+        </div>
         <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
           {defaultCols.map(
             (col) =>
@@ -499,4 +520,4 @@ function EquipmentTable({
   );
 }
 
-export default EquipmentTable;
+export default RouteSetTable;

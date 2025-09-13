@@ -17,7 +17,7 @@ import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
 
-function EquipmentTable({
+function EquipmentToolTable({
   setSelection,
   selection,
   setShowSearch,
@@ -37,7 +37,6 @@ function EquipmentTable({
   defaultCols,
   canEdit,
   onVisibleRegionChanged,
-  onCellRouteClicked,
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -49,7 +48,7 @@ function EquipmentTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_EQUIPMENT', []);
+    return loadFromLocalStorageSheet('H_OPERTATION_LIST', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -286,7 +285,7 @@ function EquipmentTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+      saveToLocalStorageSheet('H_OPERTATION_LIST', newHidden);
       return newHidden;
     });
   };
@@ -295,7 +294,7 @@ function EquipmentTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_EQUIPMENT', uniqueCols);
+      saveToLocalStorageSheet('S_OPERTATION_LIST', uniqueCols);
       return uniqueCols;
     });
   };
@@ -307,7 +306,7 @@ function EquipmentTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_EQUIPMENT', uniqueCols);
+        saveToLocalStorageSheet('S_OPERTATION_LIST', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -318,8 +317,8 @@ function EquipmentTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_EQUIPMENT');
-    localStorage.removeItem('H_EQUIPMENT');
+    localStorage.removeItem('S_OPERTATION_LIST');
+    localStorage.removeItem('H_OPERTATION_LIST');
     setShowMenu(null);
   };
 
@@ -328,14 +327,14 @@ function EquipmentTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_EQUIPMENT', updatedCols);
+      saveToLocalStorageSheet('S_OPERTATION_LIST', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_EQUIPMENT', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_OPERTATION_LIST', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -351,23 +350,23 @@ function EquipmentTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_EQUIPMENT', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_LIST', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_EQUIPMENT', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_LIST', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_LIST', newHidden);
         return newHidden;
       });
     }
@@ -410,7 +409,7 @@ function EquipmentTable({
               sticky: true,
               tint: true
             }}
-            freezeColumns={0}
+            freezeColumns={1}
             getRowThemeOverride={(i) =>
               i === hoverRow
                 ? {
@@ -432,7 +431,7 @@ function EquipmentTable({
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            onCellClicked={onCellRouteClicked}
+            onCellClicked={onCellClicked}
             onVisibleRegionChanged={onVisibleRegionChanged}
 
             onColumnResize={onColumnResize}
@@ -499,4 +498,4 @@ function EquipmentTable({
   );
 }
 
-export default EquipmentTable;
+export default EquipmentToolTable;

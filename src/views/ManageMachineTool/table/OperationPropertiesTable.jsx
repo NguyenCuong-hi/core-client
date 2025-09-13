@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DataEditor, GridCellKind } from '@glideapps/glide-data-grid';
-import { DeleteOutlined, EditOutlined, LoadingOutlined, TableOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, TableOutlined } from '@ant-design/icons';
 import { useLayer } from 'react-laag';
 // import LayoutMenuSheet from '../../sheet/jsx/layoutMenu'
 // import LayoutStatusMenuSheet from '../../sheet/jsx/layoutStatusMenu'
@@ -16,8 +16,9 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
+import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
 
-function EquipmentTable({
+function OperationPropertiesTable({
   setSelection,
   selection,
   setShowSearch,
@@ -35,9 +36,7 @@ function EquipmentTable({
   setCols,
   cols,
   defaultCols,
-  canEdit,
-  onVisibleRegionChanged,
-  onCellRouteClicked,
+  canEdit
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -49,7 +48,7 @@ function EquipmentTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_EQUIPMENT', []);
+    return loadFromLocalStorageSheet('H_OPERTATION_PROPERTY', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -132,6 +131,46 @@ function EquipmentTable({
         };
       }
 
+      if (columnKey === 'PassedQty' || columnKey === 'RejectQty' || columnKey === 'QCQty') {
+        return {
+          kind: GridCellKind.Number,
+          data: value,
+          displayData: new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 5,
+            maximumFractionDigits: 5
+          }).format(value),
+          readonly: column?.readonly || false,
+          contentAlign: 'right',
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false
+        };
+      }
+
+      if (columnKey === 'BadRate') {
+        return {
+          kind: GridCellKind.Number,
+          data: value,
+          displayData: new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }).format(value),
+          readonly: column?.readonly || false,
+          contentAlign: 'right',
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false
+        };
+      }
+
+      if (columnKey === 'TestEndDate' || columnKey === 'QCDate' || columnKey === 'DelvDate') {
+        return {
+          kind: GridCellKind.Text,
+          data: value,
+          displayData: formatDate(value) || '',
+          readonly: true,
+          allowOverlay: true,
+          hasMenu: false
+        };
+      }
 
       return {
         kind: GridCellKind.Text,
@@ -286,7 +325,7 @@ function EquipmentTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+      saveToLocalStorageSheet('H_OPERTATION_PROPERTY', newHidden);
       return newHidden;
     });
   };
@@ -295,7 +334,7 @@ function EquipmentTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_EQUIPMENT', uniqueCols);
+      saveToLocalStorageSheet('S_OPERTATION_PROPERTY', uniqueCols);
       return uniqueCols;
     });
   };
@@ -307,7 +346,7 @@ function EquipmentTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_EQUIPMENT', uniqueCols);
+        saveToLocalStorageSheet('S_OPERTATION_PROPERTY', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -318,8 +357,8 @@ function EquipmentTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_EQUIPMENT');
-    localStorage.removeItem('H_EQUIPMENT');
+    localStorage.removeItem('S_OPERTATION_PROPERTY');
+    localStorage.removeItem('H_OPERTATION_PROPERTY');
     setShowMenu(null);
   };
 
@@ -328,14 +367,14 @@ function EquipmentTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_EQUIPMENT', updatedCols);
+      saveToLocalStorageSheet('S_OPERTATION_PROPERTY', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_EQUIPMENT', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_OPERTATION_PROPERTY', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -351,23 +390,23 @@ function EquipmentTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_EQUIPMENT', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_PROPERTY', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_PROPERTY', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_EQUIPMENT', newCols);
+        saveToLocalStorageSheet('S_OPERTATION_PROPERTY', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_EQUIPMENT', newHidden);
+        saveToLocalStorageSheet('H_OPERTATION_PROPERTY', newHidden);
         return newHidden;
       });
     }
@@ -378,8 +417,8 @@ function EquipmentTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center "> 
-      <div className="w-full h-full flex flex-col  overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center">
+      <div className="w-full h-full flex flex-col border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -410,7 +449,7 @@ function EquipmentTable({
               sticky: true,
               tint: true
             }}
-            freezeColumns={0}
+            freezeColumns={1}
             getRowThemeOverride={(i) =>
               i === hoverRow
                 ? {
@@ -432,8 +471,7 @@ function EquipmentTable({
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            onCellClicked={onCellRouteClicked}
-            onVisibleRegionChanged={onVisibleRegionChanged}
+            onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}
             // onHeaderMenuClick={onHeaderMenuClick}
@@ -499,4 +537,4 @@ function EquipmentTable({
   );
 }
 
-export default EquipmentTable;
+export default OperationPropertiesTable;

@@ -13,17 +13,10 @@ import {
   CaretDownFilled,
   CaretUpFilled,
   ClusterOutlined,
-  ConsoleSqlOutlined,
   DashboardOutlined,
-  DownCircleFilled,
   LoadingOutlined,
   MinusCircleFilled,
-  MinusOutlined,
-  MonitorOutlined,
-  PartitionOutlined,
   PlusCircleFilled,
-  PlusOutlined,
-  SaveOutlined,
   SearchOutlined,
   SyncOutlined
 } from '@ant-design/icons';
@@ -46,17 +39,18 @@ import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
 import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId';
 import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
 import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
-import OperationTable from './table/EquipmentTable';
-import OperationInfoQuery from './query/MachineInfoQuery';
-import OperationManageInfo from './query/MachineManageInfo';
 import OperationPropertiesTable from './table/OperationPropertiesTable';
-import OperationStepTable from './table/OperationStepTable';
 import CategoryTable from 'component/Sheets/CategoryTable';
 import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
-import OperationEquipTable from './table/OperationEquipTable';
 import EquipmentTable from './table/EquipmentTable';
 import MachineInfoQuery from './query/MachineInfoQuery';
 import MachineManageInfo from './query/MachineManageInfo';
+import OperationTable from 'views/ManageRouteSet/table/OperationTable';
+import OperationEquipTable from 'views/ManageOperationDetails/table/OperationEquipTable';
+import EventTable from 'views/ManageMachineEvent/table/EventTable';
+import EquipmentEventTable from './table/EquipmentEventTable';
+import ToolTable from 'views/ManageMachineTool/table/ToolTable';
+import EquipmentToolTable from './table/EquipmentEventTable';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -87,15 +81,26 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     rows: CompactSelection.empty()
   });
 
-  const [selectionOperationStep, setSelectionOperationStep] = useState({
+  const [selectionEvent, setSelectionEvent] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
 
-  const [selectionOpIndicate, setSelectionOpIndicate] = useState({
+  const [selectionEqpEvent, setSelectionEqpEvent] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
+
+  const [selectionTool, setSelectionTool] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const [selectionEqpTool, setSelectionEqpTool] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
   const [selectionOpProperties, setSelectionOpProperties] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
@@ -126,7 +131,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const [dataSuccessTable, setDataSuccessTable] = useState([]);
   const [dataStep, setDataStep] = useState([]);
   const [dataUnit, setDataUnit] = useState([]);
-  const [dataReworkTable, setDataReworkTable] = useState([]);
+  const [dataOpEqpTable, setDataReworkTable] = useState([]);
   const [dataBonusTable, setDataBonusTable] = useState([]);
   const [inParameterData, setInParameterData] = useState([]);
   const [outParameterData, setOutParameterData] = useState([]);
@@ -201,12 +206,121 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const [cols, setCols] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_DETAIL_MODEL',
+      'S_OPERTATION_LIST',
       defaultCols.filter((col) => col.visible)
     )
   );
 
-  const defaultColsOpProperties = useMemo(() => [
+  const [gridDataOp, setGridDataOp] = useState([]);
+  const [numRowsOp, setNumRowsOp] = useState(0);
+  const [selectionOp, setSelectionOp] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const defaultColsOpEqp = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+    {
+      title: t('Mã'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 100,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã thiết bị'),
+      id: 'equipmentId',
+      kind: 'Text',
+      readonly: true,
+      width: 10,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationId',
+      kind: 'Text',
+      readonly: true,
+      width: 10,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Tên công đoạn'),
+      id: 'operationName',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationCode',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+  const [colsOpEqp, setColsOpEqp] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_EQUIPMENT_OP',
+      defaultColsOpEqp.filter((col) => col.visible)
+    )
+  );
+  const [gridDataOpEqp, setGridDataOpEqp] = useState([]);
+  const [numRowsOpEqp, setNumRowsOpEqp] = useState(0);
+
+  const defaultColsEqpProperties = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -221,7 +335,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã thuộc tính '),
+      title: t('Mã thuộc tính'),
       id: 'id',
       kind: 'Text',
       readonly: true,
@@ -264,7 +378,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const [colsOpProperties, setColsOpProperties] = useState(() =>
     loadFromLocalStorageSheet(
       'S_OPERTATION_PROPERTY',
-      defaultColsOpProperties.filter((col) => col.visible)
+      defaultColsEqpProperties.filter((col) => col.visible)
     )
   );
   const [gridDataOpProperties, setGridDataOpProperties] = useState([]);
@@ -379,7 +493,19 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const [numRowsToAddCategory, setNumRowsToAddCategory] = useState(null);
   const [addedRowsCategory, setAddedRowsCategory] = useState([]);
 
-  const defaultColsOpEqp = useMemo(() => [
+  const [numRowsToAddOpProperties, setNumRowsToAddOpEqp] = useState(null);
+  const [addedRowsOpProperties, setAddedRowsOpProperties] = useState([]);
+
+  const [colsEqp, setColsEqp] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_EQUIPMENT',
+      defaultColsOpEqp.filter((col) => col.visible)
+    )
+  );
+  const [gridDataEqp, setGridDataEqp] = useState([]);
+  const [numRowsEqp, setNumRowsEqp] = useState(0);
+
+  const defaultColsEvent = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -393,11 +519,12 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: false
       }
     },
+
     {
-      title: t('Mã'),
+      title: t('Mã trạng thái'),
       id: 'id',
       kind: 'Text',
-      readonly: true,
+      readonly: false,
       width: 250,
       hasMenu: true,
       visible: false,
@@ -407,13 +534,13 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã công đoạn'),
-      id: 'operationId',
+      title: t('Mã trạng thái'),
+      id: 'eventCode',
       kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
-      visible: false,
+      visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
@@ -421,22 +548,62 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Mã công đoạn'),
-      id: 'operationCode',
-      kind: 'Custom',
+      title: t('Tên trạng thái'),
+      id: 'eventName',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
-      visible: false,
+      visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
       }
     },
+
     {
-      title: t('Tên công đoạn'),
-      id: 'operationName',
-      kind: 'Custom',
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsEvent, setColsEvent] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_EVENT',
+      defaultColsEvent.filter((col) => col.visible)
+    )
+  );
+  const [gridDataEvent, setGridDataEvent] = useState([]);
+  const [numRowsEvent, setNumRowsEvent] = useState(0);
+
+  const defaultColsEqpEvent = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+
+    {
+      title: t('Mã trạng thái'),
+      id: 'id',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
@@ -448,21 +615,48 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Mã thiết bị'),
-      id: 'eqpCode',
-      kind: 'Custom',
+      id: 'equipmentId',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
-      visible: false,
+      visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
       }
     },
     {
-      title: t('Tên thiết bị'),
-      id: 'eqpName',
-      kind: 'Custom',
+      title: t('Mã trạng thái'),
+      id: 'eventId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã trạng thái'),
+      id: 'eventCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên trạng thái'),
+      id: 'eventName',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
@@ -476,7 +670,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     {
       title: t('Mô tả'),
       id: 'description',
-      kind: 'Custom',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
@@ -488,27 +682,17 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   ]);
 
-  const [colsOperationEqp, setColsOperationEqp] = useState(() =>
+  const [colsEqpEvent, setColsEqpEvent] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ROUTE_OPERATION_EQP',
-      defaultColsOpEqp.filter((col) => col.visible)
+      'S_EQP_EVENT',
+      defaultColsEqpEvent.filter((col) => col.visible)
     )
   );
-  const [gridDataOpEqp, setGridDataOpEqp] = useState([]);
-  const [numRowsOpEqp, setNumRowsOpEqp] = useState(0);
-  const [numRowsToAddOpProperties, setNumRowsToAddOpEqp] = useState(null);
-  const [addedRowsOpProperties, setAddedRowsOpProperties] = useState([]);
 
-  const [colsEqp, setColsEqp] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_ROUTE_OPERATION_EQP',
-      defaultColsOpEqp.filter((col) => col.visible)
-    )
-  );
-  const [gridDataEqp, setGridDataEqp] = useState([]);
-  const [numRowsEqp, setNumRowsEqp] = useState(0);
+  const [gridDataEqpEvent, setGridDataEqpEvent] = useState([]);
+  const [numRowsEqpEvent, setNumRowsEqpEvent] = useState(0);
 
-  const defaultColsOpStep = useMemo(() => [
+  const defaultColsTool = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -522,9 +706,104 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: false
       }
     },
+
     {
-      title: t('Mã công đoạn'),
-      id: 'operationId',
+      title: t('Mã phụ kiện'),
+      id: 'id',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã phụ kiện'),
+      id: 'toolCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên phụ kiện'),
+      id: 'toolName',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Phân loại'),
+      id: 'toolType',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsTool, setColsTool] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_TOOL',
+      defaultColsTool.filter((col) => col.visible)
+    )
+  );
+  const [gridDataTool, setGridDataTool] = useState([]);
+  const [numRowsTool, setNumRowsTool] = useState(0);
+
+  const defaultColsEqpTool = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+
+    {
+      title: t('Mã phụ kiện'),
+      id: 'id',
       kind: 'Text',
       readonly: false,
       width: 250,
@@ -537,9 +816,50 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Tên công đoạn'),
-      id: 'operationName',
-      kind: 'Custom',
+      title: t('Mã phụ kiện'),
+      id: 'toolId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã phụ kiện'),
+      id: 'toolCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên phụ kiện'),
+      id: 'toolName',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationId',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
@@ -554,7 +874,35 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       title: t('Mã công đoạn'),
       id: 'operationCode',
       kind: 'Text',
-      readonly: true,
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('equipmentId'),
+      id: 'equipmentId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã thiết bị'),
+      id: 'equipmentCode',
+      kind: 'Text',
+      readonly: false,
       width: 250,
       hasMenu: true,
       visible: true,
@@ -576,143 +924,22 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       trailingRowOptions: {
         disabled: true
       }
-    },
-    {
-      title: t('Bảng mã lỗi'),
-      id: 'lossName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã lỗi'),
-      id: 'lossId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Bảng mã bổ sung'),
-      id: 'bonusName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã bổ sung'),
-      id: 'bonusId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Bảng mã thao tác lại'),
-      id: 'reworkName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã thao tác lại'),
-      id: 'reworkId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Bảng mã sửa chữa'),
-      id: 'repairName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã sửa chữa'),
-      id: 'repairId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Yêu cầu hoàn thành'),
-      id: 'wipRequestPack',
-      kind: 'Boolean',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
     }
   ]);
 
-  const [colsOpStep, setColsOpStep] = useState(() =>
+  const [colsEqpTool, setColsEqpTool] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ROUTE_OP_STEP',
-      defaultColsOpStep.filter((col) => col.visible)
+      'S_EQP_TOOL',
+      defaultColsEqpTool.filter((col) => col.visible)
     )
   );
+  const [gridDataEqpTool, setGridDataEqpTool] = useState([]);
+  const [numRowsEqpTool, setNumRowsEqpTool] = useState(0);
+
   const [gridDataOpStep, setGridDataOpStep] = useState([]);
   const [numRowsOpStep, setNumRowsOpStep] = useState(0);
   const [numRowsToAddOpStep, setNumRowsToAddOpStep] = useState(null);
   const [addedRowsOpStep, setAddedRowsOpStep] = useState([]);
-
-  const [OpStepSelected, setOpStepSelected] = useState([]);
-  const [editedRowsOpStep, setEditedRowsOpStep] = useState([]);
 
   const [isSent, setIsSent] = useState(false);
   const [count, setCount] = useState(0);
@@ -739,33 +966,34 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const onClickSave = useCallback(async () => {
     const requiredColumns = ['configProdName'];
 
-    const columnOpRework = [
+    const columnEqpOp = [
       'id',
-      'operationId',
-      'operationCode',
-      'operationName',
-      'routeIdRework',
-      'routeCodeRework',
-      'routerNameRework',
-      'operationReworkId',
-      'operationReworkCode',
-      'operationReworkName',
-      'routeReturnId',
-      'routeReturnCode',
-      'routeReturnName'
-    ];
-
-    const columnOpIndicate = [
-      'id',
-      'routeId',
+      'equipmentId',
       'operationId',
       'operationCode',
       'operationName',
       'description',
-      'isUse',
-      'queueNumber',
-      'processNumber',
-      'yield'
+    ];
+    const columnEqpEvent = [
+      'id',
+      'operationId',
+      'operationCode',
+      'eventId',
+      'eventCode',
+      'eventName',
+      'description',
+
+    ];
+
+    const columnEqpTool = [
+      'id',
+      'toolId',
+      'operationId',
+      'operationCode',
+      'operationName',
+      'equipmentId',
+      'equipmentCode',
+      'equipmentName'
     ];
 
     const columnsCategory = [
@@ -825,60 +1053,54 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       controllers.current.onClickSave = controller;
       const data = await formBasic.getFieldValue();
 
-      const dataOpReworkA = filterAndSelectColumns(gridDataOpEqp, columnOpRework, 'A').map((row) => ({
+      const dataOpEqpA = filterAndSelectColumns(gridDataOpEqp, columnEqpOp, 'A').map((row) => ({
         ...row,
         Status: 'A',
         id: row.id || '',
-        routeId: data.id || ''
       }));
 
-      const dataOpReworkU = filterAndSelectColumns(gridDataOpEqp, columnOpRework, 'U').map((row) => ({
+      const dataOpEqpU = filterAndSelectColumns(gridDataOpEqp, columnEqpOp, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        routeId: data.id || ''
       }));
 
-      const dataOpIndicateA = filterAndSelectColumns(gridDataOpStep, columnOpIndicate, 'A').map((row) => ({
+      const dataOpEventA = filterAndSelectColumns(gridDataEqpEvent, columnEqpEvent, 'A').map((row) => ({
         ...row,
         Status: 'A',
         id: row.id || '',
-        routeId: routeId || ''
       }));
 
-      const dataOpIndicateU = filterAndSelectColumns(gridDataOpStep, columnOpIndicate, 'U').map((row) => ({
+      const dataOpEventU = filterAndSelectColumns(gridDataEqpEvent, columnEqpEvent, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        routeId: routeId || ''
       }));
 
       const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
         ...row,
         Status: 'A',
         id: row.id || '',
-        routeId: routeId || ''
       }));
 
       const dataCategoryU = filterAndSelectColumns(gridDataCategory, columnsCategory, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        routeId: routeId || ''
       }));
 
-      const dataRework = [...dataOpReworkA, ...dataOpReworkU];
-      const dataIndicate = [...dataOpIndicateA, ...dataOpIndicateU];
+      const dataOpEqp = [...dataOpEqpA, ...dataOpEqpU];
+      const dataOpEvent = [...dataOpEventA, ...dataOpEventU];
 
       const dataCategory = [...dataCategoryA, ...dataCategoryU];
       const dto = {
-        route: {
+        opReqDto: {
           id: routeId || '',
           ...data
         },
-        prompts: dataCategory,
-        reworks: dataRework,
-        indications: dataIndicate
+        promptCateList: dataCategory,
+        reworks: dataOpEqp,
+        indications: dataOpEvent
       };
       try {
         const result = await CreateRouteByService(dto);
@@ -892,7 +1114,6 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
           setIsSent(false);
           setEditedRows([]);
-          console.log('routeId', routeId);
           fetchDataRoutById(routeId);
         } else {
           setIsSent(false);
@@ -1091,6 +1312,41 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   };
 
   const onCellRouteClicked = useCallback(
+    (cell, event) => {
+      let rowIndex;
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1];
+        setIsMinusClicked(true);
+      } else {
+        rowIndex = cell[1];
+        setIsMinusClicked(false);
+      }
+
+      if (lastClickedCell && lastClickedCell[0] === cell[0] && lastClickedCell[1] === cell[1]) {
+        setLastClickedCell(null);
+        setClickedRowData(null);
+        return;
+      }
+      if (cell[0] === -1) {
+        if (rowIndex >= 0 && rowIndex < gridData.length) {
+          const isSelected = selection.rows.hasIndex(rowIndex);
+
+          let newSelected;
+          if (isSelected) {
+            newSelected = selection.rows.remove(rowIndex);
+            setOperationSelected(getSelectedRowsData());
+          } else {
+            newSelected = selection.rows.add(rowIndex);
+            setOperationSelected([]);
+          }
+        }
+      }
+    },
+    [gridData, getSelectedRowsData, operationSelected]
+  );
+
+  const onCellEventClicked = useCallback(
     (cell, event) => {
       let rowIndex;
 
@@ -1361,7 +1617,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     dataSuccessTable,
     inParameterData,
     outParameterData,
-    dataReworkTable,
+    dataOpEqpTable,
     dataBonusTable,
     keyword,
     pageIndex,
@@ -1561,9 +1817,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         message.warning('Bạn không có quyền thêm dữ liệu');
         return;
       }
-      onRowAppended(colsOpStep, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAdd);
+      onRowAppended(colsEqpEvent, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAdd);
     },
-    [colsOpStep, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAddOpStep]
+    [colsEqpEvent, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAddOpStep]
   );
 
   const onClickDelete = useCallback(async () => {
@@ -1716,41 +1972,41 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               }}
             >
               <Menu.Item key="1">
-                <span className="flex items-center gap-1 text-sm font-bold">
+                <span className="flex items-center text-sm font-bold">
                   <ApartmentOutlined style={{ fontSize: 12 }} />
                   {t('Thông tin')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="2">
-                <span className="flex items-center gap-1 text-sm font-bold">
+                <span className="flex items-center text-sm font-bold">
                   <SyncOutlined style={{ fontSize: 12 }} />
                   {t('Cài đặt công đoạn')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="3">
-                <span className="flex items-center gap-1 text-sm font-bold">
+                <span className="flex items-center  text-sm font-bold">
                   <AppstoreAddOutlined style={{ fontSize: 12 }} />
                   {t('Cài đặt trạng thái')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="4">
-                <span className="flex items-center gap-1 text-sm font-bold">
+                <span className="flex items-center text-sm font-bold">
                   <AppstoreAddOutlined style={{ fontSize: 12 }} />
                   {t('Cài đặt phụ kiện')}
                 </span>
               </Menu.Item>
 
               <Menu.Item key="5">
-                <span className="flex items-center gap-1 text-sm font-bold">
+                <span className="flex items-center text-sm font-bold">
                   <DashboardOutlined style={{ fontSize: 12 }} />
                   {t('Danh mục')}
                 </span>
               </Menu.Item>
 
-              {current === '2' && (
+              {(current === '2' || current === '3' || current === '4') && (
                 <Menu.Item
                   key="buttons"
                   disabled
@@ -1760,7 +2016,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                     background: 'transparent'
                   }}
                 >
-                  <div className="flex gap-1 items-center">
+                  <div className="flex items-center">
                     <Button type="text" icon={<PlusCircleFilled style={{ color: '#10b981', padding: 0 }} />} onClick={onInsertRow}>
                       Chèn
                     </Button>
@@ -1787,13 +2043,13 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                       dataStep={dataStep}
                       dataLossTable={dataLossTable}
                       dataSuccessTable={dataSuccessTable}
-                      dataReworkTable={dataReworkTable}
+                      dataOpEqpTable={dataOpEqpTable}
                     />
                   </SplitterPanel>
 
                   <SplitterPanel size={50} minSize={10}>
                     <OperationPropertiesTable
-                      defaultCols={defaultColsOpProperties}
+                      defaultCols={defaultColsEqpProperties}
                       gridData={gridDataOpProperties}
                       setGridData={setGridDataOpProperties}
                       cols={colsOpProperties}
@@ -1811,18 +2067,18 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
               <div className="bg-slate-50  h-[calc(100vh-180px)]">
                 <Splitter className="w-full h-full ">
                   <SplitterPanel size={50} minSize={10}>
-                    <EquipmentTable
-                      defaultCols={defaultColsOpEqp}
-                      gridData={gridDataEqp}
-                      setGridData={setGridDataEqp}
-                      cols={colsEqp}
-                      setCols={setColsEqp}
-                      numRows={numRowsEqp}
-                      setNumRows={setNumRowsEqp}
+                    <OperationTable
+                      defaultCols={defaultCols}
+                      gridData={gridDataOp}
+                      setGridData={setGridDataOp}
+                      cols={cols}
+                      setCols={setCols}
+                      numRows={numRowsOp}
+                      setNumRows={setNumRowsOp}
                       onVisibleRegionChanged={onVisibleRegionChanged}
                       onCellRouteClicked={onCellRouteClicked}
-                      selection={selection}
-                      setSelection={setSelection}
+                      selection={selectionOp}
+                      setSelection={setSelectionOp}
                     />
                   </SplitterPanel>
 
@@ -1831,8 +2087,8 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                       defaultCols={defaultColsOpEqp}
                       gridData={gridDataOpEqp}
                       setGridData={setGridDataOpEqp}
-                      cols={colsOperationEqp}
-                      setCols={setColsOperationEqp}
+                      cols={colsOpEqp}
+                      setCols={setColsOpEqp}
                       numRows={numRowsOpEqp}
                       setNumRows={setNumRowsOpEqp}
                       selection={selectionOpEqp}
@@ -1845,23 +2101,73 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
             {current === '3' && (
               <div className="bg-slate-50  h-[calc(100vh-180px)]">
-                <OperationStepTable
-                  setSelection={setSelectionOperationStep}
-                  selection={selectionOperationStep}
-                  setEditedRows={setEditedRowsOpStep}
-                  setGridData={setGridDataOpStep}
-                  gridData={gridDataOpStep}
-                  numRows={numRowsOpStep}
-                  handleRowAppend={handleRowAppendOpStep}
-                  setCols={setColsOpStep}
-                  cols={colsOpStep}
-                  defaultCols={defaultColsOpStep}
-                  canEdit={canEdit}
-                  controllers={controllers}
-                  loadingBarRef={loadingBarRef}
-                  setIsAPISuccess={setIsAPISuccess}
-                  isAPISuccess={isAPISuccess}
-                />
+                <Splitter className="w-full h-full ">
+                  <SplitterPanel size={50} minSize={10}>
+                    <EventTable
+                      defaultCols={defaultColsEvent}
+                      gridData={gridDataEvent}
+                      setGridData={setGridDataEvent}
+                      cols={colsEvent}
+                      setCols={setColsEvent}
+                      numRows={numRowsEvent}
+                      setNumRows={setNumRowsEvent}
+                      onVisibleRegionChanged={onVisibleRegionChanged}
+                      onCellClicked={onCellEventClicked}
+                      selection={selectionEvent}
+                      setSelection={setSelectionEvent}
+                    />
+                  </SplitterPanel>
+
+                  <SplitterPanel size={50} minSize={10}>
+                    <EquipmentEventTable
+                      defaultCols={defaultColsEqpEvent}
+                      gridData={gridDataEqpEvent}
+                      setGridData={setGridDataEqpEvent}
+                      cols={colsEqpEvent}
+                      setCols={setColsEqpEvent}
+                      numRows={numRowsEqpEvent}
+                      setNumRows={setNumRowsEqpEvent}
+                      selection={selectionEqpEvent}
+                      setSelection={setSelectionEqpEvent}
+                    />
+                  </SplitterPanel>
+                </Splitter>
+              </div>
+            )}
+
+            {current === '4' && (
+              <div className="bg-slate-50  h-[calc(100vh-180px)]">
+                <Splitter className="w-full h-full ">
+                  <SplitterPanel size={50} minSize={10}>
+                    <ToolTable
+                      defaultCols={defaultColsTool}
+                      gridData={gridDataTool}
+                      setGridData={setGridDataTool}
+                      cols={colsTool}
+                      setCols={setColsTool}
+                      numRows={numRowsTool}
+                      setNumRows={setNumRowsTool}
+                      onVisibleRegionChanged={onVisibleRegionChanged}
+                      onCellClicked={onCellEventClicked}
+                      selection={selectionTool}
+                      setSelection={setSelectionTool}
+                    />
+                  </SplitterPanel>
+
+                  <SplitterPanel size={50} minSize={10}>
+                    <EquipmentToolTable
+                      defaultCols={defaultColsEqpTool}
+                      gridData={gridDataEqpTool}
+                      setGridData={setGridDataEqpTool}
+                      cols={colsEqpTool}
+                      setCols={setColsEqpTool}
+                      numRows={numRowsEqpTool}
+                      setNumRows={setNumRowsEqpTool}
+                      selection={selectionEqpTool}
+                      setSelection={setSelectionEqpTool}
+                    />
+                  </SplitterPanel>
+                </Splitter>
               </div>
             )}
             {current === '5' && (
