@@ -15,7 +15,12 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
   };
 
   const onChangeUnitQty = (value) => {
-    console.log(`selected ${value}`);
+    if (value !== undefined) {
+      const unit = dataUnit.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value,
+      });
+    }
   }
 
   return (

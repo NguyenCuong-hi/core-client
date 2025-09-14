@@ -39,12 +39,10 @@ import Splitter from 'antd/es/splitter/Splitter';
 import { SplitterPanel } from 'primereact/splitter';
 
 import { SearchRouteTree } from 'services/RouteSetManage/SearchRouteTree';
-import { getRouteById } from 'services/RouteSetManage/GetRouteById';
 import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
 import { CreateRouteOperationByService } from 'services/RouteSetManage/CreateRouteOperationBy';
 import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
 import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId';
-import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
 import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
 import OperationTable from './table/EquipmentTable';
 import OperationInfoQuery from './query/OperationInfoQuery';
@@ -58,6 +56,8 @@ import EquipmentTable from './table/EquipmentTable';
 import { createOperationBy } from 'services/OperationManage/CreateRouteByService';
 import { updateIndexNo } from 'utils/sheets/updateIndexNo';
 import { getOperationById } from 'services/OperationManage/GetOperationById';
+import { searchEquipmentBy } from 'services/EquipmentManage/SearchBy';
+import { deleteOperationById } from 'services/EquipmentManage/DeleteOperationById';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -721,12 +721,13 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const fieldsToTrack = ['IdxNo'];
   const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
 
-  const [routeId, setRouteId] = useState(null);
-  const [routeCode, setRouteCode] = useState(null);
-  const [routeName, setRouteName] = useState(null);
+  const [operationId, setOperationId] = useState(null);
+  const [operationCode, setOperationCode] = useState(null);
+  const [operationName, setOperationName] = useState(null);
 
   //  Data Input
   const [formBasic] = Form.useForm();
+  const [formInfo] = Form.useForm();
 
   const dataCategoryValue = [
     { MinorName: '8080', Value: 1 },
@@ -740,16 +741,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const onClickSave = useCallback(async () => {
     const requiredColumns = ['configProdName'];
 
-    const columnEqpOp = [
-      'id',
-      'operationId',
-      'operationCode',
-      'operationName',
-      'eqpCode',
-      'eqpName',
-      'description',
-      'status',
-    ];
+    const columnEqpOp = ['id', 'operationId', 'operationCode', 'operationName', 'eqpCode', 'eqpName', 'description', 'status'];
 
     const columnOpStep = [
       'id',
@@ -773,7 +765,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       'IdxNo',
       'id',
       'configProdNameId',
-      'routeId',
+      'operationId',
       'eventId',
       'operationId',
       'promptId',
@@ -829,38 +821,38 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       const dataOpEqpA = filterAndSelectColumns(gridDataOpEqp, columnEqpOp, 'A').map((row) => ({
         ...row,
         Status: 'A',
-        id: row.id || '',
+        id: row.id || ''
       }));
 
       const dataOpEqpU = filterAndSelectColumns(gridDataOpEqp, columnEqpOp, 'U').map((row) => ({
         ...row,
         Status: 'U',
-        id: row.id || '',
+        id: row.id || ''
       }));
 
       const dataOpStepA = filterAndSelectColumns(gridDataOpStep, columnOpStep, 'A').map((row) => ({
         ...row,
         Status: 'A',
-        id: row.id || '',
+        id: row.id || ''
       }));
 
       const dataOpStepU = filterAndSelectColumns(gridDataOpStep, columnOpStep, 'U').map((row) => ({
         ...row,
         Status: 'U',
-        id: row.id || '',
+        id: row.id || ''
       }));
 
       const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
         ...row,
         Status: 'A',
-        id: row.id || '',
+        id: row.id || ''
       }));
 
       const dataCategoryU = filterAndSelectColumns(gridDataCategory, columnsCategory, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        routeId: routeId || ''
+        operationId: operationId || ''
       }));
 
       const dataOpEqp = [...dataOpEqpA, ...dataOpEqpU];
@@ -885,34 +877,22 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
             description: 'Cập nhật thành công!'
           });
 
-          const {
-            opEqpList,
-            opResDto,
-            opStepList,
-            promptCateList,
+          const { opEqpList, opResDto, opStepList, promptCateList } = result?.data;
 
-          } = result?.data
-
-          const dataOp = [
-            opResDto,
-          ]
+          const dataOp = [opResDto];
           setIsSent(false);
           setEditedRows([]);
           console.log('dataOp', dataOp);
 
           setGridData((prev) => {
-              const updated = prev.map((item) => {
-                const found = dataOp.find(
-                  (x) => x?.IDX_NO === item?.IdxNo,
-                )
-                console.log('found', found);
+            const updated = prev.map((item) => {
+              const found = dataOp.find((x) => x?.IDX_NO === item?.IdxNo);
+              console.log('found', found);
 
-                return found
-                  ? { ...item, Status: '', IdSeq: found?.IdSeq, }
-                  : item
-              })
-              return updateIndexNo(updated)
-            })
+              return found ? { ...item, Status: '', IdSeq: found?.IdSeq } : item;
+            });
+            return updateIndexNo(updated);
+          });
         } else {
           setIsSent(false);
           notify({
@@ -926,7 +906,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         setIsSent(false);
         message.error(error.message || 'Có lỗi xảy ra khi lưu dữ liệu');
       } finally {
-        onFetchRoute();
+        onFetchOperation();
 
         if (loadingBarRef.current) {
           loadingBarRef.current.complete();
@@ -935,7 +915,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
-  }, [formBasic, gridDataCategory, gridDataOpProperties, isAPISuccess, routeId, gridDataOpEqp, gridDataOpStep]);
+  }, [formBasic, gridDataCategory, gridDataOpProperties, isAPISuccess, operationId, gridDataOpEqp, gridDataOpStep]);
 
   const onVisibleRegionChanged = useCallback(
     ({ y, height }) => {
@@ -1001,7 +981,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       const fetchedData = response.data || [];
 
       const dataTree = fetchedData.map((item) => ({
-        title: item.route.routeCode,
+        title: item.route.operationCode,
         value: item.route.id,
         key: item.route.id,
         icon: <ClusterOutlined />,
@@ -1085,6 +1065,60 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   }, [gridData, numRows, keyword, pageIndex, pageSize, isAPISuccess]);
 
+    const onFetchEquipment = useCallback(async () => {
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onFetchEquipment) {
+      controllers.current.onFetchEquipment.abort();
+      controllers.current.onFetchEquipment = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onFetchEquipment = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      const data = {
+        Keyword: keyword,
+        PageIndex: pageIndex,
+        PageSize: pageSize
+      };
+
+      const response = await searchEquipmentBy(data);
+      const fetchedData = response.data || [];
+
+      setGridDataEqp(fetchedData);
+      setNumRowsEqp(fetchedData.length);
+    } catch (error) {
+      setGridDataEqp([]);
+      setNumRowsEqp(0);
+      setIsAPISuccess(true);
+      notify({
+        type: 'false',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchOperation = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, [gridDataEqp, numRowsEqp, keyword, pageIndex, pageSize, isAPISuccess]);
+
   const getSelectedRowsData = () => {
     const selectedRows = selection.rows.items;
 
@@ -1109,7 +1143,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     );
   };
 
-  const onCellRouteClicked = useCallback(
+  const onCellOperationClicked = useCallback(
     (cell, event) => {
       let rowIndex;
 
@@ -1128,16 +1162,8 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
       if (cell[0] === -1) {
         if (rowIndex >= 0 && rowIndex < gridData.length) {
-          const isSelected = selection.rows.hasIndex(rowIndex);
-
-          let newSelected;
-          if (isSelected) {
-            newSelected = selection.rows.remove(rowIndex);
-            setOperationSelected(getSelectedRowsData());
-          } else {
-            newSelected = selection.rows.add(rowIndex);
-            setOperationSelected([]);
-          }
+          const rowData = gridData[rowIndex];
+          fetchDataOperationById(rowData.id);
         }
       }
     },
@@ -1179,14 +1205,8 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     [gridDataOpProperties, getSelectedRowsRouteDetailsData, routeOpSelected]
   );
 
-  const onTreeClicked = useCallback((selectedKeys, info) => {
-    if (info.node.value) {
-      fetchDataOperationById(info.node.value);
-    }
-  }, []);
-
   const fetchDataOperationById = useCallback(
-    async (routeId) => {
+    async (id) => {
       if (!isAPISuccess) {
         message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
         return;
@@ -1211,30 +1231,67 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       setIsAPISuccess(false);
 
       try {
-        const response = await getOperationById(routeId);
+        const response = await getOperationById(id);
         const fetchedData = response.data || [];
 
+        const { opEqpList, opResDto, opStepList, promptCateList } = fetchedData;
+
         formBasic.setFieldsValue({
-          operationName: fetchedData.route.operationName,
-          description: fetchedData.route.description,
-          operationCode: fetchedData.route.operationCode
+          operationName: opResDto.operationName,
+          description: opResDto.description,
+          lossTable: opResDto.operationCode,
+          successTable: opResDto.operationCode,
         });
 
-        setRouteId(fetchedData.route.id);
-        setRouteCode(fetchedData.route.routeCode);
-        setRouteName(fetchedData.route.routeName);
+        formInfo.setFieldsValue({
+          unitQty: opResDto.operationName,
+          step: opResDto.description,
+        });
 
-        setGridDataOpProperties(fetchedData.routeOperation || []);
-        setNumRowsOpProperties(fetchedData.routeOperation?.length || 0);
+        const {
+          isBatchProcess,
+          isMultiEquipment,
+          isRequestQA,
+          isChangeRoute,
+          isStock,
+          isCheckMaterial,
+          isUseStep,
+          lossTable,
+          successTable
+        } = opResDto;
 
-        setGridDataOpEqp(fetchedData.reworkOperation || []);
-        setNumRowsOpEqp(fetchedData.reworkOperation?.length || 0);
+        const flags = {
+          isBatchProcess,
+          isMultiEquipment,
+          isRequestQA,
+          isChangeRoute,
+          isStock,
+          isCheckMaterial,
+          isUseStep,
+          lossTable,
+          successTable
+        };
 
-        setGridDataOpStep(fetchedData.indicatesOperation || []);
-        setNumRowsOpStep(fetchedData.indicatesOperation?.length || 0);
+        const arr = Object.entries(flags).map(([key, value]) => ({
+          opProperties: key,
+          isUse: value
+        }));
 
-        setGridDataCategory(fetchedData.promptCategoryResDto || []);
-        setNumRowsCategory(fetchedData.promptCategoryResDto?.length || 0);
+        setOperationId(opResDto.id);
+        setOperationCode(opResDto.operationCode);
+        setOperationName(opResDto.operationName);
+
+        setGridDataOpProperties(arr || []);
+        setNumRowsOpProperties(arr?.length || 0);
+
+        setGridDataOpEqp(opEqpList || []);
+        setNumRowsOpEqp(opEqpList?.length || 0);
+
+        setGridDataOpStep(opStepList || []);
+        setNumRowsOpStep(opStepList?.length || 0);
+
+        setGridDataCategory(promptCateList || []);
+        setNumRowsCategory(promptCateList?.length || 0);
       } catch (error) {
         console.log(error);
         setGridDataOpProperties([]);
@@ -1260,12 +1317,11 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     [
-      routeTree,
-      routeTreeSelected,
       formBasic,
-      routeId,
-      routeCode,
-      routeName,
+      formInfo,
+      operationId,
+      operationCode,
+      operationName,
       gridDataOpProperties,
       gridDataOpEqp,
       gridDataOpStep,
@@ -1278,8 +1334,6 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       numRowsCategory
     ]
   );
-
-  
 
   const onCellCategoryClicked = useCallback(
     (cell, event) => {
@@ -1342,10 +1396,18 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
     try {
       const [unitData, stepData, lostData, successData, inParameterData, outParameterData, reworkParameterData, bonusParameterData] =
-        await Promise.all([SearchCategory(1, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword)]);
+        await Promise.all([
+          SearchCategory(1, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword),
+          SearchCategory(2, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword),
+        
+        ],
+          
+      );
+
+      console.log(stepData)
 
       setDataUnit(unitData.data);
-      // setDataStep(stepData.data.data.content);
+      setDataStep(stepData.data);
       // setDataLossTable(lostData.data.data.content);
       // setDataSuccessTable(successData.data.data.content);
       // setInParameterData(inParameterData.data.data.content);
@@ -1353,6 +1415,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       // setDataReworkTable(reworkParameterData.data.data.content);
       // setDataBonusTable(bonusParameterData.data.data.content);
     } catch (error) {
+      console.log(error);
       setDataUnit([]);
       setDataStep([]);
       setDataLossTable([]);
@@ -1392,6 +1455,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
   useEffect(() => {
     onFetchOperation();
+    onFetchEquipment();
   }, [selectedData]);
 
   useEffect(() => {
@@ -1406,9 +1470,9 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
     try {
       const dto = operationSelected.map((item) => ({
-        routeId: routeId,
-        routeCode: routeCode,
-        routeName: routeName,
+        operationId: operationId,
+        operationCode: operationCode,
+        operationName: operationName,
 
         operationId: item.id,
         operationCode: item.operationCode,
@@ -1436,8 +1500,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       message.error('Có lỗi xảy ra khi thêm dòng mới');
       return;
     } finally {
-      onFetchRoute();
-      fetchDataOperationById(routeId);
+      fetchDataOperationById(operationId);
     }
 
     setGridDataOpProperties((prevGridData) => {
@@ -1446,7 +1509,9 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       let addedCount = 0;
 
       operationSelected.forEach((newItem) => {
-        const existingIndex = updatedGridData.findIndex((item) => item.id === newItem.routeId || item.routeCode === newItem.routeCode);
+        const existingIndex = updatedGridData.findIndex(
+          (item) => item.id === newItem.operationId || item.operationCode === newItem.operationCode
+        );
 
         if (existingIndex !== -1) {
           updatedGridData[existingIndex] = {
@@ -1466,7 +1531,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
       return updatedGridData;
     });
-  }, [operationSelected, routeId, routeCode, routeName]);
+  }, [operationSelected, operationId, operationCode, operationName]);
 
   const removeRow = useCallback(
     async (rowIndex) => {
@@ -1502,14 +1567,14 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         if (routeOpSelected.length > 0) {
           const ids = routeOpSelected.map((item) => item.id).filter((id) => id !== undefined);
           response = await DeleteRouteOpBy(ids);
-          const Ops = await getRouteOpByRouteId(routeId);
+          const Ops = await getRouteOpByRouteId(operationId);
           setGridDataOpProperties(Ops.data);
           setNumRowsOpProperties(Ops.data.length);
         }
         if (categorySelected.length > 0) {
           const idCategory = categorySelected.map((item) => item.id).filter((id) => id !== undefined);
           response = await DeleteCategoryBy(idCategory);
-          const category = await getCategoryByRouteId(routeId);
+          const category = await getCategoryByRouteId(operationId);
           setGridDataCategory(category.data);
           setNumRowsCategory(category.data.length);
         }
@@ -1588,7 +1653,9 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 
   const onClickDelete = useCallback(async () => {
-    if (!selectedData || !selectedData.data || !selectedData.data.id) {
+
+    console.log('operationId', operationId);
+    if (!operationId) {
       message.warning('Vui lòng chọn dữ liệu để xóa');
       return;
     }
@@ -1618,9 +1685,9 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
     try {
       let response = {};
-      if (selectedData.length > 0) {
-        const ids = selectedData.map((item) => item.id).filter((id) => id !== undefined);
-        response = await DeleteRouteOpBy(ids);
+      if (operationId) {
+
+        response = await deleteOperationById(operationId);
       }
 
       if (!response.success) {
@@ -1657,12 +1724,14 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       });
     } finally {
       setIsAPISuccess(true);
+    
       controllers.current.onClickDelete = null;
+      onFetchOperation();
       if (loadingBarRef.current) {
         loadingBarRef.current.complete();
       }
     }
-  }, [selectedData, gridDataOpProperties, gridDataCategory, formBasic, isAPISuccess]);
+  }, [operationId, gridDataOpProperties, gridDataCategory, formBasic, isAPISuccess]);
 
   const onSearch = (value) => {
     console.log('search:', value);
@@ -1709,7 +1778,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                 numRows={numRows}
                 setNumRows={setNumRows}
                 onVisibleRegionChanged={onVisibleRegionChanged}
-                onCellRouteClicked={onCellRouteClicked}
+                onCellClicked={onCellOperationClicked}
                 selection={selection}
                 setSelection={setSelection}
               />
@@ -1738,7 +1807,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
             >
               <Menu.Item key="1">
                 <span className="flex items-center gap-1 text-sm font-bold">
-                  <ApartmentOutlined style={{ fontSize: 12,  }} />
+                  <ApartmentOutlined style={{ fontSize: 12 }} />
                   {t('Thông tin')}
                 </span>
               </Menu.Item>
@@ -1763,8 +1832,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                   {t('Danh mục')}
                 </span>
               </Menu.Item>
-              
-              
+
               {current === '2' && (
                 <Menu.Item
                   key="buttons"
@@ -1797,7 +1865,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                 <Splitter className="w-full h-full ">
                   <SplitterPanel size={50} minSize={10}>
                     <OperationManageInfo
-                      formBasic={formBasic}
+                      formBasic={formInfo}
                       dataUnit={dataUnit}
                       dataStep={dataStep}
                       dataLossTable={dataLossTable}
@@ -1835,7 +1903,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                       numRows={numRowsEqp}
                       setNumRows={setNumRowsEqp}
                       onVisibleRegionChanged={onVisibleRegionChanged}
-                      onCellRouteClicked={onCellRouteClicked}
+                      onCellOperationClicked={onCellOperationClicked}
                       selection={selection}
                       setSelection={setSelection}
                     />
