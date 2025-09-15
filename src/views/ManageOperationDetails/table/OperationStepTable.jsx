@@ -21,9 +21,10 @@ import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
 import { SearchRouteBy } from 'services/ModelManage/SearchRouteBy';
 import { CellsOperation } from 'utils/sheets/cell-custom/cellsOperation';
-import { CellsRoute } from 'utils/sheets/cell-custom/cellsRoute';
 import { reorderColumns } from 'utils/sheets/reorderColumns';
 import { useNotify } from 'utils/hooks/onNotify';
+import { CellsCodeSys } from 'utils/sheets/cell-custom/cellsCodeSys';
+import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
 
 function OperationStepTable({
   setSelection,
@@ -65,11 +66,15 @@ function OperationStepTable({
   const [pageSize, setPageSize] = useState(10);
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_ROUTE_OPERATION_REWORK', []);
+    return loadFromLocalStorageSheet('H_ROUTE_OP_STEP', []);
   });
 
   const [dataRoute, setDataRoute] = useState([]);
   const [dataOperation, setDataOperation] = useState([]);
+  const [dataLossName, setDataLossName] = useState([]);
+  const [dataBonusName, setDataBonusName] = useState([]);
+  const [dataReworkName, setDataReworkName] = useState([]);
+  const [dataRepairName, setDataRepairName] = useState([]);
 
   const [typeSearch, setTypeSearch] = useState('');
   const [keySearchText, setKeySearchText] = useState('');
@@ -82,9 +87,10 @@ function OperationStepTable({
 
   const columnNames = [
     'operationName',
-    'routerNameRework',
-    'operationReworkName',
-    'routeReturnName',
+    'lossName',
+    'bonusName',
+    'reworkName',
+    'repairName',
 
   ]
   const highlightRegions = columnNames.map((columnName) => ({
@@ -151,9 +157,24 @@ function OperationStepTable({
         PageIndex: pageIndex,
         PageSize: pageSize
       };
-      const [dataOperation, dataRoute] = await Promise.all([SearchOperationBy(searchParam, signal), SearchRouteBy(searchParam, signal)]);
+      const [
+        dataOperation, 
+        dataLossName, 
+        dataBonusName, 
+        dataReworkName, 
+        dataRepairName] = await Promise.all([
+        SearchOperationBy(searchParam, signal), 
+        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
+        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
+        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
+        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
+      
+      ]);
       setDataOperation(dataOperation.data);
-      setDataRoute(dataRoute.data);
+      setDataLossName(dataLossName.data);
+      setDataBonusName(dataBonusName.data);
+      setDataReworkName(dataReworkName.data);
+      setDataRepairName(dataRepairName.data);
     } catch (error) {
       setRouteTree([]);
       setIsAPISuccess(true);
@@ -164,7 +185,7 @@ function OperationStepTable({
       });
     } finally {
       setIsAPISuccess(true);
-      controllers.current.onFetchRoute = null;
+      controllers.current.onFetchCellData = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.complete();
       }
@@ -188,22 +209,28 @@ function OperationStepTable({
           allowedValues: dataOperation,
           setCacheData: setDataOperation
         },
-        routerNameRework: {
-          kind: 'cells-route',
-          allowedValues: dataRoute,
-          setCacheData: setDataRoute
+        lossName: {
+          kind: 'cells-code-sys',
+          allowedValues: dataLossName,
+          setCacheData: setDataLossName
         },
 
-        operationReworkName: {
-          kind: 'cells-operation',
-          allowedValues: dataOperation,
-          setCacheData: setDataOperation
+        bonusName: {
+          kind: 'cells-code-sys',
+          allowedValues: dataBonusName,
+          setCacheData: setDataBonusName
         },
-        routeReturnName: {
-          kind: 'cells-route',
-          allowedValues: dataRoute,
-          setCacheData: setDataRoute
-        }
+        reworkName: {
+          kind: 'cells-code-sys',
+          allowedValues: dataReworkName,
+          setCacheData: setDataReworkName
+        },
+        repairName: {
+          kind: 'cells-code-sys',
+          allowedValues: dataRepairName,
+          setCacheData: setDataRepairName
+        },
+
       };
 
       if (cellConfig[columnKey]) {
@@ -216,7 +243,7 @@ function OperationStepTable({
             allowedValues: cellConfig[columnKey].allowedValues,
             value: value,
             boundingBox: boundingBox,
-            setCacheData: setDataOperation
+            setCacheData: cellConfig[columnKey].setCacheData
           },
           displayData: String(value),
           readonly: column?.readonly || false,
@@ -234,7 +261,7 @@ function OperationStepTable({
         hasMenu: column?.hasMenu || false
       };
     },
-    [gridData, cols, dataOperation, dataRoute]
+    [gridData, cols, dataOperation, dataLossName, dataBonusName, dataReworkName, dataRepairName]
   );
 
   const onKeyUp = useCallback(
@@ -300,7 +327,7 @@ function OperationStepTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_ROUTE_OPERATION_REWORK', newHidden);
+      saveToLocalStorageSheet('H_ROUTE_OP_STEP', newHidden);
       return newHidden;
     });
   };
@@ -309,7 +336,7 @@ function OperationStepTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', uniqueCols);
+      saveToLocalStorageSheet('S_ROUTE_OP_STEP', uniqueCols);
       return uniqueCols;
     });
   };
@@ -321,7 +348,7 @@ function OperationStepTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', uniqueCols);
+        saveToLocalStorageSheet('S_ROUTE_OP_STEP', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -332,8 +359,8 @@ function OperationStepTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_ROUTE_OPERATION_REWORK');
-    localStorage.removeItem('H_ROUTE_OPERATION_REWORK');
+    localStorage.removeItem('S_ROUTE_OP_STEP');
+    localStorage.removeItem('H_ROUTE_OP_STEP');
     setShowMenu(null);
   };
 
@@ -342,14 +369,14 @@ function OperationStepTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', updatedCols);
+      saveToLocalStorageSheet('S_ROUTE_OP_STEP', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_ROUTE_OPERATION_REWORK', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_ROUTE_OP_STEP', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -366,23 +393,23 @@ function OperationStepTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', newCols);
+        saveToLocalStorageSheet('S_ROUTE_OP_STEP', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_ROUTE_OPERATION_REWORK', newHidden);
+        saveToLocalStorageSheet('H_ROUTE_OP_STEP', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_ROUTE_OPERATION_REWORK', newCols);
+        saveToLocalStorageSheet('S_ROUTE_OP_STEP', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_ROUTE_OPERATION_REWORK', newHidden);
+        saveToLocalStorageSheet('H_ROUTE_OP_STEP', newHidden);
         return newHidden;
       });
     }
@@ -629,7 +656,7 @@ function OperationStepTable({
               onCellEdited={onCellEdited}
               onCellClicked={onCellClicked}
               onColumnResize={onColumnResize}
-              customRenderers={[DropdownRenderer, CellsOperation, CellsRoute]}
+              customRenderers={[DropdownRenderer, CellsOperation, CellsCodeSys]}
               highlightRegions={highlightRegions}
               // onHeaderMenuClick={onHeaderMenuClick}
               // onColumnMoved={onColumnMoved}

@@ -3,11 +3,11 @@ import { HOST_API_SERVER } from 'services/config';
 import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 
-export const CreateRouteOperationByService = async (dto) => {
+export const createEqpOpBy = async (dto) => {
   try {
     const token = accessToken()
     const response = await axios.post(
-      `${HOST_API_SERVER}/mes-admin/api/v1/route-operation/create-list`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/operation-eqp/create-list`,
       dto
         
       ,

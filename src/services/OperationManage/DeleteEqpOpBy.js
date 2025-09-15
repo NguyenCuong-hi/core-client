@@ -3,12 +3,13 @@ import { HOST_API_SERVER } from 'services/config';
 import { accessToken } from 'utils/cookies/CookiesUtils';
 import qs from 'qs';
 
-export const DeleteRouteOpBy = async (id) => {
+
+export const deleteEqpOpBy = async (id) => {
 
   try {
     const token = accessToken()
     const response = await axios.delete(
-      `${HOST_API_SERVER}/mes-admin/api/v1/route-operation/ids`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/operation-eqp/ids`,
       {
         params: { id },
         paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),

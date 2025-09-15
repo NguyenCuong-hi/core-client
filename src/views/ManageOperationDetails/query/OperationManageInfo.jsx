@@ -1,27 +1,88 @@
-import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
+import { Col, Form, Row, Select } from 'antd';
 import React from 'react';
 
-const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dataSuccessTable, dataReworkTable,  }) => {
-  const onChangeDataStep = (value) => {
-    console.log(`selected ${value}`);
-  };
-
+const OperationManageInfo = ({
+  formBasic,
+  dataUnit,
+  dataStep,
+  dataLossTable,
+  dataSuccessTable,
+  dataReworkTable,
+  dataInParam,
+  dataOutParam,
+  dataBonusTable
+}) => {
   const onChangeSuccessTable = (value) => {
-    console.log(`selected ${value}`);
-  };
-
-  const onChangeLossTable = (value) => {
-    console.log(`selected ${value}`);
+    if (value !== undefined) {
+      const unit = dataSuccessTable.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
   };
 
   const onChangeUnitQty = (value) => {
     if (value !== undefined) {
       const unit = dataUnit.find((x) => x.value === value);
       formBasic.setFieldsValue({
-        unitQty: unit.value,
+        unitQty: unit.value
       });
     }
-  }
+  };
+
+  const onChangeStep = (value) => {
+    if (value !== undefined) {
+      const unit = dataStep.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
+  };
+
+  const onChangeLossTable = (value) => {
+    if (value !== undefined) {
+      const unit = dataLossTable.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
+  };
+
+  const onChangeInParam = (value) => {
+    if (value !== undefined) {
+      const unit = dataInParam.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
+  };
+
+  const onChangeOutParam = (value) => {
+    if (value !== undefined) {
+      const unit = dataOutParam.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
+  };
+
+  const onChangeReworkParam = (value) => {
+    if (value !== undefined) {
+      const unit = dataReworkTable.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
+  };
+
+  const onChangeBonusParam = (value) => {
+    if (value !== undefined) {
+      const unit = dataBonusTable.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
+  };
 
   return (
     <div className="bg-slate-50 ">
@@ -35,14 +96,7 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
               wrapperCol={{ style: { padding: 0 } }}
               name={'unitQty'}
             >
-              <Select
-                showSearch
-                placeholder="Đơn vị"
-                optionFilterProp="label"
-                onChange={onChangeUnitQty}
-                allowClear
-                options={dataUnit}
-              />
+              <Select showSearch placeholder="Đơn vị" optionFilterProp="label" onChange={onChangeUnitQty} allowClear options={dataUnit} />
             </Form.Item>
           </Col>
 
@@ -54,14 +108,7 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
               wrapperCol={{ style: { padding: 0 } }}
               name={'step'}
             >
-              <Select
-                showSearch
-                placeholder="Trạng thái"
-                optionFilterProp="label"
-                onChange={onChangeDataStep}
-                allowClear
-                options={dataStep}
-              />
+              <Select showSearch placeholder="Thao tác" optionFilterProp="label" onChange={onChangeStep} allowClear options={dataStep} />
             </Form.Item>
           </Col>
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
@@ -108,13 +155,13 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'successTable'}
+              name={'inParam'}
             >
               <Select
                 showSearch
                 placeholder="Tham số đầu vào"
                 optionFilterProp="label"
-                onChange={onChangeSuccessTable}
+                onChange={onChangeInParam}
                 allowClear
                 options={dataSuccessTable}
               />
@@ -127,13 +174,13 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'successTable'}
+              name={'outParam'}
             >
               <Select
                 showSearch
                 placeholder="Tham số đầu ra"
                 optionFilterProp="label"
-                onChange={onChangeSuccessTable}
+                onChange={onChangeOutParam}
                 allowClear
                 options={dataSuccessTable}
               />
@@ -146,13 +193,13 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'successTable'}
+              name={'reworkParam'}
             >
               <Select
                 showSearch
                 placeholder="Tham số thao tác lại"
                 optionFilterProp="label"
-                onChange={onChangeSuccessTable}
+                onChange={onChangeReworkParam}
                 allowClear
                 options={dataSuccessTable}
               />
@@ -165,13 +212,13 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'successTable'}
+              name={'bonusParam'}
             >
               <Select
                 showSearch
                 placeholder="Tham số thao bổ sung"
                 optionFilterProp="label"
-                onChange={onChangeSuccessTable}
+                onChange={onChangeBonusParam}
                 allowClear
                 options={dataSuccessTable}
               />
