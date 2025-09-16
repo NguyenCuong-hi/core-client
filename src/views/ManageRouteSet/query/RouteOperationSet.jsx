@@ -1,7 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
-import RouteTable from '../table/OperationTable';
-import ModelRouteDetailsTable from '../table/RouteOperationDetailsTable';
 import OperationTable from '../table/OperationTable';
 import RouteOperationDetailsTable from '../table/RouteOperationDetailsTable';
 
@@ -32,7 +30,7 @@ const RouteOperationSet = ({
 
   
   return (
-      <div className="bg-slate-50  h-[calc(100vh-189px)]">
+      <div className="bg-slate-50  h-[calc(100vh-180px)]">
         <Splitter className="w-full h-full ">
           <SplitterPanel size={50} minSize={10}>
             <OperationTable

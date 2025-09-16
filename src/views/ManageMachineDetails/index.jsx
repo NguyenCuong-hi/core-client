@@ -1,208 +1,142 @@
-import React, { useCallback, useMemo, useState } from 'react';
-
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // project import
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
-import { GridColumnIcon } from '@glideapps/glide-data-grid';
+import { CompactSelection, GridColumnIcon } from '@glideapps/glide-data-grid';
 import { useTranslation } from 'react-i18next';
 import AuDrAction from 'component/Actions/AuDrAction';
-import { Form } from 'antd';
-import RouteParameterQuery from './query/OperationParameterQ';
-import RouteOperationQuery from './query/RouteOperationQ';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
-import MachineInfomationQuery from './query/MachineInfomation';
-import MachineReworkQuery from './query/RouteOperationReworkQ';
-import EquipmentEventsQuery from './query/EquipmentEvents';
-import { useNotify } from 'utils/hooks/onNotify';
+import { Button, Form, Menu, message, Spin, TreeSelect } from 'antd';
+import {
+  ApartmentOutlined,
+  ApiOutlined,
+  AppstoreAddOutlined,
+  CaretDownFilled,
+  CaretUpFilled,
+  ClusterOutlined,
+  DashboardOutlined,
+  LoadingOutlined,
+  MinusCircleFilled,
+  PlusCircleFilled,
+  SearchOutlined,
+  SyncOutlined
+} from '@ant-design/icons';
 import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
+import { useNotify } from 'utils/hooks/onNotify';
+import { useSelector } from 'react-redux';
+import useDynamicFilter from 'utils/hooks/useDynamicFilter';
+import { SearchRouteBy } from 'services/ModelManage/SearchRouteBy';
+import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
 
-// ==============================||  PAGE ||============================== //
+import { DeleteCategoryBy } from 'services/ModelManage/DeleteCategoryBy';
+import Splitter from 'antd/es/splitter/Splitter';
+import { SplitterPanel } from 'primereact/splitter';
+
+import { SearchRouteTree } from 'services/RouteSetManage/SearchRouteTree';
+import { getRouteById } from 'services/RouteSetManage/GetRouteById';
+import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
+import { CreateRouteOperationByService } from 'services/RouteSetManage/CreateRouteOperationBy';
+import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
+import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId';
+import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
+import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
+import OperationPropertiesTable from './table/OperationPropertiesTable';
+import CategoryTable from 'component/Sheets/CategoryTable';
+import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
+import EquipmentTable from './table/EquipmentTable';
+import MachineInfoQuery from './query/MachineInfoQuery';
+import MachineManageInfo from './query/MachineManageInfo';
+import OperationTable from 'views/ManageRouteSet/table/OperationTable';
+import OperationEquipTable from 'views/ManageOperationDetails/table/OperationEquipTable';
+import EventTable from 'views/ManageMachineEvent/table/EventTable';
+import EquipmentEventTable from './table/EquipmentEventTable';
+import ToolTable from 'views/ManageMachineTool/table/ToolTable';
+import EquipmentToolTable from './table/EquipmentEventTable';
+
+// ==============================|| MODEL PRODUCT PAGE ||============================== //
 
 const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const { t } = useTranslation();
   const { notify, contextHolder } = useNotify();
-  const { spinning, percent, showLoader } = useFullscreenLoading();
+  const { spinning, percent, showLoader, hideLoader } = useFullscreenLoading();
+  const controllers = useRef({});
+  const selectedData = useSelector((state) => state.selectedRow);
+  const [isAPISuccess, setIsAPISuccess] = useState(true);
+  const loadingBarRef = useRef(null);
+  const [lastLoadedRow, setLastLoadedRow] = useState(0);
+  const [keyword, setKeyword] = useState('');
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const defaultColsOp = useMemo(() => [
-    {
-      title: '',
-      id: 'Status',
-      kind: 'Text',
-      readonly: true,
-      width: 50,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderLookup,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('ID'),
-      id: 'id',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã công đoạn'),
-      id: 'OperationCode',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Tên công đoạn'),
-      id: 'OperationName',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mô tả'),
-      id: 'Description',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
-  ]);
+  const [isMinusClicked, setIsMinusClicked] = useState(false);
+  const [lastClickedCell, setLastClickedCell] = useState(null);
+  const [clickedRowData, setClickedRowData] = useState(null);
 
-  const [colsOp, setColsOp] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_OP_LIST',
-      defaultColsOp.filter((col) => col.visible)
-    )
-  );
-  const [gridDataOp, setGridDataOp] = useState([]);
-  const [numRowsOp, setNumRowsOp] = useState(0);
+  const [selection, setSelection] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
 
-  const defaultColsRouteOp = useMemo(() => [
-    {
-      title: '',
-      id: 'Status',
-      kind: 'Text',
-      readonly: true,
-      width: 50,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderLookup,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('RouteId'),
-      id: 'RouteId',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Id'),
-      id: 'Id',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã công đoạn'),
-      id: 'OperationCode',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Tên công đoạn'),
-      id: 'OperationName',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mô tả'),
-      id: 'Description',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Trạng thái'),
-      id: 'Status',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
-  ]);
+  const [selectionCategory, setSelectionCategory] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
 
-  const [colsRouteOp, setColsRouteOp] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_ROUTE_OP_LIST',
-      defaultColsRouteOp.filter((col) => col.visible)
-    )
-  );
-  const [gridDataRouteOp, setGridDataRouteOp] = useState([]);
-  const [numRowsRouteOp, setNumRowsRouteOp] = useState(0);
+  const [selectionEvent, setSelectionEvent] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
 
-  const defaultColsOpRework = useMemo(() => [
+  const [selectionEqpEvent, setSelectionEqpEvent] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const [selectionTool, setSelectionTool] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const [selectionEqpTool, setSelectionEqpTool] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const [selectionOpProperties, setSelectionOpProperties] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const [selectionOpEqp, setSelectionOpEqp] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const [operationSelected, setOperationSelected] = useState([]);
+  const [addedRows, setAddedRows] = useState([]);
+  const [numRowsToAdd, setNumRowsToAdd] = useState(null);
+  const [editedRows, setEditedRows] = useState([]);
+  const [editedRowsCategory, setEditedRowsCategory] = useState([]);
+
+  const [categorySelected, setCategorySelected] = useState([]);
+  const [routeOpSelected, setRouteOpSelected] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
+  const [routeTree, setRouteTree] = useState([]);
+  const [routeTreeSelected, setRouteTreeSelected] = useState([]);
+  const [checkedKeys, setCheckedKeys] = useState([]);
+  const [selectNode, setSelectNode] = useState(null);
+
+  const [dataLossTable, setDataLossTable] = useState([]);
+  const [dataSuccessTable, setDataSuccessTable] = useState([]);
+  const [dataStep, setDataStep] = useState([]);
+  const [dataUnit, setDataUnit] = useState([]);
+  const [dataOpEqpTable, setDataReworkTable] = useState([]);
+  const [dataBonusTable, setDataBonusTable] = useState([]);
+  const [inParameterData, setInParameterData] = useState([]);
+  const [outParameterData, setOutParameterData] = useState([]);
+
+  const defaultCols = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -217,11 +151,11 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('RouteId'),
-      id: 'RouteId',
+      title: t('Mã công đoạn'),
+      id: 'id',
       kind: 'Text',
       readonly: true,
-      width: 250,
+      width: 10,
       hasMenu: true,
       visible: false,
       icon: GridColumnIcon.HeaderRowID,
@@ -230,11 +164,93 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('ID'),
+      title: t('Tên công đoạn'),
+      id: 'operationName',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationCode',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [cols, setCols] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_OPERTATION_LIST',
+      defaultCols.filter((col) => col.visible)
+    )
+  );
+
+  const [gridDataOp, setGridDataOp] = useState([]);
+  const [numRowsOp, setNumRowsOp] = useState(0);
+  const [selectionOp, setSelectionOp] = useState({
+    columns: CompactSelection.empty(),
+    rows: CompactSelection.empty()
+  });
+
+  const defaultColsOpEqp = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+    {
+      title: t('Mã'),
       id: 'id',
       kind: 'Text',
       readonly: true,
-      width: 250,
+      width: 100,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã thiết bị'),
+      id: 'equipmentId',
+      kind: 'Text',
+      readonly: true,
+      width: 10,
       hasMenu: true,
       visible: false,
       icon: GridColumnIcon.HeaderRowID,
@@ -244,21 +260,21 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Mã công đoạn'),
-      id: 'OperationCode',
-      kind: 'Custom',
+      id: 'operationId',
+      kind: 'Text',
       readonly: true,
-      width: 250,
+      width: 10,
       hasMenu: true,
-      visible: true,
+      visible: false,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
       }
     },
     {
-      title: t('Mã dây chuyền Rework'),
-      id: 'RouteCodeRework',
-      kind: 'Custom',
+      title: t('Tên công đoạn'),
+      id: 'operationName',
+      kind: 'Text',
       readonly: true,
       width: 200,
       hasMenu: true,
@@ -269,9 +285,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã dây chuyền Rework'),
-      id: 'RouteCodeRework',
-      kind: 'Custom',
+      title: t('Mã công đoạn'),
+      id: 'operationCode',
+      kind: 'Text',
       readonly: true,
       width: 200,
       hasMenu: true,
@@ -282,9 +298,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã công đoạn Rework'),
-      id: 'OperationCodeRework',
-      kind: 'Custom',
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
       readonly: true,
       width: 200,
       hasMenu: true,
@@ -293,70 +309,83 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       trailingRowOptions: {
         disabled: true
       }
-    },
-    {
-      title: t('Mã dây chuyền Return'),
-      id: 'RouteCodeReturn',
-      kind: 'Custom',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã công đoạn Return'),
-      id: 'OperationCodeReturn',
-      kind: 'Custom',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Ghi chú'),
-      id: 'note',
-      kind: 'text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    
+    }
   ]);
-
-  const [colsOpRework, setColsOpRework] = useState(() =>
+  const [colsOpEqp, setColsOpEqp] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ERP_COLS_OP_REWORK',
-      defaultColsOpRework.filter((col) => col.visible)
+      'S_EQUIPMENT_OP',
+      defaultColsOpEqp.filter((col) => col.visible)
     )
   );
-  const [gridDataOpRework, setGridDataOpRework] = useState([]);
-  const [numRowsOpRework, setNumRowsOpRework] = useState(0);
-  const [numRowsToAddOpRework, setNumRowsToAddOpRework] = useState(null);
-  const [addedRowsOpRework, setAddedRowsOpRework] = useState([]);
+  const [gridDataOpEqp, setGridDataOpEqp] = useState([]);
+  const [numRowsOpEqp, setNumRowsOpEqp] = useState(0);
 
-  const handleRowAppendOpRework = useCallback(
-    (numRowsToAdd) => {
-      if (canCreate === false) {
-        message.warning('Bạn không có quyền thêm dữ liệu');
-        return;
+  const defaultColsEqpProperties = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
       }
-      onRowAppended(colsOpRework, setGridDataOpRework, setNumRowsOpRework, setAddedRowsOpRework, numRowsToAddOpRework);
     },
-    [colsOpRework, setGridDataOpRework, setNumRowsOpRework, setAddedRowsOpRework, numRowsToAddOpRework]
+    {
+      title: t('Mã thuộc tính'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
+      width: 10,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Thuộc tính'),
+      id: 'opProperties',
+      kind: 'Text',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Áp dụng'),
+      id: 'isUse',
+      kind: 'Boolean',
+      readonly: true,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsOpProperties, setColsOpProperties] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_OPERTATION_PROPERTY',
+      defaultColsEqpProperties.filter((col) => col.visible)
+    )
   );
+  const [gridDataOpProperties, setGridDataOpProperties] = useState([]);
+  const [numRowsOpProperties, setNumRowsOpProperties] = useState(0);
+
+  const [gridData, setGridData] = useState([]);
+  const [numRows, setNumRows] = useState(0);
 
   const defaultColsCategory = useMemo(() => [
     {
@@ -374,7 +403,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Mã thuộc tính'),
-      id: 'PrompId',
+      id: 'id',
       kind: 'Text',
       readonly: true,
       width: 250,
@@ -387,9 +416,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Tên thuộc tính'),
-      id: 'PrompName',
+      id: 'promptName',
       kind: 'Custom',
-      readonly: true,
+      readonly: false,
       width: 250,
       hasMenu: true,
       visible: true,
@@ -401,9 +430,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
     {
       title: t('Mô tả'),
-      id: 'Description',
+      id: 'description',
       kind: 'Text',
-      readonly: true,
+      readonly: false,
       width: 500,
       hasMenu: true,
       visible: true,
@@ -414,9 +443,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Bắt buộc nhập'),
-      id: 'MustInput',
+      id: 'mustInput',
       kind: 'Boolean',
-      readonly: true,
+      readonly: false,
       width: 200,
       hasMenu: true,
       visible: true,
@@ -427,9 +456,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('ID giá trị thuộc tính'),
-      id: 'PrompValueId',
-      kind: 'Boolean',
-      readonly: true,
+      id: 'promptValueId',
+      kind: 'Custom',
+      readonly: false,
       width: 200,
       hasMenu: true,
       visible: false,
@@ -440,9 +469,9 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Giá trị thuộc tính'),
-      id: 'PrompValue',
-      kind: 'Boolean',
-      readonly: true,
+      id: 'promptValueName',
+      kind: 'Custom',
+      readonly: false,
       width: 200,
       hasMenu: true,
       visible: true,
@@ -455,7 +484,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const [colsCategory, setColsCategory] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_PRODUCT_CATEGORY',
+      'S_DETAIL_CATEGORY',
       defaultColsCategory.filter((col) => col.visible)
     )
   );
@@ -464,18 +493,19 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
   const [numRowsToAddCategory, setNumRowsToAddCategory] = useState(null);
   const [addedRowsCategory, setAddedRowsCategory] = useState([]);
 
-  const handleRowAppend = useCallback(
-    (numRowsToAdd) => {
-      if (canCreate === false) {
-        message.warning('Bạn không có quyền thêm dữ liệu');
-        return;
-      }
-      onRowAppended(colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAddCategory);
-    },
-    [colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAddCategory]
-  );
+  const [numRowsToAddOpProperties, setNumRowsToAddOpEqp] = useState(null);
+  const [addedRowsOpProperties, setAddedRowsOpProperties] = useState([]);
 
-  const defaultColsOpIndicate = useMemo(() => [
+  const [colsEqp, setColsEqp] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_EQUIPMENT',
+      defaultColsOpEqp.filter((col) => col.visible)
+    )
+  );
+  const [gridDataEqp, setGridDataEqp] = useState([]);
+  const [numRowsEqp, setNumRowsEqp] = useState(0);
+
+  const defaultColsEvent = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -489,160 +519,13 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: false
       }
     },
+
     {
-      title: t('RouteId'),
-      id: 'RouteId',
-      kind: 'Text',
-      readonly: true,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('ID'),
+      title: t('Mã trạng thái'),
       id: 'id',
       kind: 'Text',
-      readonly: true,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã công đoạn'),
-      id: 'OperationCode',
-      kind: 'Custom',
       readonly: false,
       width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mô tả'),
-      id: 'Description',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Áp dụng'),
-      id: 'IsUse',
-      kind: 'Boolean',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Số lượng chờ'),
-      id: 'QueueNumber',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Số lượng tiến hành'),
-      id: 'ProcessNumber',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Năng suất'),
-      id: 'Yeild',
-      kind: 'Text',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
-    
-  ]);
-
-  const [colsOpIndicate, setColsOpIndicate] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_ERP_COLS_OP_INDICATE',
-      defaultColsOpIndicate.filter((col) => col.visible)
-    )
-  );
-  const [gridDataOpIndicate, setGridDataOpIndicate] = useState([]);
-  const [numRowsOpIndicate, setNumRowsOpIndicate] = useState(0);
-  const [numRowsToAddOpIndicate, setNumRowsToAddOpIndicate] = useState(null);
-  const [addedRowsOpIndicate, setAddedRowsOpIndicate] = useState([]);
-
-  const handleRowAppendOpIndicate = useCallback(
-    (numRowsToAdd) => {
-      if (canCreate === false) {
-        message.warning('Bạn không có quyền thêm dữ liệu');
-        return;
-      }
-      onRowAppended(colsOpIndicate, setGridDataOpIndicate, setNumRowsOpIndicate, setAddedRowsOpIndicate, numRowsToAdd, numRowsToAddOpIndicate);
-    },
-    [colsOpIndicate, setGridDataOpIndicate, setNumRowsOpIndicate, setAddedRowsOpIndicate, numRowsToAddOpIndicate]
-  );
-
-  const cellConfigOpIndicate = [
-    {
-    
-  }]
-
-  const defaultColsEvent = useMemo(() => [
-    {
-      title: '',
-      id: 'Status',
-      kind: 'Text',
-      readonly: true,
-      width: 50,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderLookup,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('ID'),
-      id: 'id',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
       hasMenu: true,
       visible: false,
       icon: GridColumnIcon.HeaderRowID,
@@ -652,10 +535,10 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Mã trạng thái'),
-      id: 'EventCode',
+      id: 'eventCode',
       kind: 'Text',
-      readonly: true,
-      width: 200,
+      readonly: false,
+      width: 250,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -663,12 +546,13 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
+
     {
       title: t('Tên trạng thái'),
-      id: 'EventName',
+      id: 'eventName',
       kind: 'Text',
-      readonly: true,
-      width: 200,
+      readonly: false,
+      width: 250,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -676,12 +560,13 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
+
     {
       title: t('Mô tả'),
-      id: 'Description',
+      id: 'description',
       kind: 'Text',
-      readonly: true,
-      width: 200,
+      readonly: false,
+      width: 250,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -693,8 +578,8 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const [colsEvent, setColsEvent] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_EVENT_LIST',
-  defaultColsEvent.filter((col) => col.visible)
+      'S_EVENT',
+      defaultColsEvent.filter((col) => col.visible)
     )
   );
   const [gridDataEvent, setGridDataEvent] = useState([]);
@@ -711,15 +596,16 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       visible: true,
       icon: GridColumnIcon.HeaderLookup,
       trailingRowOptions: {
-        disabled: true
+        disabled: false
       }
     },
+
     {
-      title: t('ID'),
+      title: t('Mã trạng thái'),
       id: 'id',
       kind: 'Text',
-      readonly: true,
-      width: 200,
+      readonly: false,
+      width: 250,
       hasMenu: true,
       visible: false,
       icon: GridColumnIcon.HeaderRowID,
@@ -728,11 +614,11 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã trạng thái'),
-      id: 'EventCode',
+      title: t('Mã thiết bị'),
+      id: 'equipmentId',
       kind: 'Text',
-      readonly: true,
-      width: 200,
+      readonly: false,
+      width: 250,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -740,12 +626,39 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
+    {
+      title: t('Mã trạng thái'),
+      id: 'eventId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã trạng thái'),
+      id: 'eventCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
     {
       title: t('Tên trạng thái'),
-      id: 'EventName',
+      id: 'eventName',
       kind: 'Text',
-      readonly: true,
-      width: 200,
+      readonly: false,
+      width: 250,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -753,12 +666,13 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
+
     {
       title: t('Mô tả'),
-      id: 'Description',
+      id: 'description',
       kind: 'Text',
-      readonly: true,
-      width: 200,
+      readonly: false,
+      width: 250,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -770,92 +684,1517 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const [colsEqpEvent, setColsEqpEvent] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ERP_COLS_PAGE_EQP_EVENT_LIST',
-  defaultColsEqpEvent.filter((col) => col.visible)
+      'S_EQP_EVENT',
+      defaultColsEqpEvent.filter((col) => col.visible)
     )
   );
+
   const [gridDataEqpEvent, setGridDataEqpEvent] = useState([]);
   const [numRowsEqpEvent, setNumRowsEqpEvent] = useState(0);
 
-  const [formDataBasic] = Form.useForm();
+  const defaultColsTool = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
 
- 
-  // Handle Action
-  const handleClick = () => {
-    showLoader(3000, () => {
+    {
+      title: t('Mã phụ kiện'),
+      id: 'id',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã phụ kiện'),
+      id: 'toolCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên phụ kiện'),
+      id: 'toolName',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Phân loại'),
+      id: 'toolType',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsTool, setColsTool] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_TOOL',
+      defaultColsTool.filter((col) => col.visible)
+    )
+  );
+  const [gridDataTool, setGridDataTool] = useState([]);
+  const [numRowsTool, setNumRowsTool] = useState(0);
+
+  const defaultColsEqpTool = useMemo(() => [
+    {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+
+    {
+      title: t('Mã phụ kiện'),
+      id: 'id',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã phụ kiện'),
+      id: 'toolId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã phụ kiện'),
+      id: 'toolCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên phụ kiện'),
+      id: 'toolName',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã công đoạn'),
+      id: 'operationCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('equipmentId'),
+      id: 'equipmentId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã thiết bị'),
+      id: 'equipmentCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsEqpTool, setColsEqpTool] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_EQP_TOOL',
+      defaultColsEqpTool.filter((col) => col.visible)
+    )
+  );
+  const [gridDataEqpTool, setGridDataEqpTool] = useState([]);
+  const [numRowsEqpTool, setNumRowsEqpTool] = useState(0);
+
+  const [gridDataOpStep, setGridDataOpStep] = useState([]);
+  const [numRowsOpStep, setNumRowsOpStep] = useState(0);
+  const [numRowsToAddOpStep, setNumRowsToAddOpStep] = useState(null);
+  const [addedRowsOpStep, setAddedRowsOpStep] = useState([]);
+
+  const [isSent, setIsSent] = useState(false);
+  const [count, setCount] = useState(0);
+  const lastWordEntryRef = useRef(null);
+  const fieldsToTrack = ['IdxNo'];
+  const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
+
+  const [routeId, setRouteId] = useState(null);
+  const [routeCode, setRouteCode] = useState(null);
+  const [routeName, setRouteName] = useState(null);
+
+  //  Data Input
+  const [formBasic] = Form.useForm();
+
+  const dataCategoryValue = [
+    { MinorName: '8080', Value: 1 },
+    { MinorName: '8000', Value: 2 },
+    { MinorName: '3000', Value: 3 }
+  ];
+
+  const [checkPageA, setCheckPageA] = useState(false);
+  const [current, setCurrent] = useState('1');
+
+  const onClickSave = useCallback(async () => {
+    const requiredColumns = ['configProdName'];
+
+    const columnEqpOp = [
+      'id',
+      'equipmentId',
+      'operationId',
+      'operationCode',
+      'operationName',
+      'description',
+    ];
+    const columnEqpEvent = [
+      'id',
+      'operationId',
+      'operationCode',
+      'eventId',
+      'eventCode',
+      'eventName',
+      'description',
+
+    ];
+
+    const columnEqpTool = [
+      'id',
+      'toolId',
+      'operationId',
+      'operationCode',
+      'operationName',
+      'equipmentId',
+      'equipmentCode',
+      'equipmentName'
+    ];
+
+    const columnsCategory = [
+      'IdxNo',
+      'id',
+      'configProdNameId',
+      'routeId',
+      'eventId',
+      'operationId',
+      'promptId',
+      'promptName',
+      'description',
+      'mustInput',
+      'promptValueId',
+      'promptValueName',
+      'promptType',
+      'IDX_NO'
+    ];
+
+    const validEntries = filterValidEntries();
+    setCount(validEntries.length);
+    const lastEntry = findLastEntry(validEntries);
+
+    if (lastWordEntryRef.current?.Id !== lastEntry?.Id) {
+      lastWordEntryRef.current = lastEntry;
+    }
+
+    const missingIds = findMissingIds(lastEntry);
+    if (missingIds.length > 0) {
+      message.warning('Vui lòng kiểm tra lại các mục được tạo phải theo đúng thứ tự tuần tự trước khi lưu!');
+      return;
+    }
+
+    if (isSent) return;
+    setIsSent(true);
+
+    try {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+
+      if (controllers.current && controllers.current.onClickSave) {
+        controllers.current.onClickSave.abort();
+        controllers.current.onClickSave = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      controllers.current.onClickSave = controller;
+      const data = await formBasic.getFieldValue();
+
+      const dataOpEqpA = filterAndSelectColumns(gridDataOpEqp, columnEqpOp, 'A').map((row) => ({
+        ...row,
+        Status: 'A',
+        id: row.id || '',
+      }));
+
+      const dataOpEqpU = filterAndSelectColumns(gridDataOpEqp, columnEqpOp, 'U').map((row) => ({
+        ...row,
+        Status: 'U',
+        id: row.id || '',
+      }));
+
+      const dataOpEventA = filterAndSelectColumns(gridDataEqpEvent, columnEqpEvent, 'A').map((row) => ({
+        ...row,
+        Status: 'A',
+        id: row.id || '',
+      }));
+
+      const dataOpEventU = filterAndSelectColumns(gridDataEqpEvent, columnEqpEvent, 'U').map((row) => ({
+        ...row,
+        Status: 'U',
+        id: row.id || '',
+      }));
+
+      const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
+        ...row,
+        Status: 'A',
+        id: row.id || '',
+      }));
+
+      const dataCategoryU = filterAndSelectColumns(gridDataCategory, columnsCategory, 'U').map((row) => ({
+        ...row,
+        Status: 'U',
+        id: row.id || '',
+      }));
+
+      const dataOpEqp = [...dataOpEqpA, ...dataOpEqpU];
+      const dataOpEvent = [...dataOpEventA, ...dataOpEventU];
+
+      const dataCategory = [...dataCategoryA, ...dataCategoryU];
+      const dto = {
+        opReqDto: {
+          id: routeId || '',
+          ...data
+        },
+        promptCateList: dataCategory,
+        reworks: dataOpEqp,
+        indications: dataOpEvent
+      };
+      try {
+        const result = await CreateRouteByService(dto);
+
+        if (result.success) {
+          notify({
+            type: 'success',
+            message: 'Thành công',
+            description: 'Cập nhật thành công!'
+          });
+
+          setIsSent(false);
+          setEditedRows([]);
+          fetchDataRoutById(routeId);
+        } else {
+          setIsSent(false);
+          notify({
+            type: 'error',
+            message: 'Lỗi',
+            description: 'Không thể lưu dữ liệu. Vui lòng thử lại sau.'
+          });
+        }
+      } catch (error) {
+        console.log('error', error);
+        setIsSent(false);
+        message.error(error.message || 'Có lỗi xảy ra khi lưu dữ liệu');
+      } finally {
+        onFetchRoute();
+
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    } catch (errorInfo) {
+      console.log('Failed:', errorInfo);
+    }
+  }, [formBasic, gridDataCategory, gridDataOpProperties, isAPISuccess, routeId, gridDataOpEqp, gridDataOpStep]);
+
+  const onVisibleRegionChanged = useCallback(
+    ({ y, height }) => {
+      const lastVisibleRow = y + height;
+      if (lastVisibleRow >= numRows && lastVisibleRow > lastLoadedRow) {
+        setLastLoadedRow(lastVisibleRow);
+        loadMoreData();
+      }
+    },
+    [numRows, lastLoadedRow]
+  );
+
+  const loadMoreData = useCallback(() => {
+    try {
+      const data = {
+        Keyword: keyword,
+        PageIndex: pageIndex,
+        PageSize: pageSize
+      };
+
+      const response = SearchRouteBy(data);
+      const fetchedData = response.data || [];
+
+      setGridData((prev) => [...prev, ...fetchedData]);
+      setNumRows((prev) => prev + fetchedData.length);
+    } catch (error) {
+      message.error(error.message);
+    }
+  }, [numRows]);
+
+  const onFetchRoute = useCallback(async () => {
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onFetchRoute) {
+      controllers.current.onFetchRoute.abort();
+      controllers.current.onFetchRoute = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onFetchRoute = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      const data = {
+        Keyword: keyword,
+        PageIndex: pageIndex,
+        PageSize: pageSize
+      };
+
+      const response = await SearchRouteTree(data);
+      const fetchedData = response.data || [];
+
+      const dataTree = fetchedData.map((item) => ({
+        title: item.route.routeCode,
+        value: item.route.id,
+        key: item.route.id,
+        icon: <ClusterOutlined />,
+        children: item.routeOperations.map((operation) => ({
+          title: operation.operationCode,
+          value: operation.id,
+          key: operation.id,
+          icon: <ApiOutlined />
+        }))
+      }));
+
+      setRouteTree(dataTree);
+    } catch (error) {
+      setRouteTree([]);
+      setIsAPISuccess(true);
       notify({
-        type: 'success',
-        message: 'Thành công',
-        description: 'Thêm mới thành công'
-      })
+        type: 'false',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchRoute = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, [keyword, pageIndex, pageSize, isAPISuccess]);
+
+  const onFetchOperation = useCallback(async () => {
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onFetchOperation) {
+      controllers.current.onFetchOperation.abort();
+      controllers.current.onFetchOperation = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onFetchOperation = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      const data = {
+        Keyword: keyword,
+        PageIndex: pageIndex,
+        PageSize: pageSize
+      };
+
+      const response = await SearchOperationBy(data);
+      const fetchedData = response.data || [];
+
+      setGridData(fetchedData);
+      setNumRows(fetchedData.length);
+    } catch (error) {
+      setGridData([]);
+      setNumRows(0);
+      setIsAPISuccess(true);
+      notify({
+        type: 'false',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchOperation = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, [gridData, numRows, keyword, pageIndex, pageSize, isAPISuccess]);
+
+  const getSelectedRowsData = () => {
+    const selectedRows = selection.rows.items;
+
+    return selectedRows.flatMap(([start, end]) =>
+      Array.from({ length: end - start }, (_, i) => gridData[start + i]).filter((row) => row !== undefined)
+    );
+  };
+
+  const getSelectedRowsCategoryData = () => {
+    const selectedRows = selectionCategory.rows.items;
+
+    return selectedRows.flatMap(([start, end]) =>
+      Array.from({ length: end - start }, (_, i) => gridDataCategory[start + i]).filter((row) => row !== undefined)
+    );
+  };
+
+  const getSelectedRowsRouteDetailsData = () => {
+    const selectedRows = selectionOpProperties.rows.items;
+
+    return selectedRows.flatMap(([start, end]) =>
+      Array.from({ length: end - start }, (_, i) => gridDataOpProperties[start + i]).filter((row) => row !== undefined)
+    );
+  };
+
+  const onCellRouteClicked = useCallback(
+    (cell, event) => {
+      let rowIndex;
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1];
+        setIsMinusClicked(true);
+      } else {
+        rowIndex = cell[1];
+        setIsMinusClicked(false);
+      }
+
+      if (lastClickedCell && lastClickedCell[0] === cell[0] && lastClickedCell[1] === cell[1]) {
+        setLastClickedCell(null);
+        setClickedRowData(null);
+        return;
+      }
+      if (cell[0] === -1) {
+        if (rowIndex >= 0 && rowIndex < gridData.length) {
+          const isSelected = selection.rows.hasIndex(rowIndex);
+
+          let newSelected;
+          if (isSelected) {
+            newSelected = selection.rows.remove(rowIndex);
+            setOperationSelected(getSelectedRowsData());
+          } else {
+            newSelected = selection.rows.add(rowIndex);
+            setOperationSelected([]);
+          }
+        }
+      }
+    },
+    [gridData, getSelectedRowsData, operationSelected]
+  );
+
+  const onCellEventClicked = useCallback(
+    (cell, event) => {
+      let rowIndex;
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1];
+        setIsMinusClicked(true);
+      } else {
+        rowIndex = cell[1];
+        setIsMinusClicked(false);
+      }
+
+      if (lastClickedCell && lastClickedCell[0] === cell[0] && lastClickedCell[1] === cell[1]) {
+        setLastClickedCell(null);
+        setClickedRowData(null);
+        return;
+      }
+      if (cell[0] === -1) {
+        if (rowIndex >= 0 && rowIndex < gridData.length) {
+          const isSelected = selection.rows.hasIndex(rowIndex);
+
+          let newSelected;
+          if (isSelected) {
+            newSelected = selection.rows.remove(rowIndex);
+            setOperationSelected(getSelectedRowsData());
+          } else {
+            newSelected = selection.rows.add(rowIndex);
+            setOperationSelected([]);
+          }
+        }
+      }
+    },
+    [gridData, getSelectedRowsData, operationSelected]
+  );
+
+  const onCellOpPropertiesClicked = useCallback(
+    (cell, event) => {
+      let rowIndex;
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1];
+        setIsMinusClicked(true);
+      } else {
+        rowIndex = cell[1];
+        setIsMinusClicked(false);
+      }
+
+      if (lastClickedCell && lastClickedCell[0] === cell[0] && lastClickedCell[1] === cell[1]) {
+        setLastClickedCell(null);
+        setClickedRowData(null);
+        return;
+      }
+      if (cell[0] === -1) {
+        if (rowIndex >= 0 && rowIndex < gridDataOpProperties.length) {
+          const isSelected = selectionOpProperties.rows.hasIndex(rowIndex);
+
+          let newSelected;
+          if (isSelected) {
+            newSelected = selectionOpProperties.rows.remove(rowIndex);
+            setRouteOpSelected(getSelectedRowsRouteDetailsData());
+          } else {
+            newSelected = selectionOpProperties.rows.add(rowIndex);
+            setRouteOpSelected([]);
+          }
+        }
+      }
+    },
+    [gridDataOpProperties, getSelectedRowsRouteDetailsData, routeOpSelected]
+  );
+
+  const onTreeClicked = useCallback((selectedKeys, info) => {
+    if (info.node.value) {
+      fetchDataRoutById(info.node.value);
+    }
+  }, []);
+
+  const fetchDataRoutById = useCallback(
+    async (routeId) => {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+
+      if (controllers.current && controllers.current.fetchDataRoutById) {
+        controllers.current.fetchDataRoutById.abort();
+        controllers.current.fetchDataRoutById = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      controllers.current.fetchDataRoutById = controller;
+
+      setIsAPISuccess(false);
+
+      try {
+        const response = await getRouteById(routeId);
+        const fetchedData = response.data || [];
+
+        formBasic.setFieldsValue({
+          routeName: fetchedData.route.routeCode,
+          description: fetchedData.route.description,
+          routeCode: fetchedData.route.routeCode
+        });
+
+        setRouteId(fetchedData.route.id);
+        setRouteCode(fetchedData.route.routeCode);
+        setRouteName(fetchedData.route.routeName);
+
+        setGridDataOpProperties(fetchedData.routeOperation || []);
+        setNumRowsOpProperties(fetchedData.routeOperation?.length || 0);
+
+        setGridDataOpEqp(fetchedData.reworkOperation || []);
+        setNumRowsOpEqp(fetchedData.reworkOperation?.length || 0);
+
+        setGridDataOpStep(fetchedData.indicatesOperation || []);
+        setNumRowsOpStep(fetchedData.indicatesOperation?.length || 0);
+
+        setGridDataCategory(fetchedData.promptCategoryResDto || []);
+        setNumRowsCategory(fetchedData.promptCategoryResDto?.length || 0);
+      } catch (error) {
+        console.log(error);
+        setGridDataOpProperties([]);
+        setNumRowsOpProperties(0);
+        setGridDataOpEqp([]);
+        setNumRowsOpEqp(0);
+        setGridDataOpStep([]);
+        setNumRowsOpStep(0);
+        setGridDataCategory([]);
+        setNumRowsCategory(0);
+        setIsAPISuccess(true);
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+        });
+      } finally {
+        setIsAPISuccess(true);
+        controllers.current.onFetchRoute = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    },
+    [
+      routeTree,
+      routeTreeSelected,
+      formBasic,
+      routeId,
+      routeCode,
+      routeName,
+      gridDataOpProperties,
+      gridDataOpEqp,
+      gridDataOpStep,
+      gridDataCategory,
+      isAPISuccess,
+      numRows,
+      numRowsOpProperties,
+      numRowsOpEqp,
+      numRowsOpStep,
+      numRowsCategory
+    ]
+  );
+
+  const onCellCategoryClicked = useCallback(
+    (cell, event) => {
+      let rowIndex;
+
+      if (cell[0] === -1) {
+        rowIndex = cell[1];
+        setIsMinusClicked(true);
+      } else {
+        rowIndex = cell[1];
+        setIsMinusClicked(false);
+      }
+
+      if (lastClickedCell && lastClickedCell[0] === cell[0] && lastClickedCell[1] === cell[1]) {
+        setLastClickedCell(null);
+        setClickedRowData(null);
+        return;
+      }
+      if (cell[0] === -1) {
+        if (rowIndex >= 0 && rowIndex < gridDataCategory.length) {
+          const isSelected = selectionCategory.rows.hasIndex(rowIndex);
+
+          let newSelected;
+          if (isSelected) {
+            newSelected = selectionCategory.rows.remove(rowIndex);
+            setCategorySelected(getSelectedRowsCategoryData());
+          } else {
+            newSelected = selectionCategory.rows.add(rowIndex);
+            setCategorySelected([]);
+          }
+        }
+      }
+    },
+    [gridDataCategory, getSelectedRowsCategoryData, categorySelected]
+  );
+
+  const onFetchDropdownData = useCallback(async () => {
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onFetchDropdownData) {
+      controllers.current.onFetchDropdownData.abort();
+      controllers.current.onFetchDropdownData = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onFetchDropdownData = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      const [unitData, stepData, lostData, successData, inParameterData, outParameterData, reworkParameterData, bonusParameterData] =
+        await Promise.all([SearchCategory(1, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword)]);
+
+      setDataUnit(unitData.data);
+      // setDataStep(stepData.data.data.content);
+      // setDataLossTable(lostData.data.data.content);
+      // setDataSuccessTable(successData.data.data.content);
+      // setInParameterData(inParameterData.data.data.content);
+      // setOutParameterData(outParameterData.data.data.content);
+      // setDataReworkTable(reworkParameterData.data.data.content);
+      // setDataBonusTable(bonusParameterData.data.data.content);
+    } catch (error) {
+      setDataUnit([]);
+      setDataStep([]);
+      setDataLossTable([]);
+      setDataSuccessTable([]);
+      setInParameterData([]);
+      setOutParameterData([]);
+      setDataReworkTable([]);
+      setDataBonusTable([]);
+      setIsAPISuccess(true);
+      notify({
+        type: 'error',
+        message: 'Lỗi',
+        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onFetchDropdownData = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, [
+    loadingBarRef,
+    dataUnit,
+    dataStep,
+    dataLossTable,
+    dataSuccessTable,
+    inParameterData,
+    outParameterData,
+    dataOpEqpTable,
+    dataBonusTable,
+    keyword,
+    pageIndex,
+    pageSize,
+    isAPISuccess
+  ]);
+
+  useEffect(() => {
+    onFetchOperation();
+  }, [selectedData]);
+
+  useEffect(() => {
+    onFetchDropdownData();
+  }, []);
+
+  const onInsertRow = useCallback(async () => {
+    if (!Array.isArray(operationSelected) || operationSelected.length === 0) {
+      console.warn('operationSelected is empty or invalid');
+      return;
+    }
+
+    try {
+      const dto = operationSelected.map((item) => ({
+        routeId: routeId,
+        routeCode: routeCode,
+        routeName: routeName,
+
+        operationId: item.id,
+        operationCode: item.operationCode,
+        operationName: item.operationName,
+        description: item.description
+      }));
+
+      const result = await CreateRouteOperationByService(dto);
+
+      if (result.success) {
+        notify({
+          type: 'success',
+          message: 'Thành công',
+          description: 'Cập nhật thành công!'
+        });
+      } else {
+        notify({
+          type: 'success',
+          message: 'Thành công',
+          description: 'Cập nhật thành công!'
+        });
+      }
+    } catch (error) {
+      console.error('Error in onInsertRow:', error);
+      message.error('Có lỗi xảy ra khi thêm dòng mới');
+      return;
+    } finally {
+      onFetchRoute();
+      fetchDataRoutById(routeId);
+    }
+
+    setGridDataOpProperties((prevGridData) => {
+      const updatedGridData = [...prevGridData];
+
+      let addedCount = 0;
+
+      operationSelected.forEach((newItem) => {
+        const existingIndex = updatedGridData.findIndex((item) => item.id === newItem.routeId || item.routeCode === newItem.routeCode);
+
+        if (existingIndex !== -1) {
+          updatedGridData[existingIndex] = {
+            ...updatedGridData[existingIndex],
+            ...newItem
+          };
+        } else {
+          updatedGridData.push({
+            ...newItem,
+            IdxNo: updatedGridData.length + 1
+          });
+          addedCount++;
+        }
+      });
+
+      setNumRowsOpProperties((prevNumRows) => prevNumRows + addedCount);
+
+      return updatedGridData;
     });
+  }, [operationSelected, routeId, routeCode, routeName]);
+
+  const removeRow = useCallback(
+    async (rowIndex) => {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+
+      if (controllers.current && controllers.current.removeRow) {
+        controllers.current.removeRow.abort();
+        controllers.current.removeRow = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      controllers.current.removeRow = controller;
+
+      setIsAPISuccess(false);
+
+      try {
+        if (routeOpSelected.length === 0 && categorySelected.length === 0) {
+          message.warning('Vui lòng chọn ít nhất một dòng để xóa');
+          return;
+        }
+        let response;
+        if (routeOpSelected.length > 0) {
+          const ids = routeOpSelected.map((item) => item.id).filter((id) => id !== undefined);
+          response = await DeleteRouteOpBy(ids);
+          const Ops = await getRouteOpByRouteId(routeId);
+          setGridDataOpProperties(Ops.data);
+          setNumRowsOpProperties(Ops.data.length);
+        }
+        if (categorySelected.length > 0) {
+          const idCategory = categorySelected.map((item) => item.id).filter((id) => id !== undefined);
+          response = await DeleteCategoryBy(idCategory);
+          const category = await getCategoryByRouteId(routeId);
+          setGridDataCategory(category.data);
+          setNumRowsCategory(category.data.length);
+        }
+        const fetchedData = response || [];
+
+        if (!fetchedData.success) {
+          notify({
+            type: 'error',
+            message: 'Lỗi',
+            description: 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
+          });
+          return;
+        } else {
+          notify({
+            type: 'success',
+            message: 'Thành công',
+            description: 'Xóa dữ liệu thành công!'
+          });
+        }
+        setIsAPISuccess(true);
+        controllers.current.onClickSearch = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      } catch (error) {
+        console.log('error', error);
+        setIsAPISuccess(true);
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: error.message || 'Vui lòng thử lại sau.'
+        });
+      } finally {
+        setIsAPISuccess(true);
+        onFetchRoute();
+        controllers.current.removeRow = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    },
+    [gridDataOpProperties, gridDataCategory, categorySelected, routeOpSelected]
+  );
+
+  const handleRowAppendCategory = useCallback(
+    (numRowsToAdd) => {
+      if (canCreate === false) {
+        message.warning('Bạn không có quyền thêm dữ liệu');
+        return;
+      }
+      onRowAppended(colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAdd);
+    },
+    [colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAddCategory]
+  );
+
+  const handleRowAppendOpProperties = useCallback(
+    (numRowsToAdd) => {
+      if (canCreate === false) {
+        message.warning('Bạn không có quyền thêm dữ liệu');
+        return;
+      }
+      onRowAppended(colsOpProperties, setGridDataOpProperties, setNumRowsOpProperties, setAddedRowsOpProperties, numRowsToAdd);
+    },
+    [colsOpProperties, setGridDataOpProperties, setNumRowsOpProperties, setAddedRowsOpProperties, numRowsToAddOpProperties]
+  );
+
+  const handleRowAppendOpStep = useCallback(
+    (numRowsToAdd) => {
+      if (canCreate === false) {
+        message.warning('Bạn không có quyền thêm dữ liệu');
+        return;
+      }
+      onRowAppended(colsEqpEvent, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAdd);
+    },
+    [colsEqpEvent, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAddOpStep]
+  );
+
+  const onClickDelete = useCallback(async () => {
+    if (!selectedData || !selectedData.data || !selectedData.data.id) {
+      message.warning('Vui lòng chọn dữ liệu để xóa');
+      return;
+    }
+
+    if (!isAPISuccess) {
+      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+      return;
+    }
+
+    if (controllers.current && controllers.current.onClickDelete) {
+      controllers.current.onClickDelete.abort();
+      controllers.current.onClickDelete = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (loadingBarRef.current) {
+      loadingBarRef.current.continuousStart();
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    controllers.current.onClickDelete = controller;
+
+    setIsAPISuccess(false);
+
+    try {
+      let response = {};
+      if (selectedData.length > 0) {
+        const ids = selectedData.map((item) => item.id).filter((id) => id !== undefined);
+        response = await DeleteRouteOpBy(ids);
+      }
+
+      if (!response.success) {
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
+        });
+        return;
+      } else {
+        setGridDataCategory([]);
+        setNumRowsCategory(0);
+        setGridDataOpProperties([]);
+        setNumRowsOpProperties(0);
+        formBasic.resetFields();
+
+        notify({
+          type: 'success',
+          message: 'Thành công',
+          description: 'Xóa dữ liệu thành công!'
+        });
+      }
+      setIsAPISuccess(true);
+      controllers.current.onClickDelete = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    } catch (error) {
+      setIsAPISuccess(true);
+      notify({
+        type: 'error',
+        message: 'Lỗi',
+        description: error.message || 'Vui lòng thử lại sau.'
+      });
+    } finally {
+      setIsAPISuccess(true);
+      controllers.current.onClickDelete = null;
+      if (loadingBarRef.current) {
+        loadingBarRef.current.complete();
+      }
+    }
+  }, [selectedData, gridDataOpProperties, gridDataCategory, formBasic, isAPISuccess]);
+
+  const onSearch = (value) => {
+    console.log('search:', value);
   };
 
-  const onFinish = (values) => {
-    handleClick();
-    console.log('Received values of form: ', values);
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      onSearch(e.target.value);
+    }
   };
-
 
   return (
     <>
-      <div className="h-full pt-4 pr-4 pl-4">
+      <div className="h-full mt-4">
         <AuDrAction
-          titlePage={'Đăng ký thông tin thiết bị'}
-          onClickSave={() => formDataBasic.submit()}
-          onClickCancel={() => {
-            
-          }}
-          onClickDelete={() => {}}
-          onClickAdd={handleClick}
+          titlePage={'Đăng ký thiết bị'}
+          onClickDelete={onClickDelete}
+          onClickSave={onClickSave}
+          onClickUpdate={() => {}}
+          onClickReset={() => {}}
         />
-        <MachineInfomationQuery formDataBasic={formDataBasic} onFinish={onFinish} />
-        <RouteOperationQuery
-          defaultColsOp={defaultColsOp}
-          gridDataOp={gridDataOp}
-          setGridDataOp={setGridDataOp}
-          colsOp={colsOp}
-          setColsOp={setColsOp}
-          numRowsOp={numRowsOp}
-          setNumRowsOp={setNumRowsOp}
+        <Splitter className="w-full h-full ">
+          <SplitterPanel size={30} minSize={10}>
+            <div className="w-full  h-full bg-white  overflow-x-hidden overflow-hidden  ">
+              <div className="w-full h-[30px]  items-center border-b border-gray-200 ">
+                <div className="w-full h-full flex gap-2">
+                  {isLoading ? <LoadingOutlined className="animate-spin" /> : <SearchOutlined />}
+                  <input
+                    value={keyword}
+                    onChange={onSearch}
+                    onKeyDown={onKeyDown}
+                    highlight={true}
+                    autoFocus={true}
+                    className="border-none focus:outline-none hover:border-none bg-inherit"
+                  />
+                </div>
+              </div>
+              <EquipmentTable
+                defaultCols={defaultColsOpEqp}
+                gridData={gridDataEqp}
+                setGridData={setGridDataEqp}
+                cols={colsEqp}
+                setCols={setColsEqp}
+                numRows={numRowsEqp}
+                setNumRows={setNumRowsEqp}
+                onVisibleRegionChanged={onVisibleRegionChanged}
+                onCellRouteClicked={onCellRouteClicked}
+                selection={selection}
+                setSelection={setSelection}
+              />
+            </div>
+          </SplitterPanel>
+          <SplitterPanel size={75} minSize={10}>
+            <MachineInfoQuery formBasic={formBasic} />
 
-          defaultColsRouteOp={defaultColsRouteOp}
-          gridDataRouteOp={gridDataRouteOp}
-          setGridDataRouteOp={setGridDataRouteOp}
-          colsRouteOp={colsRouteOp}
-          setColsRouteOp={setColsRouteOp}
-          numRowsRouteOp={numRowsRouteOp}
-          setNumRowsRouteOp={setNumRowsRouteOp}
-        />
-        <EquipmentEventsQuery
-          defaultColsEvent={defaultColsEvent}
-          gridDataEvent={gridDataEvent}
-          setGridDataEvent={setGridDataEvent}
-          colsEvent={colsEvent}
-          setColsEvent={setColsEvent}
-          numRowsEvent={numRowsEvent}
-          setNumRowsEvent={setNumRowsEvent}
+            <Menu
+              mode="horizontal"
+              selectedKeys={[current]}
+              style={{
+                height: 30,
+                lineHeight: '30px',
+                paddingTop: 2,
+                paddingBottom: 0,
+                minHeight: 0
+              }}
+              onClick={(e) => {
+                if (!checkPageA) {
+                  setCurrent(e.key);
+                } else {
+                  message.warning(t('870000042'));
+                }
+              }}
+            >
+              <Menu.Item key="1">
+                <span className="flex items-center text-sm font-bold">
+                  <ApartmentOutlined style={{ fontSize: 12 }} />
+                  {t('Thông tin')}
+                </span>
+              </Menu.Item>
 
-          defaultColsEqpEvent={defaultColsEqpEvent}
-          gridDataEqpEvent={gridDataEqpEvent}
-          setGridDataEqpEvent={setGridDataEqpEvent}
-          colsEqpEvent={colsEqpEvent}
-          setColsEqpEvent={setColsEqpEvent}
-          numRowsEqpEvent={numRowsEqpEvent}
-          setNumRowsEqpEvent={setNumRowsEqpEvent}
-        />
+              <Menu.Item key="2">
+                <span className="flex items-center text-sm font-bold">
+                  <SyncOutlined style={{ fontSize: 12 }} />
+                  {t('Cài đặt công đoạn')}
+                </span>
+              </Menu.Item>
 
-        <RouteParameterQuery
-          defaultCols={defaultColsCategory}
-          gridData={gridDataCategory}
-          setGridData={setGridDataCategory}
-          cols={colsCategory}
-          setCols={setColsCategory}
-          numRows={numRowsCategory}
-          setNumRows={setNumRowsCategory}
-          handleRowAppend={handleRowAppend}
-        />
+              <Menu.Item key="3">
+                <span className="flex items-center  text-sm font-bold">
+                  <AppstoreAddOutlined style={{ fontSize: 12 }} />
+                  {t('Cài đặt trạng thái')}
+                </span>
+              </Menu.Item>
+
+              <Menu.Item key="4">
+                <span className="flex items-center text-sm font-bold">
+                  <AppstoreAddOutlined style={{ fontSize: 12 }} />
+                  {t('Cài đặt phụ kiện')}
+                </span>
+              </Menu.Item>
+
+              <Menu.Item key="5">
+                <span className="flex items-center text-sm font-bold">
+                  <DashboardOutlined style={{ fontSize: 12 }} />
+                  {t('Danh mục')}
+                </span>
+              </Menu.Item>
+
+              {(current === '2' || current === '3' || current === '4') && (
+                <Menu.Item
+                  key="buttons"
+                  disabled
+                  style={{
+                    marginLeft: 'auto',
+                    cursor: 'default',
+                    background: 'transparent'
+                  }}
+                >
+                  <div className="flex items-center">
+                    <Button type="text" icon={<PlusCircleFilled style={{ color: '#10b981', padding: 0 }} />} onClick={onInsertRow}>
+                      Chèn
+                    </Button>
+                    <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
+                      Xóa
+                    </Button>
+                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
+                      Up
+                    </Button>
+                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
+                      Down
+                    </Button>
+                  </div>
+                </Menu.Item>
+              )}
+            </Menu>
+            {current === '1' && (
+              <div className="bg-slate-50  h-[calc(100vh-180px)]">
+                <Splitter className="w-full h-full ">
+                  <SplitterPanel size={50} minSize={10}>
+                    <MachineManageInfo
+                      formBasic={formBasic}
+                      dataUnit={dataUnit}
+                      dataStep={dataStep}
+                      dataLossTable={dataLossTable}
+                      dataSuccessTable={dataSuccessTable}
+                      dataOpEqpTable={dataOpEqpTable}
+                    />
+                  </SplitterPanel>
+
+                  <SplitterPanel size={50} minSize={10}>
+                    <OperationPropertiesTable
+                      defaultCols={defaultColsEqpProperties}
+                      gridData={gridDataOpProperties}
+                      setGridData={setGridDataOpProperties}
+                      cols={colsOpProperties}
+                      setCols={setColsOpProperties}
+                      numRows={numRowsOpProperties}
+                      setNumRows={setNumRowsOpProperties}
+                      selection={selectionOpProperties}
+                      setSelection={setSelectionOpProperties}
+                    />
+                  </SplitterPanel>
+                </Splitter>
+              </div>
+            )}
+            {current === '2' && (
+              <div className="bg-slate-50  h-[calc(100vh-180px)]">
+                <Splitter className="w-full h-full ">
+                  <SplitterPanel size={50} minSize={10}>
+                    <OperationTable
+                      defaultCols={defaultCols}
+                      gridData={gridDataOp}
+                      setGridData={setGridDataOp}
+                      cols={cols}
+                      setCols={setCols}
+                      numRows={numRowsOp}
+                      setNumRows={setNumRowsOp}
+                      onVisibleRegionChanged={onVisibleRegionChanged}
+                      onCellRouteClicked={onCellRouteClicked}
+                      selection={selectionOp}
+                      setSelection={setSelectionOp}
+                    />
+                  </SplitterPanel>
+
+                  <SplitterPanel size={50} minSize={10}>
+                    <OperationEquipTable
+                      defaultCols={defaultColsOpEqp}
+                      gridData={gridDataOpEqp}
+                      setGridData={setGridDataOpEqp}
+                      cols={colsOpEqp}
+                      setCols={setColsOpEqp}
+                      numRows={numRowsOpEqp}
+                      setNumRows={setNumRowsOpEqp}
+                      selection={selectionOpEqp}
+                      setSelection={setSelectionOpEqp}
+                    />
+                  </SplitterPanel>
+                </Splitter>
+              </div>
+            )}
+
+            {current === '3' && (
+              <div className="bg-slate-50  h-[calc(100vh-180px)]">
+                <Splitter className="w-full h-full ">
+                  <SplitterPanel size={50} minSize={10}>
+                    <EventTable
+                      defaultCols={defaultColsEvent}
+                      gridData={gridDataEvent}
+                      setGridData={setGridDataEvent}
+                      cols={colsEvent}
+                      setCols={setColsEvent}
+                      numRows={numRowsEvent}
+                      setNumRows={setNumRowsEvent}
+                      onVisibleRegionChanged={onVisibleRegionChanged}
+                      onCellClicked={onCellEventClicked}
+                      selection={selectionEvent}
+                      setSelection={setSelectionEvent}
+                    />
+                  </SplitterPanel>
+
+                  <SplitterPanel size={50} minSize={10}>
+                    <EquipmentEventTable
+                      defaultCols={defaultColsEqpEvent}
+                      gridData={gridDataEqpEvent}
+                      setGridData={setGridDataEqpEvent}
+                      cols={colsEqpEvent}
+                      setCols={setColsEqpEvent}
+                      numRows={numRowsEqpEvent}
+                      setNumRows={setNumRowsEqpEvent}
+                      selection={selectionEqpEvent}
+                      setSelection={setSelectionEqpEvent}
+                    />
+                  </SplitterPanel>
+                </Splitter>
+              </div>
+            )}
+
+            {current === '4' && (
+              <div className="bg-slate-50  h-[calc(100vh-180px)]">
+                <Splitter className="w-full h-full ">
+                  <SplitterPanel size={50} minSize={10}>
+                    <ToolTable
+                      defaultCols={defaultColsTool}
+                      gridData={gridDataTool}
+                      setGridData={setGridDataTool}
+                      cols={colsTool}
+                      setCols={setColsTool}
+                      numRows={numRowsTool}
+                      setNumRows={setNumRowsTool}
+                      onVisibleRegionChanged={onVisibleRegionChanged}
+                      onCellClicked={onCellEventClicked}
+                      selection={selectionTool}
+                      setSelection={setSelectionTool}
+                    />
+                  </SplitterPanel>
+
+                  <SplitterPanel size={50} minSize={10}>
+                    <EquipmentToolTable
+                      defaultCols={defaultColsEqpTool}
+                      gridData={gridDataEqpTool}
+                      setGridData={setGridDataEqpTool}
+                      cols={colsEqpTool}
+                      setCols={setColsEqpTool}
+                      numRows={numRowsEqpTool}
+                      setNumRows={setNumRowsEqpTool}
+                      selection={selectionEqpTool}
+                      setSelection={setSelectionEqpTool}
+                    />
+                  </SplitterPanel>
+                </Splitter>
+              </div>
+            )}
+            {current === '5' && (
+              <div className="bg-slate-50  h-[calc(100vh-180px)]">
+                <CategoryTable
+                  dataCategoryValue={dataCategoryValue}
+                  defaultCols={defaultColsCategory}
+                  gridData={gridDataCategory}
+                  setGridData={setGridDataCategory}
+                  cols={colsCategory}
+                  setCols={setColsCategory}
+                  numRows={numRowsCategory}
+                  setNumRows={setNumRowsCategory}
+                  handleRowAppend={handleRowAppendCategory}
+                  setEditedRows={setEditedRowsCategory}
+                  selection={selectionCategory}
+                  setSelection={setSelectionCategory}
+                  onCellClicked={onCellCategoryClicked}
+                />
+              </div>
+            )}
+          </SplitterPanel>
+        </Splitter>
       </div>
+
+      {contextHolder}
+      <Spin spinning={spinning} percent={percent} fullscreen />
     </>
   );
 };

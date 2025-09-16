@@ -1,7 +1,7 @@
 import { RefreshOutlined, UpdateOutlined } from '@mui/icons-material';
 import { Button, Typography } from 'antd';
 import React from 'react';
-import { DeleteOutlined, SaveOutlined, SwitcherFilled, SwitcherOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SaveOutlined, SwitcherFilled, SwitcherOutlined, ThunderboltOutlined } from '@ant-design/icons';
 
 const onSearch = (value) => {
   console.log(value);
@@ -14,6 +14,7 @@ const AuDrAction = ({
   onClickDelete,
   onClickReset,
   titlePage,
+  onClickCopy,
 
 }) => {
   return (
@@ -41,8 +42,14 @@ const AuDrAction = ({
         <Button
           type="text"
           icon={<SwitcherOutlined />}
-          onClick={onClickReset}>
+          onClick={onClickCopy}>
           Sao chép
+        </Button>
+        <Button
+          type="text"
+          icon={<ThunderboltOutlined />}
+          onClick={onClickReset}>
+          Mới
         </Button>
       </div>
     </div>

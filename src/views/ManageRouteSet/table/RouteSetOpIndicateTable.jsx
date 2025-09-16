@@ -482,7 +482,7 @@ function RouteSetOpIndicateTable({
   );
 
   return (
-    <div className="bg-slate-50  h-[calc(100vh-189px)]">
+    <div className="bg-slate-50  h-[calc(100vh-180px)]">
       <div className="w-full h-full gap-1 flex items-center justify-center ">
         <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
           <ContextMenuWrapper

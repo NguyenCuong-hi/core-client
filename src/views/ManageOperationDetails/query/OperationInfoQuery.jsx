@@ -5,7 +5,7 @@ const OperationInfoQuery = ({ formBasic, }) => {
 
 
   return (
-    <div className="bg-slate-50 ">
+    <div className="bg-slate-50 mb-1 ">
       <Form form={formBasic} layout="vertical">
         <Row className="gap-3 flex items-center ml-2">
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>

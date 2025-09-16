@@ -18,6 +18,7 @@ import ContextMenuWrapper from 'component/ContextMenu';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
+import { reorderColumns } from 'utils/sheets/reorderColumns';
 
 function CategoryTable({
   dataCategoryValue,
@@ -78,6 +79,22 @@ function CategoryTable({
       });
     }
   }, []);
+
+  const columnNames = [
+      'promptValueName',
+
+  
+    ]
+    const highlightRegions = columnNames.map((columnName) => ({
+      color: '#e8f0ff',
+      range: {
+        x: reorderColumns(cols).indexOf(columnName),
+        y: 0,
+        width: 1,
+        height: numRows,
+      },
+    }))
+  
 
   const [keybindings, setKeybindings] = useState({
     downFill: true,
@@ -474,6 +491,7 @@ function CategoryTable({
             onCellClicked={onCellClicked}
             onColumnResize={onColumnResize}
             customRenderers={[DropdownRenderer]}
+            highlightRegions={highlightRegions}
             // onHeaderMenuClick={onHeaderMenuClick}
             // onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}

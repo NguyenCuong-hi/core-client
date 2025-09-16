@@ -678,8 +678,8 @@ const ManageMenu = ({ canCreate }) => {
       const data =
       {
         roleCode: roleCode,
-        page: 0,
-        size: 10
+        PageIndex: 1,
+        PageSize: 1000
 
       }
       const result = await SearchMenuBy(data)
@@ -788,8 +788,8 @@ const ManageMenu = ({ canCreate }) => {
 
       const data = 
         {
-          pageIndex: 1,
-          pageSize: 50,
+          PageIndex: 1,
+          PageSize: 1000,
           keywork: '',
         }
       
@@ -816,8 +816,8 @@ const ManageMenu = ({ canCreate }) => {
 
       const data =
         {
-          pageIndex: 1,
-          pageSize: 50,
+          PageIndex: 1,
+          PageSize: 1000,
           keywork: '',
         }
 
@@ -843,8 +843,8 @@ const ManageMenu = ({ canCreate }) => {
 
       const data = [
         {
-          pageIndex: 1,
-          pageSize: 50,
+          PageIndex: 1,
+          PageSize: 50,
           keywork: '',
         },
       ]
