@@ -1,22 +1,85 @@
-import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
+import { Col, Form, Row, Select } from 'antd';
+import { set } from 'lodash';
 import React from 'react';
 
-const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dataSuccessTable, dataReworkTable,  }) => {
-  const onChangeDataStep = (value) => {
-    console.log(`selected ${value}`);
-  };
+const OperationManageInfo = ({
+  formBasic,
+  dataUnit,
+  dataStep,
+  dataLossTable,
+  dataSuccessTable,
+  dataReworkTable,
+  dataInParam,
+  dataOutParam,
+  dataBonusTable,
 
+  setUnit,
+  setStep,
+  setLossTable,
+  setSuccessTable,
+  setInParam,
+  setOutParam,
+  setReworkParam,
+  setBonusParam
+}) => {
   const onChangeSuccessTable = (value) => {
-    console.log(`selected ${value}`);
-  };
-
-  const onChangeLossTable = (value) => {
-    console.log(`selected ${value}`);
+    if (value !== undefined) {
+      const unit = dataSuccessTable.find((x) => x.value === value);
+      formBasic.setFieldsValue({
+        unitQty: unit.value
+      });
+    }
   };
 
   const onChangeUnitQty = (value) => {
-    console.log(`selected ${value}`);
-  }
+    if (value !== undefined) {
+
+      const unit = dataUnit.find((x) => x.code === value);
+      setUnit(unit.code);
+    }
+  };
+
+  const onChangeStep = (value) => {
+    if (value !== undefined) {
+      const found = dataStep.find((x) => x.code === value);
+      setStep(found.code);
+    }
+  };
+
+  const onChangeLossTable = (value) => {
+    if (value !== undefined) {
+      const found = dataLossTable.find((x) => x.code === value);
+      setLossTable(found.code);
+    }
+  };
+
+  const onChangeInParam = (value) => {
+    if (value !== undefined) {
+      const found = dataInParam.find((x) => x.code === value);
+      setInParam(found.code);
+    }
+  };
+
+  const onChangeOutParam = (value) => {
+    if (value !== undefined) {
+      const unit = dataOutParam.find((x) => x.code === value);
+      setOutParam(unit.code);
+    }
+  };
+
+  const onChangeReworkParam = (value) => {
+    if (value !== undefined) {
+      const unit = dataReworkTable.find((x) => x.code === value);
+      setReworkParam(unit.code);
+    }
+  };
+
+  const onChangeBonusParam = (value) => {
+    if (value !== undefined) {
+      const unit = dataBonusTable.find((x) => x.code === value);
+      setBonusParam(unit.code);
+    }
+  };
 
   return (
     <div className="bg-slate-50 ">
@@ -36,7 +99,10 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
                 optionFilterProp="label"
                 onChange={onChangeUnitQty}
                 allowClear
-                options={dataUnit}
+                options={dataUnit.map((u) => ({
+                  label: u.value,
+                  value: u.code
+                }))}
               />
             </Form.Item>
           </Col>
@@ -51,11 +117,14 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
             >
               <Select
                 showSearch
-                placeholder="Trạng thái"
+                placeholder="Thao tác"
                 optionFilterProp="label"
-                onChange={onChangeDataStep}
+                onChange={onChangeStep}
                 allowClear
-                options={dataStep}
+                options={dataStep.map((u) => ({
+                  label: u.value,
+                  value: u.code
+                }))}
               />
             </Form.Item>
           </Col>
@@ -91,6 +160,82 @@ const OperationManageInfo = ({ formBasic, dataUnit, dataStep, dataLossTable, dat
                 placeholder="Mã hoàn thành"
                 optionFilterProp="label"
                 onChange={onChangeSuccessTable}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số đầu vào</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'inParam'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số đầu vào"
+                optionFilterProp="label"
+                onChange={onChangeInParam}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số đầu ra</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'outParam'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số đầu ra"
+                optionFilterProp="label"
+                onChange={onChangeOutParam}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số thao tác lại</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'reworkParam'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số thao tác lại"
+                optionFilterProp="label"
+                onChange={onChangeReworkParam}
+                allowClear
+                options={dataSuccessTable}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[200px]">Tham số thao bổ sung</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'bonusParam'}
+            >
+              <Select
+                showSearch
+                placeholder="Tham số thao bổ sung"
+                optionFilterProp="label"
+                onChange={onChangeBonusParam}
                 allowClear
                 options={dataSuccessTable}
               />

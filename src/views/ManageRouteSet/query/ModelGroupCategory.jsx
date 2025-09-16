@@ -29,7 +29,7 @@ const ModelGroupCategory = ({
 
   const cellConfig = {};
   return (
-    <div className="bg-slate-50  h-[calc(100vh-189px)]">
+    <div className="bg-slate-50  h-[calc(100vh-180px)]">
       <CategoryTable
         dataCategoryValue={dataCategoryValue}
         defaultCols={defaultCols}

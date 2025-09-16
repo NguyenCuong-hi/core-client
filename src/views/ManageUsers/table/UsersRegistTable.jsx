@@ -49,6 +49,11 @@ function UsersRegisTable({
   const [isCell, setIsCell] = useState(null);
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
+  const onItemHovered = useCallback((args) => {
+        const [_, row] = args.location
+        setHoverRow(args.kind !== 'cell' ? undefined : row)
+    }, [])
+
   const [hiddenColumns, setHiddenColumns] = useState(() => {
     return loadFromLocalStorageSheet('H_ERP_COLS_PAGE_USERS_LIST', []);
   });
@@ -57,10 +62,7 @@ function UsersRegisTable({
   const [keySearchText, setKeySearchText] = useState('');
   const [hoverRow, setHoverRow] = useState(undefined);
 
-  const onItemHovered = useCallback((args) => {
-    const [_, row] = args.location;
-    setHoverRow(args.kind !== 'cell' ? undefined : row);
-  }, []);
+
 
   const onHeaderMenuClick = useCallback((col, bounds) => {
     if (cols[col]?.id === 'Status') {
@@ -495,7 +497,13 @@ function UsersRegisTable({
             // customRenderers={[
             //     AsyncDropdownCellRenderer
             // ]}
-            // onItemHovered={onItemHovered}
+            onItemHovered={onItemHovered}
+            theme={{
+              baseFontStyle: '14px Arial', // Cỡ chữ và font
+              textDark: '#333333', // Màu chữ chính
+              textMedium: '#666666', // Màu chữ trung bình
+              textLight: '#999999' // Màu chữ nhạt
+            }}
           />
           {/* {showMenu !== null &&
                     renderLayer(

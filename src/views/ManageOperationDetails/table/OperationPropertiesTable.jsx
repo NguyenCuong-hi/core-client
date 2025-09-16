@@ -16,8 +16,10 @@ import useOnFill from 'utils/hooks/onFillHook';
 import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import ContextMenuWrapper from 'component/ContextMenu';
-import { DeleteOutline, EditOffRounded } from '@mui/icons-material';
-
+const parseBoolean = (value) => {
+  const normalized = String(value).trim().toLowerCase()
+  return normalized === '1' || normalized === 'true'
+}
 function OperationPropertiesTable({
   setSelection,
   selection,
@@ -170,6 +172,18 @@ function OperationPropertiesTable({
           allowOverlay: true,
           hasMenu: false
         };
+      }
+
+      if (
+        columnKey === 'isUse' 
+      ) {
+        const booleanValue = parseBoolean(value)
+        return {
+          kind: GridCellKind.Boolean,
+          data: booleanValue,
+          allowOverlay: true,
+          hasMenu: column?.hasMenu || false,
+        }
       }
 
       return {
@@ -470,7 +484,7 @@ function OperationPropertiesTable({
             fillHandle={true}
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
-            // onCellEdited={onCellEdited}
+            onCellEdited={onCellEdited}
             onCellClicked={onCellClicked}
 
             onColumnResize={onColumnResize}

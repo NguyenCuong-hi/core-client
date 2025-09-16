@@ -51,7 +51,6 @@ import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId
 import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
 import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
 import { DeleteRouteById } from 'services/RouteSetManage/DeleteRouteById';
-import { NULL } from 'sass';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -1631,7 +1630,7 @@ const ManageRouteSetPage = ({ canCreate, canEdit, canDelete, canView }) => {
 
   return (
     <>
-      <div className="h-full pt-4">
+      <div className="h-full mt-4">
         <AuDrAction
           titlePage={'Đăng ký quy trình sản xuất'}
           onClickDelete={onClickDelete}
