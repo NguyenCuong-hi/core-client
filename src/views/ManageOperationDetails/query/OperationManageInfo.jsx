@@ -1,4 +1,5 @@
 import { Col, Form, Row, Select } from 'antd';
+import { set } from 'lodash';
 import React from 'react';
 
 const OperationManageInfo = ({
@@ -10,7 +11,16 @@ const OperationManageInfo = ({
   dataReworkTable,
   dataInParam,
   dataOutParam,
-  dataBonusTable
+  dataBonusTable,
+
+  setUnit,
+  setStep,
+  setLossTable,
+  setSuccessTable,
+  setInParam,
+  setOutParam,
+  setReworkParam,
+  setBonusParam
 }) => {
   const onChangeSuccessTable = (value) => {
     if (value !== undefined) {
@@ -23,64 +33,51 @@ const OperationManageInfo = ({
 
   const onChangeUnitQty = (value) => {
     if (value !== undefined) {
-      const unit = dataUnit.find((x) => x.value === value);
-      formBasic.setFieldsValue({
-        unitQty: unit.value
-      });
+
+      const unit = dataUnit.find((x) => x.code === value);
+      setUnit(unit.code);
     }
   };
 
   const onChangeStep = (value) => {
     if (value !== undefined) {
-      const unit = dataStep.find((x) => x.value === value);
-      formBasic.setFieldsValue({
-        unitQty: unit.value
-      });
+      const found = dataStep.find((x) => x.code === value);
+      setStep(found.code);
     }
   };
 
   const onChangeLossTable = (value) => {
     if (value !== undefined) {
-      const unit = dataLossTable.find((x) => x.value === value);
-      formBasic.setFieldsValue({
-        unitQty: unit.value
-      });
+      const found = dataLossTable.find((x) => x.code === value);
+      setLossTable(found.code);
     }
   };
 
   const onChangeInParam = (value) => {
     if (value !== undefined) {
-      const unit = dataInParam.find((x) => x.value === value);
-      formBasic.setFieldsValue({
-        unitQty: unit.value
-      });
+      const found = dataInParam.find((x) => x.code === value);
+      setInParam(found.code);
     }
   };
 
   const onChangeOutParam = (value) => {
     if (value !== undefined) {
-      const unit = dataOutParam.find((x) => x.value === value);
-      formBasic.setFieldsValue({
-        unitQty: unit.value
-      });
+      const unit = dataOutParam.find((x) => x.code === value);
+      setOutParam(unit.code);
     }
   };
 
   const onChangeReworkParam = (value) => {
     if (value !== undefined) {
-      const unit = dataReworkTable.find((x) => x.value === value);
-      formBasic.setFieldsValue({
-        unitQty: unit.value
-      });
+      const unit = dataReworkTable.find((x) => x.code === value);
+      setReworkParam(unit.code);
     }
   };
 
   const onChangeBonusParam = (value) => {
     if (value !== undefined) {
-      const unit = dataBonusTable.find((x) => x.value === value);
-      formBasic.setFieldsValue({
-        unitQty: unit.value
-      });
+      const unit = dataBonusTable.find((x) => x.code === value);
+      setBonusParam(unit.code);
     }
   };
 
@@ -96,7 +93,17 @@ const OperationManageInfo = ({
               wrapperCol={{ style: { padding: 0 } }}
               name={'unitQty'}
             >
-              <Select showSearch placeholder="Đơn vị" optionFilterProp="label" onChange={onChangeUnitQty} allowClear options={dataUnit} />
+              <Select
+                showSearch
+                placeholder="Đơn vị"
+                optionFilterProp="label"
+                onChange={onChangeUnitQty}
+                allowClear
+                options={dataUnit.map((u) => ({
+                  label: u.value,
+                  value: u.code
+                }))}
+              />
             </Form.Item>
           </Col>
 
@@ -108,7 +115,17 @@ const OperationManageInfo = ({
               wrapperCol={{ style: { padding: 0 } }}
               name={'step'}
             >
-              <Select showSearch placeholder="Thao tác" optionFilterProp="label" onChange={onChangeStep} allowClear options={dataStep} />
+              <Select
+                showSearch
+                placeholder="Thao tác"
+                optionFilterProp="label"
+                onChange={onChangeStep}
+                allowClear
+                options={dataStep.map((u) => ({
+                  label: u.value,
+                  value: u.code
+                }))}
+              />
             </Form.Item>
           </Col>
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>

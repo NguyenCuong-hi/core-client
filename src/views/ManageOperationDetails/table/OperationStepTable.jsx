@@ -25,7 +25,10 @@ import { reorderColumns } from 'utils/sheets/reorderColumns';
 import { useNotify } from 'utils/hooks/onNotify';
 import { CellsCodeSys } from 'utils/sheets/cell-custom/cellsCodeSys';
 import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
-
+const parseBoolean = (value) => {
+  const normalized = String(value).trim().toLowerCase();
+  return normalized === '1' || normalized === 'true';
+};
 function OperationStepTable({
   setSelection,
   selection,
@@ -59,7 +62,6 @@ function OperationStepTable({
   const [isCell, setIsCell] = useState(null);
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
   const { notify, contextHolder } = useNotify();
-  
 
   const [keyword, setKeyword] = useState('');
   const [pageIndex, setPageIndex] = useState(1);
@@ -85,23 +87,16 @@ function OperationStepTable({
     setHoverRow(args.kind !== 'cell' ? undefined : row);
   }, []);
 
-  const columnNames = [
-    'operationName',
-    'lossName',
-    'bonusName',
-    'reworkName',
-    'repairName',
-
-  ]
+  const columnNames = ['operationStepName', 'lossName', 'bonusName', 'reworkName', 'repairName'];
   const highlightRegions = columnNames.map((columnName) => ({
     color: '#e8f0ff',
     range: {
       x: reorderColumns(cols).indexOf(columnName),
       y: 0,
       width: 1,
-      height: numRows,
-    },
-  }))
+      height: numRows
+    }
+  }));
 
   const onHeaderMenuClick = useCallback((col, bounds) => {
     if (cols[col]?.id === 'Status') {
@@ -157,18 +152,12 @@ function OperationStepTable({
         PageIndex: pageIndex,
         PageSize: pageSize
       };
-      const [
-        dataOperation, 
-        dataLossName, 
-        dataBonusName, 
-        dataReworkName, 
-        dataRepairName] = await Promise.all([
-        SearchOperationBy(searchParam, signal), 
-        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
-        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
-        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
-        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, key),
-      
+      const [dataOperation, dataLossName, dataBonusName, dataReworkName, dataRepairName] = await Promise.all([
+        SearchOperationBy(searchParam, signal),
+        SearchCategory(1, 'fmOperationRegister', '', '', 1, 1000, keyword),
+        SearchCategory(2, 'fmOperationRegister', '', '', 1, 1000, keyword),
+        SearchCategory(3, 'fmOperationRegister', '', '', 1, 1000, keyword),
+        SearchCategory(4, 'fmOperationRegister', '', '', 1, 1000, keyword)
       ]);
       setDataOperation(dataOperation.data);
       setDataLossName(dataLossName.data);
@@ -176,10 +165,9 @@ function OperationStepTable({
       setDataReworkName(dataReworkName.data);
       setDataRepairName(dataRepairName.data);
     } catch (error) {
-      setRouteTree([]);
       setIsAPISuccess(true);
       notify({
-        type: 'false',
+        type: 'error',
         message: 'Lỗi',
         description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
       });
@@ -204,7 +192,7 @@ function OperationStepTable({
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
       const cellConfig = {
-        operationName: {
+        operationStepName: {
           kind: 'cells-operation',
           allowedValues: dataOperation,
           setCacheData: setDataOperation
@@ -229,8 +217,7 @@ function OperationStepTable({
           kind: 'cells-code-sys',
           allowedValues: dataRepairName,
           setCacheData: setDataRepairName
-        },
-
+        }
       };
 
       if (cellConfig[columnKey]) {
@@ -247,6 +234,16 @@ function OperationStepTable({
           },
           displayData: String(value),
           readonly: column?.readonly || false,
+          hasMenu: column?.hasMenu || false
+        };
+      }
+
+      if (columnKey === 'wipRequestPack') {
+        const booleanValue = parseBoolean(value);
+        return {
+          kind: GridCellKind.Boolean,
+          data: booleanValue,
+          allowOverlay: true,
           hasMenu: column?.hasMenu || false
         };
       }
@@ -439,7 +436,7 @@ function OperationStepTable({
       const [col, row] = cell;
       const key = indexes[col];
 
-      if (key === 'operationName') {
+      if (key === 'operationStepName') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -449,13 +446,14 @@ function OperationStepTable({
             const checkCopyData = newValue.copyData;
             if (selectedName) {
               const selectedValue = dataOperation.find((item) => item.id === selectedName[0].id);
-              product['operationId'] = selectedValue.id;
-              product['operationCode'] = selectedValue.operationCode;
-              product['operationName'] = selectedValue.operationName;
+              product['operationStepId'] = selectedValue.id;
+              product['operationStepCode'] = selectedValue.operationCode;
+              product['operationStepName'] = selectedValue.operationName;
+              product['description'] = selectedValue.description;
             } else {
-              product['operationId'] = '';
-              product['operationCode'] = '';
-              product['operationName'] = '';
+              product['operationStepId'] = '';
+              product['operationStepCode'] = '';
+              product['operationStepName'] = '';
             }
 
             product.isEdited = true;
@@ -471,7 +469,7 @@ function OperationStepTable({
         }
       }
 
-      if (key === 'routerNameRework') {
+      if (key === 'lossName') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -480,14 +478,12 @@ function OperationStepTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataRoute.find((item) => item.id === selectedName[0].id);
-              product['routeIdRework'] = selectedValue.id;
-              product['routerNameRework'] = selectedValue.routeName;
-              product['routeCodeRework'] = selectedValue.routeCode;
+              const selectedValue = dataLossName.find((item) => item.id === selectedName[0].id);
+              product['lossName'] = selectedValue.value;
+              product['lossId'] = selectedValue.id;
             } else {
-              product['routeIdRework'] = '';
-              product['routerNameRework'] = '';
-              product['routeCodeRework'] = '';
+              product['lossName'] = '';
+              product['lossId'] = '';
             }
 
             product.isEdited = true;
@@ -503,7 +499,7 @@ function OperationStepTable({
         }
       }
 
-      if (key === 'operationReworkName') {
+      if (key === 'bonusName') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -512,14 +508,12 @@ function OperationStepTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataOperation.find((item) => item.id === selectedName[0].id);
-              product['operationReworkId'] = selectedValue.id;
-              product['operationReworkCode'] = selectedValue.operationCode;
-              product['operationReworkName'] = selectedValue.operationName;
+              const selectedValue = dataBonusName.find((item) => item.id === selectedName[0].id);
+              product['bonusName'] = selectedValue.value;
+              product['bonusId'] = selectedValue.id;
             } else {
-              product['operationReworkId'] = '';
-              product['operationReworkCode'] = '';
-              product['operationReworkName'] = '';
+              product['bonusName'] = '';
+              product['bonusId'] = '';
             }
 
             product.isEdited = true;
@@ -535,7 +529,7 @@ function OperationStepTable({
         }
       }
 
-      if (key === 'routeReturnName') {
+      if (key === 'reworkName') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -544,14 +538,42 @@ function OperationStepTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataRoute.find((item) => item.id === selectedName[0].id);
-              product['routeReturnId'] = selectedValue.id;
-              product['routeReturnCode'] = selectedValue.routeCode;
-              product['routeReturnName'] = selectedValue.routeName;
+              const selectedValue = dataReworkName.find((item) => item.id === selectedName[0].id);
+              product['reworkName'] = selectedValue.value;
+              product['reworkId'] = selectedValue.id;
             } else {
-              product['routeReturnId'] = '';
-              product['routeReturnCode'] = '';
-              product['routeReturnName'] = '';
+              product['reworkName'] = '';
+              product['reworkId'] = '';
+            }
+
+            product.isEdited = true;
+            product['IdxNo'] = row + 1;
+            const currentStatus = product['Status'] || 'U';
+            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
+
+            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
+
+            return newData;
+          });
+          return;
+        }
+      }
+
+      if (key === 'repairName') {
+        if (newValue.kind === GridCellKind.Custom) {
+          setGridData((prev) => {
+            const newData = [...prev];
+            const product = newData[row];
+
+            let selectedName = newValue.data;
+            const checkCopyData = newValue.copyData;
+            if (selectedName) {
+              const selectedValue = dataRepairName.find((item) => item.id === selectedName[0].id);
+              product['repairName'] = selectedValue.value;
+              product['repairId'] = selectedValue.id;
+            } else {
+              product['reworkName'] = '';
+              product['reworkId'] = '';
             }
 
             product.isEdited = true;
@@ -600,73 +622,73 @@ function OperationStepTable({
   );
 
   return (
-      <div className="w-full h-full gap-1 flex items-center justify-center ">
-        <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
-          <ContextMenuWrapper
-            menuItems={[
-              { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
-              { key: 'delete', label: 'Xoá', icon: <DeleteOutlined /> }
-            ]}
-            onMenuClick={handleMenuClick}
-          >
-            <DataEditor
-              {...cellProps}
-              ref={gridRef}
-              columns={cols}
-              getCellContent={getData}
-              onFill={onFill}
-              rows={numRows}
-              showSearch={showSearch}
-              onSearchClose={onSearchClose}
-              rowMarkers="both"
-              width="100%"
-              height="100%"
-              headerHeight={32}
-              rowHeight={27}
-              rowSelect="multi"
-              gridSelection={selection}
-              onGridSelectionChange={setSelection}
-              getCellsForSelection={true}
-              trailingRowOptions={{
-                hint: ' ',
-                sticky: true,
-                tint: true
-              }}
-              freezeColumns={1}
-              getRowThemeOverride={(i) =>
-                i === hoverRow
-                  ? {
-                      bgCell: '#f7f7f7',
-                      bgCellMedium: '#f0f0f0'
+    <div className="w-full h-full gap-1 flex items-center justify-center ">
+      <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
+        <ContextMenuWrapper
+          menuItems={[
+            { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
+            { key: 'delete', label: 'Xoá', icon: <DeleteOutlined /> }
+          ]}
+          onMenuClick={handleMenuClick}
+        >
+          <DataEditor
+            {...cellProps}
+            ref={gridRef}
+            columns={cols}
+            getCellContent={getData}
+            onFill={onFill}
+            rows={numRows}
+            showSearch={showSearch}
+            onSearchClose={onSearchClose}
+            rowMarkers="both"
+            width="100%"
+            height="100%"
+            headerHeight={32}
+            rowHeight={27}
+            rowSelect="multi"
+            gridSelection={selection}
+            onGridSelectionChange={setSelection}
+            getCellsForSelection={true}
+            trailingRowOptions={{
+              hint: ' ',
+              sticky: true,
+              tint: true
+            }}
+            freezeColumns={1}
+            getRowThemeOverride={(i) =>
+              i === hoverRow
+                ? {
+                    bgCell: '#f7f7f7',
+                    bgCellMedium: '#f0f0f0'
+                  }
+                : i % 2 === 0
+                  ? undefined
+                  : {
+                      bgCell: '#FBFBFB'
                     }
-                  : i % 2 === 0
-                    ? undefined
-                    : {
-                        bgCell: '#FBFBFB'
-                      }
-              }
-              overscrollY={0}
-              overscrollX={0}
-              smoothScrollY={true}
-              smoothScrollX={true}
-              onPaste={true}
-              fillHandle={true}
-              keybindings={keybindings}
-              onRowAppended={() => handleRowAppend(1)}
-              onCellEdited={onCellEdited}
-              onCellClicked={onCellClicked}
-              onColumnResize={onColumnResize}
-              customRenderers={[DropdownRenderer, CellsOperation, CellsCodeSys]}
-              highlightRegions={highlightRegions}
-              // onHeaderMenuClick={onHeaderMenuClick}
-              // onColumnMoved={onColumnMoved}
-              // onKeyUp={onKeyUp}
-              // customRenderers={[
-              //     AsyncDropdownCellRenderer
-              // ]}
-              // onItemHovered={onItemHovered}
-            />
-            {/* {showMenu !== null &&
+            }
+            overscrollY={0}
+            overscrollX={0}
+            smoothScrollY={true}
+            smoothScrollX={true}
+            onPaste={true}
+            fillHandle={true}
+            keybindings={keybindings}
+            onRowAppended={() => handleRowAppend(1)}
+            onCellEdited={onCellEdited}
+            onCellClicked={onCellClicked}
+            onColumnResize={onColumnResize}
+            customRenderers={[DropdownRenderer, CellsOperation, CellsCodeSys]}
+            highlightRegions={highlightRegions}
+            // onHeaderMenuClick={onHeaderMenuClick}
+            // onColumnMoved={onColumnMoved}
+            // onKeyUp={onKeyUp}
+            // customRenderers={[
+            //     AsyncDropdownCellRenderer
+            // ]}
+            // onItemHovered={onItemHovered}
+          />
+          {/* {showMenu !== null &&
                     renderLayer(
                         <div
                             {...layerProps}
@@ -701,22 +723,22 @@ function OperationStepTable({
                             )}
                         </div>,
                     )} */}
-          </ContextMenuWrapper>
+        </ContextMenuWrapper>
 
-          <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
-            {defaultCols.map(
-              (col) =>
-                col.id !== 'Status' && (
-                  <div key={col.id} style={{ marginBottom: '10px' }}>
-                    <Checkbox checked={!hiddenColumns.includes(col.id)} onChange={(e) => handleCheckboxChange(col.id, e.target.checked)}>
-                      {col.title}
-                    </Checkbox>
-                  </div>
-                )
-            )}
-          </Drawer>
-        </div>
+        <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
+          {defaultCols.map(
+            (col) =>
+              col.id !== 'Status' && (
+                <div key={col.id} style={{ marginBottom: '10px' }}>
+                  <Checkbox checked={!hiddenColumns.includes(col.id)} onChange={(e) => handleCheckboxChange(col.id, e.target.checked)}>
+                    {col.title}
+                  </Checkbox>
+                </div>
+              )
+          )}
+        </Drawer>
       </div>
+    </div>
   );
 }
 
