@@ -22,6 +22,7 @@
     "bootstrap": "^5.3.5",
     "formik": "^2.4.6",
     "framer-motion": "^11.1.7",
+    "i18next": "^25.3.2",
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "marked": "^4.0.10",
@@ -38,6 +39,8 @@
     "react-responsive-carousel": "^3.2.23",
     "react-router-dom": "^6.21.3",
     "reducers": "^3.0.0-alpha",
+    "sockjs-client": "^1.6.1",
+    "stompjs": "^2.3.3",
     "tailwindcss": "^4.1.3",
     "typescript": "4.1.3",
     "update-browserslist-db": "^1.1.3",
@@ -45,9 +48,7 @@
     "vite": "^5.2.10",
     "vite-jsconfig-paths": "^2.0.1",
     "xlsx": "^0.18.5",
-    "yup": "^1.4.0",
-    "i18next": "^25.3.2"
-
+    "yup": "^1.4.0"
   },
   "scripts": {
     "start": "vite",
