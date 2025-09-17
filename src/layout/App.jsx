@@ -11,7 +11,7 @@ import '../index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // third-party
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 // project import
 import theme from 'themes';
@@ -24,6 +24,7 @@ import { GetByLang } from 'services/Lang/GetByLang';
 import LoadingBlur from 'component/Loader/LoadingBlur';
 import AuthLogin from 'views/Login/AuthLogin';
 import { GetUserService } from 'services/Auth/GetUserService';
+import { connectWebSocket, disconnectWebSocket } from 'services/Socket/socket';
 
 // ==============================|| APP ||============================== //
 
@@ -32,6 +33,7 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingLogin, setCheckingLogin] = useState(true);
   const [languageUser, setLanguageUser] = useState(Number(localStorage.getItem('language')) || 2);
+  const dispatch = useDispatch();
 
   const LanguageProvider = ({ children, keyLanguage }) => {
     const [isReady, setIsReady] = useState(false);
@@ -118,6 +120,13 @@ const App = () => {
     };
     checkLogin();
   }, []);
+
+  useEffect(() => {
+    connectWebSocket(dispatch);
+    return () => {
+      disconnectWebSocket();
+    };
+  }, [dispatch]);
 
   if (checkingLogin) {
     return <LoadingBlur />;
