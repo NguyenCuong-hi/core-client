@@ -472,7 +472,7 @@ function OperationTable({
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            onCellClicked={onCellRouteClicked}
+            onCellClicked={onCellClicked}
             onVisibleRegionChanged={onVisibleRegionChanged}
 
             onColumnResize={onColumnResize}

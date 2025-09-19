@@ -37,7 +37,6 @@ function EquipmentTable({
   defaultCols,
   canEdit,
   onVisibleRegionChanged,
-  onCellRouteClicked,
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -432,7 +431,7 @@ function EquipmentTable({
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
             // onCellEdited={onCellEdited}
-            onCellClicked={onCellRouteClicked}
+            onCellClicked={onCellClicked}
             onVisibleRegionChanged={onVisibleRegionChanged}
 
             onColumnResize={onColumnResize}
