@@ -2,11 +2,11 @@ import axios from "axios";
 import { HOST_API_SERVER } from "services/config";
 import { accessToken } from "utils/cookies/CookiesUtils";
 
-export const SearchRouteTree = async (data) => {
+export const SearchOperationBy = async (data) => {
   try {
     const token = accessToken();
     const response = await axios.get(
-      `${HOST_API_SERVER}/mes-admin/api/v1/route/tree`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/operation/page`,
 
       { params: data,
         headers: {
@@ -15,7 +15,6 @@ export const SearchRouteTree = async (data) => {
         },
       },
     );
-
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,

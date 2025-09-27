@@ -51,7 +51,7 @@ import { createOperationBy } from 'services/OperationManage/CreateRouteByService
 import { updateIndexNo } from 'utils/sheets/updateIndexNo';
 import { getOperationById } from 'services/OperationManage/GetOperationById';
 import { searchEquipmentBy } from 'services/EquipmentManage/SearchBy';
-import { deleteOperationById } from 'services/EquipmentManage/DeleteOperationById';
+import { deleteOperationById } from 'services/EquipmentManage/DeleteEqpEventById';
 import { createEqpOpBy } from 'services/OperationManage/CreateEqpOpBy';
 import { getEqpByOperationId } from 'services/OperationManage/GetEqpByOperationId';
 import { deleteEqpOpBy } from 'services/OperationManage/DeleteEqpOpBy';
@@ -2117,7 +2117,7 @@ const ManageOperationDetails = ({ canCreate, canEdit, canDelete, canView }) => {
           onClickReset={onClickResetAll}
           onClickCopy={onClickCopy}
         />
-        <Splitter className="w-full h-full ">
+        <Splitter className="w-full h-full border">
           <SplitterPanel size={30} minSize={10}>
             <div className="w-full  h-full bg-white  overflow-x-hidden overflow-hidden  ">
               <div className="w-full h-[30px]  items-center border-b border-gray-200 ">
