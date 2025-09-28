@@ -32,23 +32,23 @@ import Splitter from 'antd/es/splitter/Splitter';
 import { SplitterPanel } from 'primereact/splitter';
 
 import { SearchRouteTree } from 'services/RouteSetManage/SearchRouteTree';
-import { getRouteById } from 'services/RouteSetManage/GetRouteById';
-import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
+
 import { CreateRouteOperationByService } from 'services/RouteSetManage/CreateRouteOperationBy';
 import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
-import { getRouteOpByRouteId } from 'services/RouteSetManage/GetRouteOpByRouteId';
 import { CreateRouteByService } from 'services/RouteSetManage/CreateRouteByService';
-import { getCategoryByRouteId } from 'services/RouteSetManage/GetCategoryByRouteId';
-import OperationPropertiesTable from './table/OperationPropertiesTable';
-import OperationStepTable from './table/OperationStepTable';
+
 import CategoryTable from 'component/Sheets/CategoryTable';
 import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
-import EquipmentTable from './table/EventTable';
-import MachineInfoQuery from './query/MachineInfoQuery';
-import MachineManageInfo from './query/EventManageInfo';
-import OperationTable from 'views/ManageRouteSet/table/OperationTable';
-import OperationEquipTable from 'views/ManageOperationDetails/table/OperationEquipTable';
-import EventManageInfo from './query/EventManageInfo';
+import EventTable from './table/EventTable';
+import EventStatusInfoTable from './table/EventStatusInfoTable';
+import { eventSearchBy } from 'services/EventManage/EventSearchBy';
+import { getEventById } from 'services/EventManage/GetEventById';
+import EventInfoQuery from './query/EventInfoQuery';
+import { createEventBy } from 'services/EventManage/createEventBy';
+import { deleteEventById } from 'services/EventManage/DeleteEventById';
+import { deleteEventRuleById } from 'services/EventManage/DeleteEventRuleBy';
+import { updateIndexNo } from 'utils/sheets/updateIndexNo';
+import { set } from 'lodash';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -69,7 +69,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [lastClickedCell, setLastClickedCell] = useState(null);
   const [clickedRowData, setClickedRowData] = useState(null);
 
-  const [selection, setSelection] = useState({
+  const [selectionEvent, setSelectionEvent] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
@@ -84,30 +84,23 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     rows: CompactSelection.empty()
   });
 
-  const [selectionOperationStep, setSelectionOperationStep] = useState({
+  const [selectionRuleEvent, setSelectionRuleEvent] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
 
-  const [selectionOpIndicate, setSelectionOpIndicate] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty()
-  });
   const [selectionOpProperties, setSelectionOpProperties] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
 
-  const [selectionOpEqp, setSelectionOpEqp] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty()
-  });
-
-  const [operationSelected, setOperationSelected] = useState([]);
+  const [eventSelected, setEventSelected] = useState([]);
   const [addedRows, setAddedRows] = useState([]);
   const [numRowsToAdd, setNumRowsToAdd] = useState(null);
   const [editedRows, setEditedRows] = useState([]);
   const [editedRowsCategory, setEditedRowsCategory] = useState([]);
+
+  const [eventRuleSelected, setEventRuleSelected] = useState([]);
 
   const [categorySelected, setCategorySelected] = useState([]);
   const [routeOpSelected, setRouteOpSelected] = useState([]);
@@ -115,9 +108,6 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [showSearch, setShowSearch] = useState(false);
 
   const [routeTree, setRouteTree] = useState([]);
-  const [routeTreeSelected, setRouteTreeSelected] = useState([]);
-  const [checkedKeys, setCheckedKeys] = useState([]);
-  const [selectNode, setSelectNode] = useState(null);
 
   const [dataLossTable, setDataLossTable] = useState([]);
   const [dataSuccessTable, setDataSuccessTable] = useState([]);
@@ -127,150 +117,8 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [dataBonusTable, setDataBonusTable] = useState([]);
   const [inParameterData, setInParameterData] = useState([]);
   const [outParameterData, setOutParameterData] = useState([]);
+  const cellConfig = {};
 
-  const defaultCols = useMemo(() => [
-    {
-      title: '',
-      id: 'Status',
-      kind: 'Text',
-      readonly: true,
-      width: 50,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderLookup,
-      trailingRowOptions: {
-        disabled: false
-      }
-    },
-    {
-      title: t('Mã công đoạn'),
-      id: 'id',
-      kind: 'Text',
-      readonly: true,
-      width: 10,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Tên công đoạn'),
-      id: 'operationName',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã công đoạn'),
-      id: 'operationCode',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mô tả'),
-      id: 'description',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
-  ]);
-
-  const [cols, setCols] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_OPERTATION_LIST',
-      defaultCols.filter((col) => col.visible)
-    )
-  );
-
-  const [gridDataOp, setGridDataOp] = useState([]);
-  const [numRowsOp, setNumRowsOp] = useState(0);
-  const [selectionOp, setSelectionOp] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty()
-  });
-
-  const defaultColsOpProperties = useMemo(() => [
-    {
-      title: '',
-      id: 'Status',
-      kind: 'Text',
-      readonly: true,
-      width: 50,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderLookup,
-      trailingRowOptions: {
-        disabled: false
-      }
-    },
-    {
-      title: t('Mã thuộc tính '),
-      id: 'id',
-      kind: 'Text',
-      readonly: true,
-      width: 10,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Thuộc tính'),
-      id: 'opProperties',
-      kind: 'Text',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Áp dụng'),
-      id: 'isUse',
-      kind: 'Boolean',
-      readonly: true,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
-  ]);
-
-  const [colsOpProperties, setColsOpProperties] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_OPERTATION_PROPERTY',
-      defaultColsOpProperties.filter((col) => col.visible)
-    )
-  );
   const [gridDataOpProperties, setGridDataOpProperties] = useState([]);
   const [numRowsOpProperties, setNumRowsOpProperties] = useState(0);
 
@@ -383,7 +231,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [numRowsToAddCategory, setNumRowsToAddCategory] = useState(null);
   const [addedRowsCategory, setAddedRowsCategory] = useState([]);
 
-  const defaultColsOpEqp = useMemo(() => [
+  const defaultColsEvent = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -402,7 +250,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       id: 'id',
       kind: 'Text',
       readonly: true,
-      width: 250,
+      width: 150,
       hasMenu: true,
       visible: false,
       icon: GridColumnIcon.HeaderRowID,
@@ -411,13 +259,13 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã công đoạn'),
-      id: 'operationId',
+      title: t('Mã sự kiện'),
+      id: 'eventCode',
       kind: 'Text',
       readonly: false,
-      width: 250,
+      width: 150,
       hasMenu: true,
-      visible: false,
+      visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
@@ -425,50 +273,11 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Mã công đoạn'),
-      id: 'operationCode',
-      kind: 'Custom',
+      title: t('Tên sự kiện'),
+      id: 'eventName',
+      kind: 'Text',
       readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Tên công đoạn'),
-      id: 'operationName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã thiết bị'),
-      id: 'eqpCode',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Tên thiết bị'),
-      id: 'eqpName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
+      width: 200,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -480,7 +289,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     {
       title: t('Mô tả'),
       id: 'description',
-      kind: 'Custom',
+      kind: 'Text',
       readonly: false,
       width: 250,
       hasMenu: true,
@@ -492,27 +301,21 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   ]);
 
-  const [colsOperationEqp, setColsOperationEqp] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_ROUTE_OPERATION_EQP',
-      defaultColsOpEqp.filter((col) => col.visible)
-    )
-  );
   const [gridDataOpEqp, setGridDataOpEqp] = useState([]);
   const [numRowsOpEqp, setNumRowsOpEqp] = useState(0);
   const [numRowsToAddOpProperties, setNumRowsToAddOpEqp] = useState(null);
   const [addedRowsOpProperties, setAddedRowsOpProperties] = useState([]);
 
-  const [colsEqp, setColsEqp] = useState(() =>
+  const [colsEvent, setColsEvent] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ROUTE_OPERATION_EQP',
-      defaultColsOpEqp.filter((col) => col.visible)
+      'S_EVENT',
+      defaultColsEvent.filter((col) => col.visible)
     )
   );
-  const [gridDataEqp, setGridDataEqp] = useState([]);
-  const [numRowsEqp, setNumRowsEqp] = useState(0);
+  const [gridDataEvent, setGridDataEvent] = useState([]);
+  const [numRowsEvent, setNumRowsEvent] = useState(0);
 
-  const defaultColsOpStep = useMemo(() => [
+  const defaultColsRuleEvent = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -527,8 +330,8 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã công đoạn'),
-      id: 'operationId',
+      title: t('Mã sự kiện'),
+      id: 'eventId',
       kind: 'Text',
       readonly: false,
       width: 250,
@@ -541,11 +344,11 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Tên công đoạn'),
-      id: 'operationName',
-      kind: 'Custom',
+      title: t('Thứ tự'),
+      id: 'seq',
+      kind: 'Text',
       readonly: false,
-      width: 250,
+      width: 100,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -555,10 +358,24 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Mã công đoạn'),
-      id: 'operationCode',
+      title: t('Mã sự kiện cho phép'),
+      id: 'eventNextId',
       kind: 'Text',
       readonly: true,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã sự kiện cho phép'),
+      id: 'eventNextCode',
+      kind: 'Custom',
+      readonly: false,
       width: 250,
       hasMenu: true,
       visible: true,
@@ -580,143 +397,22 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       trailingRowOptions: {
         disabled: true
       }
-    },
-    {
-      title: t('Bảng mã lỗi'),
-      id: 'lossName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã lỗi'),
-      id: 'lossId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Bảng mã bổ sung'),
-      id: 'bonusName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã bổ sung'),
-      id: 'bonusId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Bảng mã thao tác lại'),
-      id: 'reworkName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã thao tác lại'),
-      id: 'reworkId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Bảng mã sửa chữa'),
-      id: 'repairName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã sửa chữa'),
-      id: 'repairId',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Yêu cầu hoàn thành'),
-      id: 'wipRequestPack',
-      kind: 'Boolean',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
     }
   ]);
 
-  const [colsOpStep, setColsOpStep] = useState(() =>
+  const [colsRuleEvent, setColsRuleEvent] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_ROUTE_OP_STEP',
-      defaultColsOpStep.filter((col) => col.visible)
+      'S_RULE_EVENT',
+      defaultColsRuleEvent.filter((col) => col.visible)
     )
   );
-  const [gridDataOpStep, setGridDataOpStep] = useState([]);
-  const [numRowsOpStep, setNumRowsOpStep] = useState(0);
-  const [numRowsToAddOpStep, setNumRowsToAddOpStep] = useState(null);
-  const [addedRowsOpStep, setAddedRowsOpStep] = useState([]);
+  const [gridDataRuleEvent, setGridDataRuleEvent] = useState([]);
+  const [numRowsRuleEvent, setNumRowsRuleEvent] = useState(0);
+  const [numRowsToAddRuleEvent, setNumRowsToAddRuleEvent] = useState(null);
+  const [addedRowsRuleEvent, setAddedRowsRuleEvent] = useState([]);
 
-  const [OpStepSelected, setOpStepSelected] = useState([]);
-  const [editedRowsOpStep, setEditedRowsOpStep] = useState([]);
+  const [ruleEventSelected, setRuleEventSelected] = useState([]);
+  const [editedRowsRuleEvent, setEditedRowsRuleEvent] = useState([]);
 
   const [isSent, setIsSent] = useState(false);
   const [count, setCount] = useState(0);
@@ -724,9 +420,9 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const fieldsToTrack = ['IdxNo'];
   const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
 
-  const [routeId, setRouteId] = useState(null);
-  const [routeCode, setRouteCode] = useState(null);
-  const [routeName, setRouteName] = useState(null);
+  const [eventId, setEventId] = useState(null);
+  const [eventCode, setEventCode] = useState(null);
+  const [eventName, setEventName] = useState(null);
 
   //  Data Input
   const [formBasic] = Form.useForm();
@@ -741,42 +437,15 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [current, setCurrent] = useState('1');
 
   const onClickSave = useCallback(async () => {
-    const requiredColumns = ['configProdName'];
+    const requiredColumns = ['eventNextCode', 'eventNextId'];
 
-    const columnOpRework = [
-      'id',
-      'operationId',
-      'operationCode',
-      'operationName',
-      'routeIdRework',
-      'routeCodeRework',
-      'routerNameRework',
-      'operationReworkId',
-      'operationReworkCode',
-      'operationReworkName',
-      'routeReturnId',
-      'routeReturnCode',
-      'routeReturnName'
-    ];
-
-    const columnOpIndicate = [
-      'id',
-      'routeId',
-      'operationId',
-      'operationCode',
-      'operationName',
-      'description',
-      'isUse',
-      'queueNumber',
-      'processNumber',
-      'yield'
-    ];
+    const columnRuleEvent = ['id', 'eventId', 'seq', 'eventNextId', 'eventNextCode', 'description'];
 
     const columnsCategory = [
       'IdxNo',
       'id',
       'configProdNameId',
-      'routeId',
+      'eventId',
       'eventId',
       'operationId',
       'promptId',
@@ -829,75 +498,79 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       controllers.current.onClickSave = controller;
       const data = await formBasic.getFieldValue();
 
-      const dataOpReworkA = filterAndSelectColumns(gridDataOpEqp, columnOpRework, 'A').map((row) => ({
+      const dataRuleEventA = filterAndSelectColumns(gridDataRuleEvent, columnRuleEvent, 'A').map((row) => ({
         ...row,
         Status: 'A',
         id: row.id || '',
-        routeId: data.id || ''
+        eventId: eventId || ''
       }));
 
-      const dataOpReworkU = filterAndSelectColumns(gridDataOpEqp, columnOpRework, 'U').map((row) => ({
+      const dataRuleEventU = filterAndSelectColumns(gridDataRuleEvent, columnRuleEvent, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        routeId: data.id || ''
-      }));
-
-      const dataOpIndicateA = filterAndSelectColumns(gridDataOpStep, columnOpIndicate, 'A').map((row) => ({
-        ...row,
-        Status: 'A',
-        id: row.id || '',
-        routeId: routeId || ''
-      }));
-
-      const dataOpIndicateU = filterAndSelectColumns(gridDataOpStep, columnOpIndicate, 'U').map((row) => ({
-        ...row,
-        Status: 'U',
-        id: row.id || '',
-        routeId: routeId || ''
+        eventId: eventId || ''
       }));
 
       const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
         ...row,
         Status: 'A',
         id: row.id || '',
-        routeId: routeId || ''
+        eventId: eventId || ''
       }));
 
       const dataCategoryU = filterAndSelectColumns(gridDataCategory, columnsCategory, 'U').map((row) => ({
         ...row,
         Status: 'U',
         id: row.id || '',
-        routeId: routeId || ''
+        eventId: eventId || ''
       }));
 
-      const dataRework = [...dataOpReworkA, ...dataOpReworkU];
-      const dataIndicate = [...dataOpIndicateA, ...dataOpIndicateU];
+      const dataRuleEvent = [...dataRuleEventA, ...dataRuleEventU];
 
       const dataCategory = [...dataCategoryA, ...dataCategoryU];
       const dto = {
-        route: {
-          id: routeId || '',
+        event: {
+          id: eventId || '',
           ...data
         },
-        prompts: dataCategory,
-        reworks: dataRework,
-        indications: dataIndicate
+        categories: dataCategory,
+        rules: dataRuleEvent
       };
       try {
-        const result = await CreateRouteByService(dto);
+        const result = await createEventBy(dto);
 
         if (result.success) {
+          const { categories, event, rules } = result.data;
           notify({
             type: 'success',
             message: 'Thành công',
             description: 'Cập nhật thành công!'
           });
 
+          setGridData((prev) => {
+            const updated = prev.map((item) => {
+              const found = event.id === item.id ? event : null;
+              console.log('found', found);
+
+              return found
+                ? {
+                    ...item,
+                    Status: '',
+                    id: found?.id
+                  }
+                : {
+                    ...item,
+                    Status: '',
+                    id: found?.id
+                  };
+            });
+            return updateIndexNo(updated);
+          });
+
+
           setIsSent(false);
           setEditedRows([]);
-          console.log('routeId', routeId);
-          fetchDataRoutById(routeId);
         } else {
           setIsSent(false);
           notify({
@@ -911,8 +584,6 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         setIsSent(false);
         message.error(error.message || 'Có lỗi xảy ra khi lưu dữ liệu');
       } finally {
-        onFetchRoute();
-
         if (loadingBarRef.current) {
           loadingBarRef.current.complete();
         }
@@ -920,7 +591,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
-  }, [formBasic, gridDataCategory, gridDataOpProperties, isAPISuccess, routeId, gridDataOpEqp, gridDataOpStep]);
+  }, [formBasic, gridDataCategory, gridDataOpProperties, isAPISuccess, eventId, gridDataOpEqp, gridDataRuleEvent, gridData]);
 
   const onVisibleRegionChanged = useCallback(
     ({ y, height }) => {
@@ -941,7 +612,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
-      const response = SearchRouteBy(data);
+      const response = eventSearchBy(data);
       const fetchedData = response.data || [];
 
       setGridData((prev) => [...prev, ...fetchedData]);
@@ -951,15 +622,15 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   }, [numRows]);
 
-  const onFetchRoute = useCallback(async () => {
+  const onFetchEvent = useCallback(async () => {
     if (!isAPISuccess) {
       message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
       return;
     }
 
-    if (controllers.current && controllers.current.onFetchRoute) {
-      controllers.current.onFetchRoute.abort();
-      controllers.current.onFetchRoute = null;
+    if (controllers.current && controllers.current.onFetchEvent) {
+      controllers.current.onFetchEvent.abort();
+      controllers.current.onFetchEvent = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.continuousStart();
       }
@@ -971,7 +642,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    controllers.current.onFetchRoute = controller;
+    controllers.current.onFetchEvent = controller;
 
     setIsAPISuccess(false);
 
@@ -982,72 +653,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
-      const response = await SearchRouteTree(data);
-      const fetchedData = response.data || [];
-
-      const dataTree = fetchedData.map((item) => ({
-        title: item.route.routeCode,
-        value: item.route.id,
-        key: item.route.id,
-        icon: <ClusterOutlined />,
-        children: item.routeOperations.map((operation) => ({
-          title: operation.operationCode,
-          value: operation.id,
-          key: operation.id,
-          icon: <ApiOutlined />
-        }))
-      }));
-
-      setRouteTree(dataTree);
-    } catch (error) {
-      setRouteTree([]);
-      setIsAPISuccess(true);
-      notify({
-        type: 'false',
-        message: 'Lỗi',
-        description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
-      });
-    } finally {
-      setIsAPISuccess(true);
-      controllers.current.onFetchRoute = null;
-      if (loadingBarRef.current) {
-        loadingBarRef.current.complete();
-      }
-    }
-  }, [keyword, pageIndex, pageSize, isAPISuccess]);
-
-  const onFetchOperation = useCallback(async () => {
-    if (!isAPISuccess) {
-      message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
-      return;
-    }
-
-    if (controllers.current && controllers.current.onFetchOperation) {
-      controllers.current.onFetchOperation.abort();
-      controllers.current.onFetchOperation = null;
-      if (loadingBarRef.current) {
-        loadingBarRef.current.continuousStart();
-      }
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    if (loadingBarRef.current) {
-      loadingBarRef.current.continuousStart();
-    }
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    controllers.current.onFetchOperation = controller;
-
-    setIsAPISuccess(false);
-
-    try {
-      const data = {
-        Keyword: keyword,
-        PageIndex: pageIndex,
-        PageSize: pageSize
-      };
-
-      const response = await SearchOperationBy(data);
+      const response = await eventSearchBy(data);
       const fetchedData = response.data || [];
 
       setGridData(fetchedData);
@@ -1063,14 +669,14 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       });
     } finally {
       setIsAPISuccess(true);
-      controllers.current.onFetchOperation = null;
+      controllers.current.onFetchEvent = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.complete();
       }
     }
   }, [gridData, numRows, keyword, pageIndex, pageSize, isAPISuccess]);
 
-  const getSelectedRowsData = () => {
+  const getSelectedRowsData = (selection, gridData) => {
     const selectedRows = selection.rows.items;
 
     return selectedRows.flatMap(([start, end]) =>
@@ -1094,7 +700,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     );
   };
 
-  const onCellRouteClicked = useCallback(
+  const onCellEventClicked = useCallback(
     (cell, event) => {
       let rowIndex;
 
@@ -1113,23 +719,23 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       }
       if (cell[0] === -1) {
         if (rowIndex >= 0 && rowIndex < gridData.length) {
-          const isSelected = selection.rows.hasIndex(rowIndex);
+          const isSelected = selectionEvent.rows.hasIndex(rowIndex);
 
           let newSelected;
           if (isSelected) {
-            newSelected = selection.rows.remove(rowIndex);
-            setOperationSelected(getSelectedRowsData());
+            newSelected = selectionEvent.rows.remove(rowIndex);
+            setEventSelected(getSelectedRowsData(selectionEvent, gridData));
           } else {
-            newSelected = selection.rows.add(rowIndex);
-            setOperationSelected([]);
+            newSelected = selectionEvent.rows.add(rowIndex);
+            setEventSelected([]);
           }
         }
       }
     },
-    [gridData, getSelectedRowsData, operationSelected]
+    [gridData, getSelectedRowsData, eventSelected]
   );
 
-  const onCellOpPropertiesClicked = useCallback(
+  const onCellRuleEventClicked = useCallback(
     (cell, event) => {
       let rowIndex;
 
@@ -1147,39 +753,33 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         return;
       }
       if (cell[0] === -1) {
-        if (rowIndex >= 0 && rowIndex < gridDataOpProperties.length) {
-          const isSelected = selectionOpProperties.rows.hasIndex(rowIndex);
+        if (rowIndex >= 0 && rowIndex < gridDataRuleEvent.length) {
+          const isSelected = selectionRuleEvent.rows.hasIndex(rowIndex);
 
           let newSelected;
           if (isSelected) {
-            newSelected = selectionOpProperties.rows.remove(rowIndex);
-            setRouteOpSelected(getSelectedRowsRouteDetailsData());
+            newSelected = selectionRuleEvent.rows.remove(rowIndex);
+            setEventRuleSelected(getSelectedRowsData(selectionRuleEvent, gridDataRuleEvent));
           } else {
-            newSelected = selectionOpProperties.rows.add(rowIndex);
-            setRouteOpSelected([]);
+            newSelected = selectionRuleEvent.rows.add(rowIndex);
+            setEventRuleSelected([]);
           }
         }
       }
     },
-    [gridDataOpProperties, getSelectedRowsRouteDetailsData, routeOpSelected]
+    [gridDataRuleEvent, getSelectedRowsData, eventRuleSelected]
   );
 
-  const onTreeClicked = useCallback((selectedKeys, info) => {
-    if (info.node.value) {
-      fetchDataRoutById(info.node.value);
-    }
-  }, []);
-
-  const fetchDataRoutById = useCallback(
-    async (routeId) => {
+  const fetchDataEventById = useCallback(
+    async (id) => {
       if (!isAPISuccess) {
         message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
         return;
       }
 
-      if (controllers.current && controllers.current.fetchDataRoutById) {
-        controllers.current.fetchDataRoutById.abort();
-        controllers.current.fetchDataRoutById = null;
+      if (controllers.current && controllers.current.fetchDataEventById) {
+        controllers.current.fetchDataEventById.abort();
+        controllers.current.fetchDataEventById = null;
         if (loadingBarRef.current) {
           loadingBarRef.current.continuousStart();
         }
@@ -1191,43 +791,33 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       const controller = new AbortController();
       const signal = controller.signal;
 
-      controllers.current.fetchDataRoutById = controller;
+      controllers.current.fetchDataEventById = controller;
 
       setIsAPISuccess(false);
 
       try {
-        const response = await getRouteById(routeId);
+        const response = await getEventById(id);
         const fetchedData = response.data || [];
 
         formBasic.setFieldsValue({
-          routeName: fetchedData.route.routeCode,
-          description: fetchedData.route.description,
-          routeCode: fetchedData.route.routeCode
+          eventName: fetchedData.event.eventCode,
+          description: fetchedData.event.description,
+          eventCode: fetchedData.event.eventCode
         });
 
-        setRouteId(fetchedData.route.id);
-        setRouteCode(fetchedData.route.routeCode);
-        setRouteName(fetchedData.route.routeName);
+        setEventId(fetchedData.event.id);
+        setEventCode(fetchedData.event.eventCode);
+        setEventName(fetchedData.event.eventName);
 
-        setGridDataOpProperties(fetchedData.routeOperation || []);
-        setNumRowsOpProperties(fetchedData.routeOperation?.length || 0);
+        setGridDataRuleEvent(fetchedData.rules || []);
+        setNumRowsRuleEvent(fetchedData.rules?.length || 0);
 
-        setGridDataOpEqp(fetchedData.reworkOperation || []);
-        setNumRowsOpEqp(fetchedData.reworkOperation?.length || 0);
-
-        setGridDataOpStep(fetchedData.indicatesOperation || []);
-        setNumRowsOpStep(fetchedData.indicatesOperation?.length || 0);
-
-        setGridDataCategory(fetchedData.promptCategoryResDto || []);
-        setNumRowsCategory(fetchedData.promptCategoryResDto?.length || 0);
+        setGridDataCategory(fetchedData.categories || []);
+        setNumRowsCategory(fetchedData.categories?.length || 0);
       } catch (error) {
         console.log(error);
-        setGridDataOpProperties([]);
-        setNumRowsOpProperties(0);
-        setGridDataOpEqp([]);
-        setNumRowsOpEqp(0);
-        setGridDataOpStep([]);
-        setNumRowsOpStep(0);
+        setGridDataRuleEvent([]);
+        setNumRowsRuleEvent(0);
         setGridDataCategory([]);
         setNumRowsCategory(0);
         setIsAPISuccess(true);
@@ -1244,24 +834,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         }
       }
     },
-    [
-      routeTree,
-      routeTreeSelected,
-      formBasic,
-      routeId,
-      routeCode,
-      routeName,
-      gridDataOpProperties,
-      gridDataOpEqp,
-      gridDataOpStep,
-      gridDataCategory,
-      isAPISuccess,
-      numRows,
-      numRowsOpProperties,
-      numRowsOpEqp,
-      numRowsOpStep,
-      numRowsCategory
-    ]
+    [formBasic, gridDataRuleEvent, gridDataCategory, isAPISuccess, numRows, numRowsRuleEvent, numRowsCategory]
   );
 
   const onCellCategoryClicked = useCallback(
@@ -1374,82 +947,14 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   ]);
 
   useEffect(() => {
-    onFetchOperation();
-  }, [selectedData]);
+    if (!eventSelected[0]?.id) return;
+    fetchDataEventById(eventSelected[0]?.id);
+  }, [eventSelected]);
 
   useEffect(() => {
     onFetchDropdownData();
+    onFetchEvent();
   }, []);
-
-  const onInsertRow = useCallback(async () => {
-    if (!Array.isArray(operationSelected) || operationSelected.length === 0) {
-      console.warn('operationSelected is empty or invalid');
-      return;
-    }
-
-    try {
-      const dto = operationSelected.map((item) => ({
-        routeId: routeId,
-        routeCode: routeCode,
-        routeName: routeName,
-
-        operationId: item.id,
-        operationCode: item.operationCode,
-        operationName: item.operationName,
-        description: item.description
-      }));
-
-      const result = await CreateRouteOperationByService(dto);
-
-      if (result.success) {
-        notify({
-          type: 'success',
-          message: 'Thành công',
-          description: 'Cập nhật thành công!'
-        });
-      } else {
-        notify({
-          type: 'success',
-          message: 'Thành công',
-          description: 'Cập nhật thành công!'
-        });
-      }
-    } catch (error) {
-      console.error('Error in onInsertRow:', error);
-      message.error('Có lỗi xảy ra khi thêm dòng mới');
-      return;
-    } finally {
-      onFetchRoute();
-      fetchDataRoutById(routeId);
-    }
-
-    setGridDataOpProperties((prevGridData) => {
-      const updatedGridData = [...prevGridData];
-
-      let addedCount = 0;
-
-      operationSelected.forEach((newItem) => {
-        const existingIndex = updatedGridData.findIndex((item) => item.id === newItem.routeId || item.routeCode === newItem.routeCode);
-
-        if (existingIndex !== -1) {
-          updatedGridData[existingIndex] = {
-            ...updatedGridData[existingIndex],
-            ...newItem
-          };
-        } else {
-          updatedGridData.push({
-            ...newItem,
-            IdxNo: updatedGridData.length + 1
-          });
-          addedCount++;
-        }
-      });
-
-      setNumRowsOpProperties((prevNumRows) => prevNumRows + addedCount);
-
-      return updatedGridData;
-    });
-  }, [operationSelected, routeId, routeCode, routeName]);
 
   const removeRow = useCallback(
     async (rowIndex) => {
@@ -1485,16 +990,10 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         if (routeOpSelected.length > 0) {
           const ids = routeOpSelected.map((item) => item.id).filter((id) => id !== undefined);
           response = await DeleteRouteOpBy(ids);
-          const Ops = await getRouteOpByRouteId(routeId);
-          setGridDataOpProperties(Ops.data);
-          setNumRowsOpProperties(Ops.data.length);
         }
         if (categorySelected.length > 0) {
           const idCategory = categorySelected.map((item) => item.id).filter((id) => id !== undefined);
           response = await DeleteCategoryBy(idCategory);
-          const category = await getCategoryByRouteId(routeId);
-          setGridDataCategory(category.data);
-          setNumRowsCategory(category.data.length);
         }
         const fetchedData = response || [];
 
@@ -1527,7 +1026,6 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         });
       } finally {
         setIsAPISuccess(true);
-        onFetchRoute();
         controllers.current.removeRow = null;
         if (loadingBarRef.current) {
           loadingBarRef.current.complete();
@@ -1548,33 +1046,22 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     [colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAddCategory]
   );
 
-  const handleRowAppendOpProperties = useCallback(
+  const handleRowAppendRuleEvent = useCallback(
     (numRowsToAdd) => {
       if (canCreate === false) {
         message.warning('Bạn không có quyền thêm dữ liệu');
         return;
       }
-      onRowAppended(colsOpProperties, setGridDataOpProperties, setNumRowsOpProperties, setAddedRowsOpProperties, numRowsToAdd);
+      onRowAppended(colsRuleEvent, setGridDataRuleEvent, setNumRowsRuleEvent, setAddedRowsRuleEvent, numRowsToAdd);
     },
-    [colsOpProperties, setGridDataOpProperties, setNumRowsOpProperties, setAddedRowsOpProperties, numRowsToAddOpProperties]
-  );
-
-  const handleRowAppendOpStep = useCallback(
-    (numRowsToAdd) => {
-      if (canCreate === false) {
-        message.warning('Bạn không có quyền thêm dữ liệu');
-        return;
-      }
-      onRowAppended(colsOpStep, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAdd);
-    },
-    [colsOpStep, setGridDataOpStep, setNumRowsOpStep, setAddedRowsOpStep, numRowsToAddOpStep]
+    [colsRuleEvent, setGridDataRuleEvent, setNumRowsRuleEvent, setAddedRowsRuleEvent, numRowsToAddRuleEvent]
   );
 
   const onClickDelete = useCallback(async () => {
-    if (!selectedData || !selectedData.data || !selectedData.data.id) {
-      message.warning('Vui lòng chọn dữ liệu để xóa');
-      return;
-    }
+    // if (!eventSelected || !eventSelected.data || !eventSelected.data.id) {
+    //   message.warning('Vui lòng chọn dữ liệu để xóa');
+    //   return;
+    // }
 
     if (!isAPISuccess) {
       message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
@@ -1600,31 +1087,14 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     setIsAPISuccess(false);
 
     try {
-      let response = {};
-      if (selectedData.length > 0) {
-        const ids = selectedData.map((item) => item.id).filter((id) => id !== undefined);
-        response = await DeleteRouteOpBy(ids);
+      if (eventSelected.length !== 0 && eventRuleSelected.length === 0 && categorySelected.length === 0) {
+        deleteEvent(eventSelected[0]?.id);
       }
-
-      if (!response.success) {
-        notify({
-          type: 'error',
-          message: 'Lỗi',
-          description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
-        });
-        return;
-      } else {
-        setGridDataCategory([]);
-        setNumRowsCategory(0);
-        setGridDataOpProperties([]);
-        setNumRowsOpProperties(0);
-        formBasic.resetFields();
-
-        notify({
-          type: 'success',
-          message: 'Thành công',
-          description: 'Xóa dữ liệu thành công!'
-        });
+      if (eventRuleSelected.length > 0) {
+        deleteRuleEvent();
+      }
+      if (categorySelected.length > 0) {
+        deleteCategory();
       }
       setIsAPISuccess(true);
       controllers.current.onClickDelete = null;
@@ -1645,7 +1115,100 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         loadingBarRef.current.complete();
       }
     }
-  }, [selectedData, gridDataOpProperties, gridDataCategory, formBasic, isAPISuccess]);
+  }, [eventSelected, gridDataRuleEvent, gridDataCategory, formBasic, isAPISuccess]);
+
+  const deleteEvent = useCallback(
+    async (id) => {
+      let response = {};
+      if (eventSelected.length > 0) {
+        response = await deleteEventById(id);
+      }
+
+      if (!response.success) {
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
+        });
+        return;
+      } else {
+        setGridDataCategory([]);
+        setNumRowsCategory(0);
+
+        setGridDataRuleEvent([]);
+        setNumRowsRuleEvent(0);
+
+        const updatedData = gridData.filter((row) => id !== row.id);
+        setGridData(updateIndexNo(updatedData));
+        setNumRows(updatedData.length);
+
+        formBasic.resetFields();
+
+        notify({
+          type: 'success',
+          message: 'Thành công',
+          description: 'Xóa dữ liệu thành công!'
+        });
+      }
+    },
+    [eventSelected, gridDataCategory, numRowsCategory, gridDataRuleEvent, numRowsRuleEvent, gridData, formBasic, numRows]
+  );
+
+  const deleteRuleEvent = useCallback(async () => {
+    let response = {};
+    if (eventRuleSelected.length > 0) {
+      const ids = eventRuleSelected.map((item) => item.id);
+      response = await deleteEventRuleById(ids);
+    }
+
+    if (!response.success) {
+      notify({
+        type: 'error',
+        message: 'Lỗi',
+        description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
+      });
+      return;
+    } else {
+      const ids = eventRuleSelected.map((item) => item.id).filter((id) => id !== undefined);
+      const updatedData = gridDataRuleEvent.filter((row) => !ids.includes(row.id));
+      setGridDataRuleEvent(updateIndexNo(updatedData));
+      setNumRowsRuleEvent(updatedData.length);
+
+      notify({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Xóa dữ liệu thành công!'
+      });
+    }
+  }, [gridDataRuleEvent, eventRuleSelected, numRowsRuleEvent]);
+
+  const deleteCategory = useCallback(async () => {
+    let response = {};
+    if (eventRuleSelected.length > 0) {
+      const ids = eventRuleSelected.map((item) => item.id);
+      response = await deleteEventRuleById(ids);
+    }
+
+    if (!response.success) {
+      notify({
+        type: 'error',
+        message: 'Lỗi',
+        description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
+      });
+      return;
+    } else {
+      const ids = eventRuleSelected.map((item) => item.id).filter((id) => id !== undefined);
+      const updatedData = gridDataRuleEvent.filter((row) => !ids.includes(row.id));
+      setGridDataRuleEvent(updateIndexNo(updatedData));
+      setNumRowsRuleEvent(updatedData.length);
+
+      notify({
+        type: 'success',
+        message: 'Thành công',
+        description: 'Xóa dữ liệu thành công!'
+      });
+    }
+  }, [gridDataRuleEvent, eventRuleSelected, numRowsRuleEvent]);
 
   const onSearch = (value) => {
     console.log('search:', value);
@@ -1657,6 +1220,22 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   };
 
+  const onClickCopy = () => {
+    setEventId('');
+  };
+
+  const onClickResetAll = () => {
+    formBasic.resetFields();
+
+    setGridDataRuleEvent([]);
+    setNumRowsRuleEvent(0);
+
+    setGridDataCategory([]);
+    setNumRowsCategory(0);
+
+    setEventId('');
+  };
+
   return (
     <>
       <div className="h-full mt-4">
@@ -1664,10 +1243,10 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
           titlePage={'Cấu hình trạng thái thiết bị'}
           onClickDelete={onClickDelete}
           onClickSave={onClickSave}
-          onClickUpdate={() => {}}
-          onClickReset={() => {}}
+          onClickReset={onClickResetAll}
+          onClickCopy={onClickCopy}
         />
-        <Splitter className="w-full h-full ">
+        <Splitter className="w-full h-full border">
           <SplitterPanel size={30} minSize={10}>
             <div className="w-full  h-full bg-white  overflow-x-hidden overflow-hidden  ">
               <div className="w-full h-[30px]  items-center border-b border-gray-200 ">
@@ -1683,23 +1262,30 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
                   />
                 </div>
               </div>
-              <EquipmentTable
-                defaultCols={defaultColsOpEqp}
-                gridData={gridDataEqp}
-                setGridData={setGridDataEqp}
-                cols={colsEqp}
-                setCols={setColsEqp}
-                numRows={numRowsEqp}
-                setNumRows={setNumRowsEqp}
+              <EventTable
+                defaultCols={defaultColsEvent}
+                gridData={gridData}
+                setGridData={setGridData}
+                cols={colsEvent}
+                setCols={setColsEvent}
+                numRows={numRows}
+                setNumRows={setNumRows}
                 onVisibleRegionChanged={onVisibleRegionChanged}
-                onCellRouteClicked={onCellRouteClicked}
-                selection={selection}
-                setSelection={setSelection}
+                onCellClicked={onCellEventClicked}
+                selection={selectionEvent}
+                setSelection={setSelectionEvent}
               />
             </div>
           </SplitterPanel>
           <SplitterPanel size={75} minSize={10}>
-            <MachineInfoQuery formBasic={formBasic} />
+            <EventInfoQuery
+              formBasic={formBasic}
+              dataUnit={dataUnit}
+              dataStep={dataStep}
+              dataLossTable={dataLossTable}
+              dataSuccessTable={dataSuccessTable}
+              dataReworkTable={dataReworkTable}
+            />
 
             <Menu
               mode="horizontal"
@@ -1721,115 +1307,44 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
             >
               <Menu.Item key="1">
                 <span className="flex items-center gap-1 text-sm font-bold">
-                  <ApartmentOutlined style={{ fontSize: 12 }} />
-                  {t('Thông tin')}
-                </span>
-              </Menu.Item>
-
-              <Menu.Item key="2">
-                <span className="flex items-center gap-1 text-sm font-bold">
-                  <SyncOutlined style={{ fontSize: 12 }} />
-                  {t('Thông tin bổ sung')}
-                </span>
-              </Menu.Item>
-
-              <Menu.Item key="3">
-                <span className="flex items-center gap-1 text-sm font-bold">
                   <AppstoreAddOutlined style={{ fontSize: 12 }} />
                   {t('Trạng thái cho phép')}
                 </span>
               </Menu.Item>
 
-              <Menu.Item key="4">
+              <Menu.Item key="2">
                 <span className="flex items-center gap-1 text-sm font-bold">
                   <DashboardOutlined style={{ fontSize: 12 }} />
                   {t('Danh mục')}
                 </span>
               </Menu.Item>
-
-              {current === '2' && (
-                <Menu.Item
-                  key="buttons"
-                  disabled
-                  style={{
-                    marginLeft: 'auto',
-                    cursor: 'default',
-                    background: 'transparent'
-                  }}
-                >
-                  <div className="flex gap-1 items-center">
-                    <Button type="text" icon={<PlusCircleFilled style={{ color: '#10b981', padding: 0 }} />} onClick={onInsertRow}>
-                      Chèn
-                    </Button>
-                    <Button type="text" icon={<MinusCircleFilled style={{ color: '#ef4444' }} />} onClick={removeRow}>
-                      Xóa
-                    </Button>
-                    <Button type="text" icon={<CaretUpFilled style={{ color: '#3333ff' }} />} onClick={() => {}}>
-                      Up
-                    </Button>
-                    <Button type="text" icon={<CaretDownFilled style={{ color: '#ff5c33' }} />} onClick={() => {}}>
-                      Down
-                    </Button>
-                  </div>
-                </Menu.Item>
-              )}
             </Menu>
+
             {current === '1' && (
               <div className="bg-slate-50  h-[calc(100vh-180px)]">
-                <EventManageInfo
-                      formBasic={formBasic}
-                      dataUnit={dataUnit}
-                      dataStep={dataStep}
-                      dataLossTable={dataLossTable}
-                      dataSuccessTable={dataSuccessTable}
-                      dataReworkTable={dataReworkTable}
-                    />
+                <EventStatusInfoTable
+                  dataEvent={gridData}
+                  setDataEvent={setGridData}
+                  setSelection={setSelectionRuleEvent}
+                  selection={selectionRuleEvent}
+                  setEditedRows={setEditedRowsRuleEvent}
+                  setGridData={setGridDataRuleEvent}
+                  gridData={gridDataRuleEvent}
+                  numRows={numRowsRuleEvent}
+                  handleRowAppend={handleRowAppendRuleEvent}
+                  setCols={setColsRuleEvent}
+                  cols={colsRuleEvent}
+                  defaultCols={defaultColsRuleEvent}
+                  canEdit={canEdit}
+                  controllers={controllers}
+                  loadingBarRef={loadingBarRef}
+                  setIsAPISuccess={setIsAPISuccess}
+                  isAPISuccess={isAPISuccess}
+                  onCellClicked={onCellRuleEventClicked}
+                />
               </div>
             )}
             {current === '2' && (
-              <div className="bg-slate-50  h-[calc(100vh-180px)]">
-                <OperationStepTable
-                  setSelection={setSelectionOperationStep}
-                  selection={selectionOperationStep}
-                  setEditedRows={setEditedRowsOpStep}
-                  setGridData={setGridDataOpStep}
-                  gridData={gridDataOpStep}
-                  numRows={numRowsOpStep}
-                  handleRowAppend={handleRowAppendOpStep}
-                  setCols={setColsOpStep}
-                  cols={colsOpStep}
-                  defaultCols={defaultColsOpStep}
-                  canEdit={canEdit}
-                  controllers={controllers}
-                  loadingBarRef={loadingBarRef}
-                  setIsAPISuccess={setIsAPISuccess}
-                  isAPISuccess={isAPISuccess}
-                />
-              </div>
-            )}
-
-            {current === '3' && (
-              <div className="bg-slate-50  h-[calc(100vh-180px)]">
-                <OperationStepTable
-                  setSelection={setSelectionOperationStep}
-                  selection={selectionOperationStep}
-                  setEditedRows={setEditedRowsOpStep}
-                  setGridData={setGridDataOpStep}
-                  gridData={gridDataOpStep}
-                  numRows={numRowsOpStep}
-                  handleRowAppend={handleRowAppendOpStep}
-                  setCols={setColsOpStep}
-                  cols={colsOpStep}
-                  defaultCols={defaultColsOpStep}
-                  canEdit={canEdit}
-                  controllers={controllers}
-                  loadingBarRef={loadingBarRef}
-                  setIsAPISuccess={setIsAPISuccess}
-                  isAPISuccess={isAPISuccess}
-                />
-              </div>
-            )}
-            {current === '4' && (
               <div className="bg-slate-50  h-[calc(100vh-180px)]">
                 <CategoryTable
                   dataCategoryValue={dataCategoryValue}
@@ -1845,6 +1360,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
                   selection={selectionCategory}
                   setSelection={setSelectionCategory}
                   onCellClicked={onCellCategoryClicked}
+                  cellConfig={cellConfig}
                 />
               </div>
             )}

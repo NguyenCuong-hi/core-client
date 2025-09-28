@@ -56,6 +56,7 @@ import { deleteEqpOpBy } from 'services/OperationManage/DeleteEqpOpBy';
 import { eq } from 'lodash';
 import { deleteEqpOperationBy } from 'services/EquipmentManage/DeleteEqpOperationBy';
 import { deleteEquipmentById } from 'services/EquipmentManage/DeleteEquipmentById';
+import { toolDetailsSearchBy } from 'services/ToolManage/ToolDetailsSearchBy';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -1660,7 +1661,7 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
-      const response = await toolSearchBy(data);
+      const response = await toolDetailsSearchBy(data);
       const fetchedData = response.data || [];
 
       setGridDataTool(fetchedData);
@@ -1717,7 +1718,6 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
 
         const response = await getEquipmentById(id);
         const fetchedData = response.data || [];
-        console.log('fetchedData', fetchedData);
 
         const { equipment, events, operations, tools, categories } = fetchedData;
 
@@ -2096,12 +2096,12 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
             setEqpSelected(getSelectedRowsData(gridDataEqp, selection));
           } else {
             newSelected = selection.rows.add(rowIndex);
-            setCategorySelected([]);
+            setEqpSelected([]);
           }
         }
       }
     },
-    [gridDataEqp, getSelectedRowsData, selection]
+    [gridDataEqp, getSelectedRowsData, selection, selectedEqp]
   );
 
   const onFetchDropdownData = useCallback(async () => {
@@ -2820,6 +2820,8 @@ const ManageMachineDetails = ({ canCreate, canEdit, canDelete, canView }) => {
                       onCellClicked={onCellToolClicked}
                       selection={selectionTool}
                       setSelection={setSelectionTool}
+                      cellConfig={cellConfig}
+                      
                     />
                   </SplitterPanel>
 

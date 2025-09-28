@@ -51,12 +51,11 @@ import { createOperationBy } from 'services/OperationManage/CreateRouteByService
 import { updateIndexNo } from 'utils/sheets/updateIndexNo';
 import { getOperationById } from 'services/OperationManage/GetOperationById';
 import { searchEquipmentBy } from 'services/EquipmentManage/SearchBy';
-import { deleteOperationById } from 'services/EquipmentManage/DeleteEqpEventById';
-import { createEqpOpBy } from 'services/OperationManage/CreateEqpOpBy';
 import { getEqpByOperationId } from 'services/OperationManage/GetEqpByOperationId';
 import { deleteEqpOpBy } from 'services/OperationManage/DeleteEqpOpBy';
 import { deleteOpStepBy } from 'services/OperationManage/DeleteOpStepBy';
 import { DeleteCategoryBy } from 'services/OperationManage/DeleteCategoryBy';
+import { deleteOperationById } from 'services/OperationManage/DeleteOperationById';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 

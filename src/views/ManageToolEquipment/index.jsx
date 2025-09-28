@@ -11,18 +11,21 @@ import { useNotify } from 'utils/hooks/onNotify';
 import { useSelector } from 'react-redux';
 import useDynamicFilter from 'utils/hooks/useDynamicFilter';
 import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
+
 import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
 import { eventSearchBy } from 'services/EventManage/EventSearchBy';
 import { updateIndexNo } from 'utils/sheets/updateIndexNo';
-import AuDMachineToolAction from './action/AuDMachineToolAction';
-import ToolTable from './table/ToolTable';
+
+import ToolDetailsTable from './table/ToolDetailsTable';
+import AuDToolDetailAction from './action/AuDToolDetailsAction';
+import { toolDetailsSearchBy } from 'services/ToolManage/ToolDetailsSearchBy';
+import { deleteToolDetailsByListId } from 'services/ToolManage/DeleteToolDetails';
+import { CreateToolDetailListByService } from 'services/ToolManage/CreateToolDetailListByService';
 import { toolSearchBy } from 'services/ToolManage/ToolSearchBy';
-import { CreateToolListByService } from 'services/ToolManage/CreateToolListByService';
-import { deleteToolByListId } from 'services/ToolManage/DeleteTool';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
-const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
+const ManageToolEquipment = ({ canCreate, canEdit, canDelete, canView }) => {
   const { t } = useTranslation();
   const { notify, contextHolder } = useNotify();
   const { spinning, percent, showLoader, hideLoader } = useFullscreenLoading();
@@ -50,15 +53,26 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const [selected, setSelected] = useState([]);
 
-  const [dataLossTable, setDataLossTable] = useState([]);
-  const [dataSuccessTable, setDataSuccessTable] = useState([]);
+  const [dataModel, setDataModel] = useState([]);
+  const [dataTool, setDataTool] = useState([]);
   const [dataStep, setDataStep] = useState([]);
   const [dataUnit, setDataUnit] = useState([]);
   const [dataReworkTable, setDataReworkTable] = useState([]);
   const [dataBonusTable, setDataBonusTable] = useState([]);
   const [inParameterData, setInParameterData] = useState([]);
   const [outParameterData, setOutParameterData] = useState([]);
-  const cellConfig = {};
+  const cellConfig = {
+    toolCode: {
+      kind: 'cells-tool',
+      allowedValues: dataTool,
+      setCacheData: setDataTool
+    },
+    modelCode: {
+      kind: 'cells-code-sys',
+      allowedValues: dataModel,
+      setCacheData: setDataModel
+    }
+  };
 
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
@@ -91,8 +105,73 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã phụ kiện'),
+      title: t('Mã danh mục phụ kiện'),
+      id: 'toolId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã danh mục phụ kiện'),
       id: 'toolCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      },
+      themeOverride: {
+        textHeader: '#DD1144',
+        bgIconHeader: '#DD1144',
+        fontFamily: ''
+      }
+    },
+
+    {
+      title: t('Model'),
+      id: 'modelId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Model'),
+      id: 'modelCode',
+      kind: 'Custom',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      },
+      themeOverride: {
+        textHeader: '#DD1144',
+        bgIconHeader: '#DD1144',
+        fontFamily: ''
+      }
+    },
+
+    {
+      title: t('Mã phụ kiện'),
+      id: 'toolDetailsCode',
       kind: 'Text',
       readonly: false,
       width: 250,
@@ -105,22 +184,8 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Tên phụ kiện'),
-      id: 'toolName',
-      kind: 'Text',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Phân loại phụ kiện'),
-      id: 'toolType',
+      title: t('Danh mục'),
+      id: 'toolCategory',
       kind: 'Text',
       readonly: false,
       width: 250,
@@ -148,10 +213,10 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
 
     {
       title: t('Đơn vị'),
-      id: 'unitName',
+      id: 'toolUnit',
       kind: 'Text',
       readonly: false,
-      width: 500,
+      width: 200,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -161,11 +226,11 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Đặc điểm phụ kiện'),
-      id: 'toolSpec',
+      title: t('Nhà cung cấp'),
+      id: 'vendor',
       kind: 'Text',
       readonly: false,
-      width: 500,
+      width: 200,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -175,11 +240,91 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Hạn thay thế'),
+      title: t('Ngày đăng ký'),
+      id: 'dateRegister',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Kiểm tra IQC'),
+      id: 'isIQC',
+      kind: 'Boolean',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Áp dụng INTERLOCK'),
+      id: 'isInterlock',
+      kind: 'Boolean',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Sử dụng PDA'),
+      id: 'isChangePDA',
+      kind: 'Boolean',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Kiểm tra hết hạn'),
+      id: 'isCheckPeriod',
+      kind: 'Boolean',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Chu kỳ thay thế (ngày)'),
+      id: 'exchangeCycleType',
+      kind: 'Text',
+      readonly: false,
+      width: 200,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Chu kì hết hạn'),
       id: 'exchangePeriod',
       kind: 'Text',
       readonly: false,
-      width: 500,
+      width: 200,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -187,13 +332,12 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
-
     {
-      title: t('Cảnh báo giới hạn thay thế'),
+      title: t('Cảnh báo hết hạn'),
       id: 'alarmPeriod',
       kind: 'Text',
       readonly: false,
-      width: 500,
+      width: 200,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -205,7 +349,7 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const [cols, setcols] = useState(() =>
     loadFromLocalStorageSheet(
-      'S_MACHINE_TOOL',
+      'S_DETAIL_TOOL',
       defaultCols.filter((col) => col.visible)
     )
   );
@@ -216,27 +360,37 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
   const fieldsToTrack = ['IdxNo'];
   const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
 
-
   const dataCategoryValue = [
     { MinorName: '8080', Value: 1 },
     { MinorName: '8000', Value: 2 },
     { MinorName: '3000', Value: 3 }
   ];
 
-  const onClickSave = useCallback(async () => {
+  const [checkPageA, setCheckPageA] = useState(false);
+  const [current, setCurrent] = useState('1');
 
+  const onClickSave = useCallback(async () => {
     const columnsCategory = [
       'IdxNo',
       'id',
+      'toolId',
+      'modelId',
       'toolCode',
-      'toolName',
-      'toolType',
+      'modelCode',
+      'toolDetailsCode',
+      'toolCategory',
       'description',
-      'unitName',
-      'toolSpec',
-      'description',
+      'toolUnit',
+      'vendor',
+      'dateRegister',
+      'isIQC',
+      'isInterlock',
+      'isChangePDA',
+      'isCheckPeriod',
+      'exchangeCycleType',
       'exchangePeriod',
       'alarmPeriod',
+      'toolName',
       'IDX_NO'
     ];
 
@@ -294,7 +448,7 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
       const dto = [...dataCategoryA, ...dataCategoryU];
 
       try {
-        const result = await CreateToolListByService(dto);
+        const result = await CreateToolDetailListByService(dto);
 
         if (result.success) {
           const data = result?.data;
@@ -407,7 +561,7 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
-      const response = await toolSearchBy(data);
+      const response = await toolDetailsSearchBy(data);
       const fetchedData = response.data || [];
 
       setGridData(fetchedData);
@@ -498,26 +652,21 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
     setIsAPISuccess(false);
 
     try {
-      const [unitData, stepData, lostData, successData, inParameterData, outParameterData, reworkParameterData, bonusParameterData] =
-        await Promise.all([SearchCategory(1, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword)]);
+      const data = {
+        Keyword: keyword,
+        PageIndex: pageIndex,
+        PageSize: pageSize
+      };
+      const [dataTool, dataModel] = await Promise.all([
+        toolSearchBy(data),
+        SearchCategory(1, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword)
+      ]);
 
-      setDataUnit(unitData.data);
-      // setDataStep(stepData.data.data.content);
-      // setDataLossTable(lostData.data.data.content);
-      // setDataSuccessTable(successData.data.data.content);
-      // setInParameterData(inParameterData.data.data.content);
-      // setOutParameterData(outParameterData.data.data.content);
-      // setDataReworkTable(reworkParameterData.data.data.content);
-      // setDataBonusTable(bonusParameterData.data.data.content);
+      setDataTool(dataTool.data);
+      setDataModel(dataModel.data);
     } catch (error) {
-      setDataUnit([]);
-      setDataStep([]);
-      setDataLossTable([]);
-      setDataSuccessTable([]);
-      setInParameterData([]);
-      setOutParameterData([]);
-      setDataReworkTable([]);
-      setDataBonusTable([]);
+      setDataModel([]);
+      setDataTool([]);
       setIsAPISuccess(true);
       notify({
         type: 'error',
@@ -531,23 +680,10 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
         loadingBarRef.current.complete();
       }
     }
-  }, [
-    loadingBarRef,
-    dataUnit,
-    dataStep,
-    dataLossTable,
-    dataSuccessTable,
-    inParameterData,
-    outParameterData,
-    dataReworkTable,
-    dataBonusTable,
-    keyword,
-    pageIndex,
-    pageSize,
-    isAPISuccess
-  ]);
+  }, [loadingBarRef, dataModel, dataTool, keyword, pageIndex, pageSize, isAPISuccess]);
 
   useEffect(() => {
+    onFetchDropdownData();
     onFetchTool();
   }, []);
 
@@ -620,7 +756,7 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
     let response = {};
     if (selected.length > 0) {
       const ids = selected.map((item) => item.id);
-      response = await deleteToolByListId(ids);
+      response = await deleteToolDetailsByListId(ids);
     }
 
     if (!response.success) {
@@ -662,14 +798,16 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
   return (
     <>
       <div className="h-full mt-4">
-        <AuDMachineToolAction
-          titlePage={'Danh mục phụ kiện'}
+        <AuDToolDetailAction
+          titlePage={'Danh sách phụ kiện'}
           onClickDelete={onClickDelete}
           onClickSave={onClickSave}
           onClickReset={onClickResetAll}
         />
         <div className="bg-slate-50  h-[calc(100vh-90px)]">
-          <ToolTable
+          <ToolDetailsTable
+            dataTool={dataTool}
+            dataModel={dataModel}
             dataCategoryValue={dataCategoryValue}
             defaultCols={defaultCols}
             gridData={gridData}
@@ -694,4 +832,4 @@ const ManageMachineTool = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 };
 
-export default ManageMachineTool;
+export default ManageToolEquipment;
