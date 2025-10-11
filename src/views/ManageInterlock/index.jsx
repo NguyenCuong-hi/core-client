@@ -7,10 +7,18 @@ import AuDrAction from 'component/Actions/AuDrAction';
 import { onRowAppended } from 'utils/sheets/onRowAppended';
 import { Button, Form, Menu, message, Spin, TreeSelect } from 'antd';
 import {
+  ApartmentOutlined,
+  ApiOutlined,
   AppstoreAddOutlined,
+  CaretDownFilled,
+  CaretUpFilled,
+  ClusterOutlined,
   DashboardOutlined,
   LoadingOutlined,
+  MinusCircleFilled,
+  PlusCircleFilled,
   SearchOutlined,
+  SyncOutlined
 } from '@ant-design/icons';
 import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
 import { useNotify } from 'utils/hooks/onNotify';
@@ -26,19 +34,22 @@ import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
 
 import CategoryTable from 'component/Sheets/CategoryTable';
 import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
-import EventTable from './table/EventTable';
-import EventStatusInfoTable from './table/EventStatusInfoTable';
 import { eventSearchBy } from 'services/EventManage/EventSearchBy';
 import { getEventById } from 'services/EventManage/GetEventById';
-import EventInfoQuery from './query/EventInfoQuery';
 import { createEventBy } from 'services/EventManage/createEventBy';
 import { deleteEventById } from 'services/EventManage/DeleteEventById';
 import { deleteEventRuleById } from 'services/EventManage/DeleteEventRuleBy';
 import { updateIndexNo } from 'utils/sheets/updateIndexNo';
+import InterlockCatTable from './table/InterlockCatTable';
+import InterlockQuery from './query/InterlockQuery';
+import InterlockTable from './table/InterlockTable';
+import { createInterlockBy } from 'services/InterlockManage/createInterlockBy';
+import { searchInterlock } from 'services/InterlockManage/searchInterlock';
+import { getInterlockByParentId } from 'services/InterlockManage/getInterlockByParentId';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
-const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
+const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
   const { t } = useTranslation();
   const { notify, contextHolder } = useNotify();
   const { spinning, percent, showLoader, hideLoader } = useFullscreenLoading();
@@ -55,7 +66,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [lastClickedCell, setLastClickedCell] = useState(null);
   const [clickedRowData, setClickedRowData] = useState(null);
 
-  const [selectionEvent, setSelectionEvent] = useState({
+  const [selectionInterlockCat, setSelectionInterlockCat] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
@@ -65,7 +76,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     rows: CompactSelection.empty()
   });
 
-  const [selectionCategory, setSelectionCategory] = useState({
+  const [selectionInterlock, setSelectionInterlock] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
@@ -84,7 +95,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [addedRows, setAddedRows] = useState([]);
   const [numRowsToAdd, setNumRowsToAdd] = useState(null);
   const [editedRows, setEditedRows] = useState([]);
-  const [editedRowsCategory, setEditedRowsCategory] = useState([]);
+  const [editedRowsCategory, setEditedRowsInterlock] = useState([]);
 
   const [eventRuleSelected, setEventRuleSelected] = useState([]);
 
@@ -93,12 +104,10 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
-  const [routeTree, setRouteTree] = useState([]);
-
-  const [dataLossTable, setDataLossTable] = useState([]);
-  const [dataSuccessTable, setDataSuccessTable] = useState([]);
-  const [dataStep, setDataStep] = useState([]);
-  const [dataUnit, setDataUnit] = useState([]);
+  const [transactionData, setTransactionData] = useState([]);
+  const [typeCheckData, setTypeCheckData] = useState([]);
+  const [workModeData, setWorkModeData] = useState([]);
+  const [ruleTypeData, setRuleTypeData] = useState([]);
   const [dataReworkTable, setDataReworkTable] = useState([]);
   const [dataBonusTable, setDataBonusTable] = useState([]);
   const [inParameterData, setInParameterData] = useState([]);
@@ -111,113 +120,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
 
-  const defaultColsCategory = useMemo(() => [
-    {
-      title: '',
-      id: 'Status',
-      kind: 'Text',
-      readonly: true,
-      width: 50,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderLookup,
-      trailingRowOptions: {
-        disabled: false
-      }
-    },
-    {
-      title: t('Mã thuộc tính'),
-      id: 'id',
-      kind: 'Text',
-      readonly: true,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Tên thuộc tính'),
-      id: 'promptName',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Mô tả'),
-      id: 'description',
-      kind: 'Text',
-      readonly: false,
-      width: 500,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Bắt buộc nhập'),
-      id: 'mustInput',
-      kind: 'Boolean',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('ID giá trị thuộc tính'),
-      id: 'promptValueId',
-      kind: 'Custom',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Giá trị thuộc tính'),
-      id: 'promptValueName',
-      kind: 'Custom',
-      readonly: false,
-      width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
-  ]);
-
-  const [colsCategory, setColsCategory] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_DETAIL_CATEGORY',
-      defaultColsCategory.filter((col) => col.visible)
-    )
-  );
-  const [gridDataCategory, setGridDataCategory] = useState([]);
-  const [numRowsCategory, setNumRowsCategory] = useState(0);
-  const [numRowsToAddCategory, setNumRowsToAddCategory] = useState(null);
-  const [addedRowsCategory, setAddedRowsCategory] = useState([]);
-
-  const defaultColsEvent = useMemo(() => [
+  const defaultColsInterlock = useMemo(() => [
     {
       title: '',
       id: 'Status',
@@ -236,6 +139,226 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       id: 'id',
       kind: 'Text',
       readonly: true,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã phân loại Interlock'),
+      id: 'ruleTypeId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mã phân loại Interlock'),
+      id: 'ruleTypeCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Tên phân loại Interlock'),
+      id: 'ruleTypeName',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã phân loại áp dụng'),
+      id: 'transactionCodeId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: false,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã phân loại áp dụng'),
+      id: 'transactionCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã nhóm dòng sản phẩm'),
+      id: 'groupDeviceId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Nhóm dòng sản phẩm'),
+      id: 'groupDevice',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã nhóm thiết bị'),
+      id: 'groupEqpId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Nhóm thiết bị'),
+      id: 'groupEqp',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã nhóm công đoạn'),
+      id: 'operationId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Nhóm công đoạn'),
+      id: 'operation',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã thiết bị'),
+      id: 'eqpCodeId',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+
+    {
+      title: t('Mã thiết bị'),
+      id: 'eqpCode',
+      kind: 'Text',
+      readonly: false,
+      width: 250,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    },
+    {
+      title: t('Mô tả'),
+      id: 'description',
+      kind: 'Text',
+      readonly: false,
+      width: 500,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderRowID,
+      trailingRowOptions: {
+        disabled: true
+      }
+    }
+  ]);
+
+  const [colsInterlock, setColsInterlock] = useState(() =>
+    loadFromLocalStorageSheet(
+      'S_INTERLOCK',
+      defaultColsInterlock.filter((col) => col.visible)
+    )
+  );
+  const [gridDataInterlock, setGridDataInterlock] = useState([]);
+  const [numRowsInterlock, setNumRowsInterlock] = useState(0);
+  const [numRowsToAddCategory, setNumRowsToAddCategory] = useState(null);
+  const [addedRowsCategory, setAddedRowsCategory] = useState([]);
+
+  const defaultColsInterlockCat = useMemo(() => [
+    {
+      title: t('Mã'),
+      id: 'id',
+      kind: 'Text',
+      readonly: true,
       width: 150,
       hasMenu: true,
       visible: false,
@@ -245,8 +368,8 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       }
     },
     {
-      title: t('Mã sự kiện'),
-      id: 'eventCode',
+      title: t('Loại Interlock'),
+      id: 'code',
       kind: 'Text',
       readonly: false,
       width: 150,
@@ -259,25 +382,11 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     },
 
     {
-      title: t('Tên sự kiện'),
-      id: 'eventName',
+      title: t('Mã Interlock'),
+      id: 'value',
       kind: 'Text',
       readonly: false,
       width: 200,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Mô tả'),
-      id: 'description',
-      kind: 'Text',
-      readonly: false,
-      width: 250,
       hasMenu: true,
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
@@ -292,10 +401,10 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const [numRowsToAddOpProperties, setNumRowsToAddOpEqp] = useState(null);
   const [addedRowsOpProperties, setAddedRowsOpProperties] = useState([]);
 
-  const [colsEvent, setColsEvent] = useState(() =>
+  const [colsInterlockCat, setColsInterlockCat] = useState(() =>
     loadFromLocalStorageSheet(
       'S_EVENT',
-      defaultColsEvent.filter((col) => col.visible)
+      defaultColsInterlockCat.filter((col) => col.visible)
     )
   );
   const [gridDataEvent, setGridDataEvent] = useState([]);
@@ -317,7 +426,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     },
     {
       title: t('Mã sự kiện'),
-      id: 'eventId',
+      id: 'interlockId',
       kind: 'Text',
       readonly: false,
       width: 250,
@@ -406,7 +515,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const fieldsToTrack = ['IdxNo'];
   const { filterValidEntries, findLastEntry, findMissingIds } = useDynamicFilter(gridData, fieldsToTrack);
 
-  const [eventId, setEventId] = useState(null);
+  const [interlockId, setInterlockId] = useState(null);
   const [eventCode, setEventCode] = useState(null);
   const [eventName, setEventName] = useState(null);
 
@@ -425,14 +534,14 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   const onClickSave = useCallback(async () => {
     const requiredColumns = ['eventNextCode', 'eventNextId'];
 
-    const columnRuleEvent = ['id', 'eventId', 'seq', 'eventNextId', 'eventNextCode', 'description'];
+    const columnRuleEvent = ['id', 'interlockId', 'seq', 'eventNextId', 'eventNextCode', 'description'];
 
     const columnsCategory = [
       'IdxNo',
       'id',
       'configProdNameId',
-      'eventId',
-      'eventId',
+      'interlockId',
+      'interlockId',
       'operationId',
       'promptId',
       'promptName',
@@ -484,50 +593,37 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       controllers.current.onClickSave = controller;
       const data = await formBasic.getFieldValue();
 
-      const dataRuleEventA = filterAndSelectColumns(gridDataRuleEvent, columnRuleEvent, 'A').map((row) => ({
-        ...row,
-        Status: 'A',
-        id: row.id || '',
-        eventId: eventId || ''
-      }));
-
-      const dataRuleEventU = filterAndSelectColumns(gridDataRuleEvent, columnRuleEvent, 'U').map((row) => ({
-        ...row,
-        Status: 'U',
-        id: row.id || '',
-        eventId: eventId || ''
-      }));
-
-      const dataCategoryA = filterAndSelectColumns(gridDataCategory, columnsCategory, 'A').map((row) => ({
-        ...row,
-        Status: 'A',
-        id: row.id || '',
-        eventId: eventId || ''
-      }));
-
-      const dataCategoryU = filterAndSelectColumns(gridDataCategory, columnsCategory, 'U').map((row) => ({
-        ...row,
-        Status: 'U',
-        id: row.id || '',
-        eventId: eventId || ''
-      }));
-
-      const dataRuleEvent = [...dataRuleEventA, ...dataRuleEventU];
-
-      const dataCategory = [...dataCategoryA, ...dataCategoryU];
       const dto = {
         event: {
-          id: eventId || '',
-          ...data
-        },
-        categories: dataCategory,
-        rules: dataRuleEvent
+          id: interlockId || '',
+          ...data,
+          parentId: 0,
+          ruleType: 'string',
+          ruleTypeId: 0,
+          workMode: 'string',
+          transactionCode: 'string',
+          transactionId: 0,
+          groupDevice: 'string',
+          groupDeviceId: 0,
+          groupEqp: 'string',
+          operation: 'string',
+          operationId: 0,
+          eqpCode: 'string',
+          eqpId: 0,
+          mailGroup: 'string',
+          typeCheck: 'string',
+          ruleCode: 'string',
+          errorText: 'string',
+          isActive: true,
+          isMail: true,
+          isStopEqp: true
+        }
       };
       try {
-        const result = await createEventBy(dto);
+        const result = await createInterlockBy(dto);
 
         if (result.success) {
-          const { categories, event, rules } = result.data;
+          const { data } = result;
           notify({
             type: 'success',
             message: 'Thành công',
@@ -536,8 +632,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
 
           setGridData((prev) => {
             const updated = prev.map((item) => {
-              const found = event.id === item.id ? event : null;
-              console.log('found', found);
+              const found = data.id === item.id ? data : null;
 
               return found
                 ? {
@@ -553,7 +648,6 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
             });
             return updateIndexNo(updated);
           });
-
 
           setIsSent(false);
           setEditedRows([]);
@@ -577,7 +671,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
-  }, [formBasic, gridDataCategory, gridDataOpProperties, isAPISuccess, eventId, gridDataOpEqp, gridDataRuleEvent, gridData]);
+  }, [formBasic, isAPISuccess, interlockId]);
 
   const onVisibleRegionChanged = useCallback(
     ({ y, height }) => {
@@ -608,15 +702,15 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   }, [numRows]);
 
-  const onFetchEvent = useCallback(async () => {
+  const onFetchPageInterlock = useCallback(async () => {
     if (!isAPISuccess) {
       message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
       return;
     }
 
-    if (controllers.current && controllers.current.onFetchEvent) {
-      controllers.current.onFetchEvent.abort();
-      controllers.current.onFetchEvent = null;
+    if (controllers.current && controllers.current.onFetchPageInterlock) {
+      controllers.current.onFetchPageInterlock.abort();
+      controllers.current.onFetchPageInterlock = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.continuousStart();
       }
@@ -628,7 +722,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    controllers.current.onFetchEvent = controller;
+    controllers.current.onFetchPageInterlock = controller;
 
     setIsAPISuccess(false);
 
@@ -639,7 +733,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
-      const response = await eventSearchBy(data);
+      const response = await searchInterlock(data);
       const fetchedData = response.data || [];
 
       setGridData(fetchedData);
@@ -655,7 +749,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       });
     } finally {
       setIsAPISuccess(true);
-      controllers.current.onFetchEvent = null;
+      controllers.current.onFetchPageInterlock = null;
       if (loadingBarRef.current) {
         loadingBarRef.current.complete();
       }
@@ -671,10 +765,10 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   };
 
   const getSelectedRowsCategoryData = () => {
-    const selectedRows = selectionCategory.rows.items;
+    const selectedRows = selectionInterlock.rows.items;
 
     return selectedRows.flatMap(([start, end]) =>
-      Array.from({ length: end - start }, (_, i) => gridDataCategory[start + i]).filter((row) => row !== undefined)
+      Array.from({ length: end - start }, (_, i) => gridDataInterlock[start + i]).filter((row) => row !== undefined)
     );
   };
 
@@ -686,7 +780,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     );
   };
 
-  const onCellEventClicked = useCallback(
+  const onCellInterlockCatClicked = useCallback(
     (cell, event) => {
       let rowIndex;
 
@@ -705,14 +799,14 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       }
       if (cell[0] === -1) {
         if (rowIndex >= 0 && rowIndex < gridData.length) {
-          const isSelected = selectionEvent.rows.hasIndex(rowIndex);
+          const isSelected = selectionInterlockCat.rows.hasIndex(rowIndex);
 
           let newSelected;
           if (isSelected) {
-            newSelected = selectionEvent.rows.remove(rowIndex);
-            setEventSelected(getSelectedRowsData(selectionEvent, gridData));
+            newSelected = selectionInterlockCat.rows.remove(rowIndex);
+            setEventSelected(getSelectedRowsData(selectionInterlockCat, gridData));
           } else {
-            newSelected = selectionEvent.rows.add(rowIndex);
+            newSelected = selectionInterlockCat.rows.add(rowIndex);
             setEventSelected([]);
           }
         }
@@ -756,16 +850,16 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     [gridDataRuleEvent, getSelectedRowsData, eventRuleSelected]
   );
 
-  const fetchDataEventById = useCallback(
+  const fetchDataInterlockByParent = useCallback(
     async (id) => {
       if (!isAPISuccess) {
         message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
         return;
       }
 
-      if (controllers.current && controllers.current.fetchDataEventById) {
-        controllers.current.fetchDataEventById.abort();
-        controllers.current.fetchDataEventById = null;
+      if (controllers.current && controllers.current.fetchDataInterlockByParent) {
+        controllers.current.fetchDataInterlockByParent.abort();
+        controllers.current.fetchDataInterlockByParent = null;
         if (loadingBarRef.current) {
           loadingBarRef.current.continuousStart();
         }
@@ -777,35 +871,29 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
       const controller = new AbortController();
       const signal = controller.signal;
 
-      controllers.current.fetchDataEventById = controller;
+      controllers.current.fetchDataInterlockByParent = controller;
 
       setIsAPISuccess(false);
 
       try {
-        const response = await getEventById(id);
+        const response = await getInterlockByParentId(id);
         const fetchedData = response.data || [];
 
-        formBasic.setFieldsValue({
-          eventName: fetchedData.event.eventCode,
-          description: fetchedData.event.description,
-          eventCode: fetchedData.event.eventCode
-        });
-
-        setEventId(fetchedData.event.id);
+        setInterlockId(fetchedData.event.id);
         setEventCode(fetchedData.event.eventCode);
         setEventName(fetchedData.event.eventName);
 
         setGridDataRuleEvent(fetchedData.rules || []);
         setNumRowsRuleEvent(fetchedData.rules?.length || 0);
 
-        setGridDataCategory(fetchedData.categories || []);
-        setNumRowsCategory(fetchedData.categories?.length || 0);
+        setGridDataInterlock(fetchedData.categories || []);
+        setNumRowsInterlock(fetchedData.categories?.length || 0);
       } catch (error) {
         console.log(error);
         setGridDataRuleEvent([]);
         setNumRowsRuleEvent(0);
-        setGridDataCategory([]);
-        setNumRowsCategory(0);
+        setGridDataInterlock([]);
+        setNumRowsInterlock(0);
         setIsAPISuccess(true);
         notify({
           type: 'error',
@@ -820,7 +908,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         }
       }
     },
-    [formBasic, gridDataRuleEvent, gridDataCategory, isAPISuccess, numRows, numRowsRuleEvent, numRowsCategory]
+    [formBasic, gridDataRuleEvent, gridDataInterlock, isAPISuccess, numRows, numRowsRuleEvent, numRowsInterlock]
   );
 
   const onCellCategoryClicked = useCallback(
@@ -841,21 +929,21 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         return;
       }
       if (cell[0] === -1) {
-        if (rowIndex >= 0 && rowIndex < gridDataCategory.length) {
-          const isSelected = selectionCategory.rows.hasIndex(rowIndex);
+        if (rowIndex >= 0 && rowIndex < gridDataInterlock.length) {
+          const isSelected = selectionInterlock.rows.hasIndex(rowIndex);
 
           let newSelected;
           if (isSelected) {
-            newSelected = selectionCategory.rows.remove(rowIndex);
+            newSelected = selectionInterlock.rows.remove(rowIndex);
             setCategorySelected(getSelectedRowsCategoryData());
           } else {
-            newSelected = selectionCategory.rows.add(rowIndex);
+            newSelected = selectionInterlock.rows.add(rowIndex);
             setCategorySelected([]);
           }
         }
       }
     },
-    [gridDataCategory, getSelectedRowsCategoryData, categorySelected]
+    [gridDataInterlock, getSelectedRowsCategoryData, categorySelected]
   );
 
   const onFetchDropdownData = useCallback(async () => {
@@ -883,22 +971,34 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     setIsAPISuccess(false);
 
     try {
-      const [unitData, stepData, lostData, successData, inParameterData, outParameterData, reworkParameterData, bonusParameterData] =
-        await Promise.all([SearchCategory(1, 'fmOperationRegister', '', '', pageIndex, pageSize, keyword)]);
+      const [
+        ruleTypeData,
+        workModeData,
+        transactionData,
+        typeCheckData,
+        inParameterData,
+        outParameterData,
+        reworkParameterData,
+        bonusParameterData
+      ] = await Promise.all([
+        SearchCategory(1, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
+        SearchCategory(2, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
+        SearchCategory(3, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
+      ]);
 
-      setDataUnit(unitData.data);
-      // setDataStep(stepData.data.data.content);
-      // setDataLossTable(lostData.data.data.content);
-      // setDataSuccessTable(successData.data.data.content);
+      setRuleTypeData(ruleTypeData.data);
+      // setWorkModeData(workModeData.data);
+      // setTransactionData(transactionData.data);
+      // setTypeCheckData(typeCheckData.data);
       // setInParameterData(inParameterData.data.data.content);
       // setOutParameterData(outParameterData.data.data.content);
       // setDataReworkTable(reworkParameterData.data.data.content);
       // setDataBonusTable(bonusParameterData.data.data.content);
     } catch (error) {
-      setDataUnit([]);
-      setDataStep([]);
-      setDataLossTable([]);
-      setDataSuccessTable([]);
+      setRuleTypeData([]);
+      setWorkModeData([]);
+      setTransactionData([]);
+      setTypeCheckData([]);
       setInParameterData([]);
       setOutParameterData([]);
       setDataReworkTable([]);
@@ -918,10 +1018,10 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     }
   }, [
     loadingBarRef,
-    dataUnit,
-    dataStep,
-    dataLossTable,
-    dataSuccessTable,
+    ruleTypeData,
+    workModeData,
+    transactionData,
+    typeCheckData,
     inParameterData,
     outParameterData,
     dataReworkTable,
@@ -934,12 +1034,12 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
 
   useEffect(() => {
     if (!eventSelected[0]?.id) return;
-    fetchDataEventById(eventSelected[0]?.id);
+    fetchDataInterlockByParent(eventSelected[0]?.id);
   }, [eventSelected]);
 
   useEffect(() => {
     onFetchDropdownData();
-    onFetchEvent();
+    onFetchPageInterlock();
   }, []);
 
   const removeRow = useCallback(
@@ -1018,18 +1118,18 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         }
       }
     },
-    [gridDataOpProperties, gridDataCategory, categorySelected, routeOpSelected]
+    [gridDataOpProperties, gridDataInterlock, categorySelected, routeOpSelected]
   );
 
-  const handleRowAppendCategory = useCallback(
+  const handleRowAppendInterlock = useCallback(
     (numRowsToAdd) => {
       if (canCreate === false) {
         message.warning('Bạn không có quyền thêm dữ liệu');
         return;
       }
-      onRowAppended(colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAdd);
+      onRowAppended(colsInterlock, setGridDataInterlock, setNumRowsInterlock, setAddedRowsCategory, numRowsToAdd);
     },
-    [colsCategory, setGridDataCategory, setNumRowsCategory, setAddedRowsCategory, numRowsToAddCategory]
+    [colsInterlock, setGridDataInterlock, setNumRowsInterlock, setAddedRowsCategory, numRowsToAddCategory]
   );
 
   const handleRowAppendRuleEvent = useCallback(
@@ -1101,7 +1201,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         loadingBarRef.current.complete();
       }
     }
-  }, [eventSelected, gridDataRuleEvent, gridDataCategory, formBasic, isAPISuccess]);
+  }, [eventSelected, gridDataRuleEvent, gridDataInterlock, formBasic, isAPISuccess]);
 
   const deleteEvent = useCallback(
     async (id) => {
@@ -1118,8 +1218,8 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         });
         return;
       } else {
-        setGridDataCategory([]);
-        setNumRowsCategory(0);
+        setGridDataInterlock([]);
+        setNumRowsInterlock(0);
 
         setGridDataRuleEvent([]);
         setNumRowsRuleEvent(0);
@@ -1137,7 +1237,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
         });
       }
     },
-    [eventSelected, gridDataCategory, numRowsCategory, gridDataRuleEvent, numRowsRuleEvent, gridData, formBasic, numRows]
+    [eventSelected, gridDataInterlock, numRowsInterlock, gridDataRuleEvent, numRowsRuleEvent, gridData, formBasic, numRows]
   );
 
   const deleteRuleEvent = useCallback(async () => {
@@ -1207,7 +1307,7 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   };
 
   const onClickCopy = () => {
-    setEventId('');
+    setInterlockId('');
   };
 
   const onClickResetAll = () => {
@@ -1216,17 +1316,16 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
     setGridDataRuleEvent([]);
     setNumRowsRuleEvent(0);
 
-    setGridDataCategory([]);
-    setNumRowsCategory(0);
+    setGridDataInterlock([]);
+    setNumRowsInterlock(0);
 
-    setEventId('');
+    setInterlockId('');
   };
-
   return (
     <>
       <div className="h-full mt-4">
         <AuDrAction
-          titlePage={'Cấu hình trạng thái thiết bị'}
+          titlePage={'Cấu hình khóa liên động'}
           onClickDelete={onClickDelete}
           onClickSave={onClickSave}
           onClickReset={onClickResetAll}
@@ -1248,108 +1347,56 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
                   />
                 </div>
               </div>
-              <EventTable
-                defaultCols={defaultColsEvent}
+              <InterlockCatTable
+                defaultCols={defaultColsInterlockCat}
                 gridData={gridData}
                 setGridData={setGridData}
-                cols={colsEvent}
-                setCols={setColsEvent}
+                cols={colsInterlockCat}
+                setCols={setColsInterlockCat}
                 numRows={numRows}
                 setNumRows={setNumRows}
                 onVisibleRegionChanged={onVisibleRegionChanged}
-                onCellClicked={onCellEventClicked}
-                selection={selectionEvent}
-                setSelection={setSelectionEvent}
+                onCellClicked={onCellInterlockCatClicked}
+                selection={selectionInterlockCat}
+                setSelection={setSelectionInterlockCat}
               />
             </div>
           </SplitterPanel>
           <SplitterPanel size={75} minSize={10}>
-            <EventInfoQuery
-              formBasic={formBasic}
-              dataUnit={dataUnit}
-              dataStep={dataStep}
-              dataLossTable={dataLossTable}
-              dataSuccessTable={dataSuccessTable}
-              dataReworkTable={dataReworkTable}
-            />
+            <Splitter className="w-full h-full" layout="vertical">
+              <SplitterPanel size={30} minSize={10}>
+                <div className="bg-slate-50  h-full">
+                  <InterlockTable
+                    dataCategoryValue={dataCategoryValue}
+                    defaultCols={defaultColsInterlock}
+                    gridData={gridDataInterlock}
+                    setGridData={setGridDataInterlock}
+                    cols={colsInterlock}
+                    setCols={setColsInterlock}
+                    numRows={numRowsInterlock}
+                    setNumRows={setNumRowsInterlock}
+                    handleRowAppend={handleRowAppendInterlock}
+                    setEditedRows={setEditedRowsInterlock}
+                    selection={selectionInterlock}
+                    setSelection={setSelectionInterlock}
+                    onCellClicked={onCellCategoryClicked}
+                    cellConfig={cellConfig}
+                  />
+                </div>
+              </SplitterPanel>
 
-            <Menu
-              mode="horizontal"
-              selectedKeys={[current]}
-              style={{
-                height: 30,
-                lineHeight: '30px',
-                paddingTop: 2,
-                paddingBottom: 0,
-                minHeight: 0
-              }}
-              onClick={(e) => {
-                if (!checkPageA) {
-                  setCurrent(e.key);
-                } else {
-                  message.warning(t('870000042'));
-                }
-              }}
-            >
-              <Menu.Item key="1">
-                <span className="flex items-center gap-1 text-sm font-bold">
-                  <AppstoreAddOutlined style={{ fontSize: 12 }} />
-                  {t('Trạng thái cho phép')}
-                </span>
-              </Menu.Item>
-
-              <Menu.Item key="2">
-                <span className="flex items-center gap-1 text-sm font-bold">
-                  <DashboardOutlined style={{ fontSize: 12 }} />
-                  {t('Danh mục')}
-                </span>
-              </Menu.Item>
-            </Menu>
-
-            {current === '1' && (
-              <div className="bg-slate-50  h-[calc(100vh-180px)]">
-                <EventStatusInfoTable
-                  dataEvent={gridData}
-                  setDataEvent={setGridData}
-                  setSelection={setSelectionRuleEvent}
-                  selection={selectionRuleEvent}
-                  setEditedRows={setEditedRowsRuleEvent}
-                  setGridData={setGridDataRuleEvent}
-                  gridData={gridDataRuleEvent}
-                  numRows={numRowsRuleEvent}
-                  handleRowAppend={handleRowAppendRuleEvent}
-                  setCols={setColsRuleEvent}
-                  cols={colsRuleEvent}
-                  defaultCols={defaultColsRuleEvent}
-                  canEdit={canEdit}
-                  controllers={controllers}
-                  loadingBarRef={loadingBarRef}
-                  setIsAPISuccess={setIsAPISuccess}
-                  isAPISuccess={isAPISuccess}
-                  onCellClicked={onCellRuleEventClicked}
-                />
-              </div>
-            )}
-            {current === '2' && (
-              <div className="bg-slate-50  h-[calc(100vh-180px)]">
-                <CategoryTable
-                  dataCategoryValue={dataCategoryValue}
-                  defaultCols={defaultColsCategory}
-                  gridData={gridDataCategory}
-                  setGridData={setGridDataCategory}
-                  cols={colsCategory}
-                  setCols={setColsCategory}
-                  numRows={numRowsCategory}
-                  setNumRows={setNumRowsCategory}
-                  handleRowAppend={handleRowAppendCategory}
-                  setEditedRows={setEditedRowsCategory}
-                  selection={selectionCategory}
-                  setSelection={setSelectionCategory}
-                  onCellClicked={onCellCategoryClicked}
-                  cellConfig={cellConfig}
-                />
-              </div>
-            )}
+              <SplitterPanel size={70} minSize={10}>
+                <div className="bg-slate-50  h-full">
+                  <InterlockQuery
+                    formBasic={formBasic}
+                    ruleTypeData={ruleTypeData}
+                    workModeData={workModeData}
+                    transactionData={transactionData}
+                    typeCheckData={typeCheckData}
+                  />
+                </div>
+              </SplitterPanel>
+            </Splitter>
           </SplitterPanel>
         </Splitter>
       </div>
@@ -1360,4 +1407,4 @@ const ManageMachineEvent = ({ canCreate, canEdit, canDelete, canView }) => {
   );
 };
 
-export default ManageMachineEvent;
+export default ManageInterlock;
