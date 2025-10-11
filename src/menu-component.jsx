@@ -20,4 +20,5 @@ export const TabComponents = {
   ManageMachineTool: lazy(() => import("./views/ManageMachineTool")),
   ManageToolEquipment: lazy(() => import("./views/ManageToolEquipment")),
   ManageInterlock: lazy(() => import("./views/ManageInterlock")),
+  ManageCategory: lazy(() => import("./views/ManageCategory")),
 };

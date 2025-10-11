@@ -1,8 +1,6 @@
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Editor } from '@monaco-editor/react';
-import { DeleteOutline } from '@mui/icons-material';
-import { Button, Col, DatePicker, Form, Image, Input, Radio, Row, Select, Tooltip, Typography, Upload } from 'antd';
-import React, { useState } from 'react';
+import { Col, Form, Input, Row, Select } from 'antd';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData, typeCheckData, dataGroupDevice, dataGroupEqp, dataOperation }) => {
@@ -11,8 +9,6 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
   const [file, setFile] = useState(null);
-
-  console.log('ruleTypeData:', ruleTypeData);
 
   const onChangeRuleTypeCode = (value) => {
     console.log(`selected ${value}`);
@@ -248,7 +244,7 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
         </Row>
 
         <Row gutter={[6, 6]} align={'middle'} className="mr-2 flex flex-wrap md:flex-nowrap">
-          <Col flex="1 1 300px" className="min-w-[250px]">
+          <Col flex="1 1 300px" className="min-w-[300px]">
             <Form.Item
               label={<span className="uppercase text-[9px] w-[150px]">SQL</span>}
               style={{ marginBottom: 0 }}
@@ -256,7 +252,7 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
               wrapperCol={{ style: { padding: 0 } }}
               name="textSQL"
             >
-              <div className="w-full h-[250px] border rounded">
+              <div className="w-full h-[350px] border rounded">
                 <Editor
                   height="100%"
                   defaultLanguage="sql"
@@ -280,7 +276,7 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
               wrapperCol={{ style: { padding: 0 } }}
               name="errorText"
             >
-              <div className="w-full h-[250px] border rounded">
+              <div className="w-full h-[350px] border rounded">
                 <Editor
                   height="100%"
                   defaultLanguage="text"
