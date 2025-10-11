@@ -1,17 +1,10 @@
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
-import { DeleteOutline } from '@mui/icons-material';
-import { Button, Col, DatePicker, Form, Image, Input, Radio, Row, Select, Tooltip, Typography, Upload } from 'antd';
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Col, DatePicker, Form, Input, Radio, Row, Select, Typography } from 'antd';
+import React from 'react';
 
-const EventManageInfo = ({ formBasic, dataChangeConfirm, dataStatus, dataCategory, dataAfterChange, dataReworkTable }) => {
-  const { t } = useTranslation();
-  const [previewImage, setPreviewImage] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loading2, setLoading2] = useState(false);
-  const [file, setFile] = useState(null);
+const EventInfoQuery = ({ formBasic, dataChangeConfirm, dataStatus, dataCategory, dataAfterChange, }) => {
 
-  const onChangeStatus = (value) => {
+
+    const onChangeStatus = (value) => {
     console.log(`selected ${value}`);
   };
 
@@ -27,25 +20,66 @@ const EventManageInfo = ({ formBasic, dataChangeConfirm, dataStatus, dataCategor
     console.log(`selected ${value}`);
   };
 
-  const handleImageChange = (file) => {
-    setFile(file);
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewImage(e.target.result);
-    };
-    reader.readAsDataURL(file);
-
-    return false;
-  };
-
   return (
     <div className="bg-slate-50 ">
       <Form form={formBasic} layout="vertical">
-        <Row gutter={[6, 6]} align={'middle'} className="m-2">
+        <Row className="gap-3 flex items-center mb-2 ml-2">
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
-              label={<span className="uppercase text-[9px] w-[318px]">Trạng thái</span>}
+              label={<span className="uppercase text-[9px] w-[150px]">Tên sự kiện</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'eventName'}
+            >
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
+                // value={ConfigProductName}
+                // onChange={(e) => setConfigProductName(e.target.value)}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[150px]">Mã sự kiện</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'eventCode'}
+            >
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
+                // value={ConfigProductName}
+                // onChange={(e) => setConfigProductName(e.target.value)}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[150px]">Mô tả</span>}
+              style={{ marginBottom: 0 }}
+              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
+              wrapperCol={{ style: { padding: 0 } }}
+              name={'description'}
+            >
+              <Input
+                placeholder=""
+                className="w-[150px]"
+                size="middle"
+                // value={Description}
+                // onChange={(e) => setDescription(e.target.value)}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
+            <Form.Item
+              label={<span className="uppercase text-[9px] w-[150px]">Trạng thái</span>}
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
@@ -123,4 +157,4 @@ const EventManageInfo = ({ formBasic, dataChangeConfirm, dataStatus, dataCategor
   );
 };
 
-export default EventManageInfo;
+export default EventInfoQuery;

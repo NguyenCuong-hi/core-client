@@ -18,10 +18,18 @@ import ContextMenuWrapper from 'component/ContextMenu';
 import { resetColumn } from 'utils/local-storage/reset-column';
 import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
+import { SearchOperationBy } from 'services/RouteSetManage/SearchOperationBy';
+import { SearchRouteBy } from 'services/ModelManage/SearchRouteBy';
+import { CellsOperation } from 'utils/sheets/cell-custom/cellsOperation';
+import { CellsRoute } from 'utils/sheets/cell-custom/cellsRoute';
 import { reorderColumns } from 'utils/sheets/reorderColumns';
+import { useNotify } from 'utils/hooks/onNotify';
+import { eventSearchBy } from 'services/EventManage/EventSearchBy';
+import { CellsEvent } from 'utils/sheets/cell-custom/cellsEvent';
 
-function ToolTable({
-  dataCategoryValue,
+function EventStatusInfoTable({
+  dataEvent,
+  setDataEvent,
   setSelection,
   selection,
   setShowSearch,
@@ -40,7 +48,10 @@ function ToolTable({
   cols,
   defaultCols,
   canEdit,
-  cellConfig
+  controllers,
+  loadingBarRef,
+  setIsAPISuccess,
+  isAPISuccess
 }) {
   const gridRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -50,10 +61,18 @@ function ToolTable({
   const [showMenu, setShowMenu] = useState(null);
   const [isCell, setIsCell] = useState(null);
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
+  const { notify, contextHolder } = useNotify();
+  
+
+  const [keyword, setKeyword] = useState('');
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_MACHINE_TOOL', []);
+    return loadFromLocalStorageSheet('H_RULE_EVENT', []);
   });
+
+  const [dataRoute, setDataRoute] = useState([]);
 
   const [typeSearch, setTypeSearch] = useState('');
   const [keySearchText, setKeySearchText] = useState('');
@@ -63,6 +82,19 @@ function ToolTable({
     const [_, row] = args.location;
     setHoverRow(args.kind !== 'cell' ? undefined : row);
   }, []);
+
+  const columnNames = [
+    'eventNextCode',
+  ]
+  const highlightRegions = columnNames.map((columnName) => ({
+    color: '#e8f0ff',
+    range: {
+      x: reorderColumns(cols).indexOf(columnName),
+      y: 0,
+      width: 1,
+      height: numRows,
+    },
+  }))
 
   const onHeaderMenuClick = useCallback((col, bounds) => {
     if (cols[col]?.id === 'Status') {
@@ -80,22 +112,6 @@ function ToolTable({
     }
   }, []);
 
-  const columnNames = [
-      'promptValueName',
-
-  
-    ]
-    const highlightRegions = columnNames.map((columnName) => ({
-      color: '#e8f0ff',
-      range: {
-        x: reorderColumns(cols).indexOf(columnName),
-        y: 0,
-        width: 1,
-        height: numRows,
-      },
-    }))
-  
-
   const [keybindings, setKeybindings] = useState({
     downFill: true,
     rightFill: true,
@@ -109,6 +125,14 @@ function ToolTable({
       const columnKey = column?.id || '';
       const value = person[columnKey] || '';
       const boundingBox = document.body.getBoundingClientRect();
+      const cellConfig = {
+        eventNextCode: {
+          kind: 'cells-event',
+          allowedValues: dataEvent,
+          setCacheData: setDataEvent
+        },
+        
+      };
 
       if (cellConfig[columnKey]) {
         return {
@@ -119,36 +143,12 @@ function ToolTable({
             kind: cellConfig[columnKey].kind,
             allowedValues: cellConfig[columnKey].allowedValues,
             value: value,
-            boundingBox: boundingBox
+            boundingBox: boundingBox,
+            setCacheData: setDataEvent
           },
           displayData: String(value),
           readonly: column?.readonly || false,
           hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'mustInput') {
-        const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
-        return {
-          kind: GridCellKind.Boolean,
-          data: booleanValue,
-          allowOverlay: true,
-          hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'promptValueName') {
-        return {
-          kind: GridCellKind.Custom,
-          allowOverlay: true,
-          copyData: String(value),
-          data: {
-            kind: 'dropdown-cell',
-            allowedValues: dataCategoryValue,
-            value: value
-          },
-          displayData: String(value),
-          readonly: column?.readonly || false
         };
       }
 
@@ -162,7 +162,7 @@ function ToolTable({
         hasMenu: column?.hasMenu || false
       };
     },
-    [gridData, cols]
+    [gridData, cols, dataEvent, dataRoute]
   );
 
   const onKeyUp = useCallback(
@@ -228,7 +228,7 @@ function ToolTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_MACHINE_TOOL', newHidden);
+      saveToLocalStorageSheet('H_RULE_EVENT', newHidden);
       return newHidden;
     });
   };
@@ -237,7 +237,7 @@ function ToolTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_MACHINE_TOOL', uniqueCols);
+      saveToLocalStorageSheet('S_RULE_EVENT', uniqueCols);
       return uniqueCols;
     });
   };
@@ -249,7 +249,7 @@ function ToolTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_MACHINE_TOOL', uniqueCols);
+        saveToLocalStorageSheet('S_RULE_EVENT', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -260,8 +260,8 @@ function ToolTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_MACHINE_TOOL');
-    localStorage.removeItem('H_MACHINE_TOOL');
+    localStorage.removeItem('S_RULE_EVENT');
+    localStorage.removeItem('H_RULE_EVENT');
     setShowMenu(null);
   };
 
@@ -270,14 +270,14 @@ function ToolTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_MACHINE_TOOL', updatedCols);
+      saveToLocalStorageSheet('S_RULE_EVENT', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_MACHINE_TOOL', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_RULE_EVENT', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -294,23 +294,23 @@ function ToolTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_MACHINE_TOOL', newCols);
+        saveToLocalStorageSheet('S_RULE_EVENT', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_MACHINE_TOOL', newHidden);
+        saveToLocalStorageSheet('H_RULE_EVENT', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_MACHINE_TOOL', newCols);
+        saveToLocalStorageSheet('S_RULE_EVENT', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_MACHINE_TOOL', newHidden);
+        saveToLocalStorageSheet('H_RULE_EVENT', newHidden);
         return newHidden;
       });
     }
@@ -340,7 +340,7 @@ function ToolTable({
       const [col, row] = cell;
       const key = indexes[col];
 
-      if (key === 'promptValueName') {
+      if (key === 'eventNextCode') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -349,42 +349,14 @@ function ToolTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
+              const selectedValue = dataEvent.find((item) => item.id === selectedName[0].id);
+              product['eventNextId'] = selectedValue.id;
+              product['eventNextCode'] = selectedValue.eventCode;
+              product['description'] = selectedValue.description;
             } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
-            }
-
-            product.isEdited = true;
-            product['IdxNo'] = row + 1;
-            const currentStatus = product['Status'] || 'U';
-            product['Status'] = currentStatus === 'A' ? 'A' : 'U';
-
-            setEditedRows((prevEditedRows) => updateEditedRows(prevEditedRows, row, newData, currentStatus));
-
-            return newData;
-          });
-          return;
-        }
-      }
-
-      if (key === 'promptValueName') {
-        if (newValue.kind === GridCellKind.Custom) {
-          setGridData((prev) => {
-            const newData = [...prev];
-            const product = newData[row];
-
-            let selectedName = newValue.data;
-            const checkCopyData = newValue.copyData;
-            if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
-            } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
+              product['eventNextId'] = '';
+              product['eventNextCode'] = '';
+              product['description'] = '';
             }
 
             product.isEdited = true;
@@ -430,77 +402,77 @@ function ToolTable({
         return updatedData;
       });
     },
-    [canEdit, cols, gridData]
+    [canEdit, cols, gridData, dataEvent, dataRoute]
   );
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center ">
-      <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
-        <ContextMenuWrapper
-          menuItems={[
-            { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
-            { key: 'delete', label: 'Xoá', icon: <DeleteOutlined /> }
-          ]}
-          onMenuClick={handleMenuClick}
-        >
-          <DataEditor
-            {...cellProps}
-            ref={gridRef}
-            columns={cols}
-            getCellContent={getData}
-            onFill={onFill}
-            rows={numRows}
-            showSearch={showSearch}
-            onSearchClose={onSearchClose}
-            rowMarkers="both"
-            width="100%"
-            height="100%"
-            headerHeight={32}
-            rowHeight={27}
-            rowSelect="multi"
-            gridSelection={selection}
-            onGridSelectionChange={setSelection}
-            getCellsForSelection={true}
-            trailingRowOptions={{
-              hint: ' ',
-              sticky: true,
-              tint: true
-            }}
-            freezeColumns={1}
-            getRowThemeOverride={(i) =>
-              i === hoverRow
-                ? {
-                    bgCell: '#f7f7f7',
-                    bgCellMedium: '#f0f0f0'
-                  }
-                : i % 2 === 0
-                  ? undefined
-                  : {
-                      bgCell: '#FBFBFB'
+      <div className="w-full h-full gap-1 flex items-center justify-center ">
+        <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
+          <ContextMenuWrapper
+            menuItems={[
+              { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
+              { key: 'delete', label: 'Xoá', icon: <DeleteOutlined /> }
+            ]}
+            onMenuClick={handleMenuClick}
+          >
+            <DataEditor
+              {...cellProps}
+              ref={gridRef}
+              columns={cols}
+              getCellContent={getData}
+              onFill={onFill}
+              rows={numRows}
+              showSearch={showSearch}
+              onSearchClose={onSearchClose}
+              rowMarkers="both"
+              width="100%"
+              height="100%"
+              headerHeight={32}
+              rowHeight={27}
+              rowSelect="multi"
+              gridSelection={selection}
+              onGridSelectionChange={setSelection}
+              getCellsForSelection={true}
+              trailingRowOptions={{
+                hint: ' ',
+                sticky: true,
+                tint: true
+              }}
+              freezeColumns={1}
+              getRowThemeOverride={(i) =>
+                i === hoverRow
+                  ? {
+                      bgCell: '#f7f7f7',
+                      bgCellMedium: '#f0f0f0'
                     }
-            }
-            overscrollY={0}
-            overscrollX={0}
-            smoothScrollY={true}
-            smoothScrollX={true}
-            onPaste={true}
-            fillHandle={true}
-            keybindings={keybindings}
-            onRowAppended={() => handleRowAppend(1)}
-            onCellEdited={onCellEdited}
-            onCellClicked={onCellClicked}
-            onColumnResize={onColumnResize}
-            customRenderers={[DropdownRenderer]}
-            highlightRegions={highlightRegions}
-            // onHeaderMenuClick={onHeaderMenuClick}
-            // onColumnMoved={onColumnMoved}
-            // onKeyUp={onKeyUp}
-            // customRenderers={[
-            //     AsyncDropdownCellRenderer
-            // ]}
-            // onItemHovered={onItemHovered}
-          />
-          {/* {showMenu !== null &&
+                  : i % 2 === 0
+                    ? undefined
+                    : {
+                        bgCell: '#FBFBFB'
+                      }
+              }
+              overscrollY={0}
+              overscrollX={0}
+              smoothScrollY={true}
+              smoothScrollX={true}
+              onPaste={true}
+              fillHandle={true}
+              keybindings={keybindings}
+              onRowAppended={() => handleRowAppend(1)}
+              onCellEdited={onCellEdited}
+              onCellClicked={onCellClicked}
+              onColumnResize={onColumnResize}
+              customRenderers={[DropdownRenderer, CellsEvent]}
+              highlightRegions={highlightRegions}
+              // onHeaderMenuClick={onHeaderMenuClick}
+              // onColumnMoved={onColumnMoved}
+              // onKeyUp={onKeyUp}
+              // customRenderers={[
+              //     AsyncDropdownCellRenderer
+              // ]}
+              // onItemHovered={onItemHovered}
+            />
+            {/* {showMenu !== null &&
                     renderLayer(
                         <div
                             {...layerProps}
@@ -535,23 +507,23 @@ function ToolTable({
                             )}
                         </div>,
                     )} */}
-        </ContextMenuWrapper>
+          </ContextMenuWrapper>
 
-        <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
-          {defaultCols.map(
-            (col) =>
-              col.id !== 'Status' && (
-                <div key={col.id} style={{ marginBottom: '10px' }}>
-                  <Checkbox checked={!hiddenColumns.includes(col.id)} onChange={(e) => handleCheckboxChange(col.id, e.target.checked)}>
-                    {col.title}
-                  </Checkbox>
-                </div>
-              )
-          )}
-        </Drawer>
+          <Drawer title="CÀI ĐẶT SHEET" onClose={onClose} open={open}>
+            {defaultCols.map(
+              (col) =>
+                col.id !== 'Status' && (
+                  <div key={col.id} style={{ marginBottom: '10px' }}>
+                    <Checkbox checked={!hiddenColumns.includes(col.id)} onChange={(e) => handleCheckboxChange(col.id, e.target.checked)}>
+                      {col.title}
+                    </Checkbox>
+                  </div>
+                )
+            )}
+          </Drawer>
+        </div>
       </div>
-    </div>
   );
 }
 
-export default ToolTable;
+export default EventStatusInfoTable;

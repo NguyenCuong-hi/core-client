@@ -19,8 +19,12 @@ import { resetColumn } from 'utils/local-storage/reset-column';
 import { DropdownRenderer } from 'utils/sheets/cell-custom/DropDownCells';
 import { updateEditedRows } from 'utils/sheets/updateEditedRows';
 import { reorderColumns } from 'utils/sheets/reorderColumns';
+import { CellsCodeSys } from 'utils/sheets/cell-custom/cellsCodeSys';
+import { CellsTool } from 'utils/sheets/cell-custom/cellsTool';
 
-function ToolTable({
+function ToolDetailsTable({
+  dataTool,
+  dataModel,
   dataCategoryValue,
   setSelection,
   selection,
@@ -52,7 +56,7 @@ function ToolTable({
   const formatDate = (date) => (date ? dayjs(date).format('YYYY-MM-DD') : '');
 
   const [hiddenColumns, setHiddenColumns] = useState(() => {
-    return loadFromLocalStorageSheet('H_MACHINE_TOOL', []);
+    return loadFromLocalStorageSheet('H_DETAIL_TOOL', []);
   });
 
   const [typeSearch, setTypeSearch] = useState('');
@@ -81,9 +85,8 @@ function ToolTable({
   }, []);
 
   const columnNames = [
-      'promptValueName',
-
-  
+      'toolCode',
+      'modelCode',
     ]
     const highlightRegions = columnNames.map((columnName) => ({
       color: '#e8f0ff',
@@ -119,7 +122,8 @@ function ToolTable({
             kind: cellConfig[columnKey].kind,
             allowedValues: cellConfig[columnKey].allowedValues,
             value: value,
-            boundingBox: boundingBox
+            boundingBox: boundingBox,
+            setCacheData: cellConfig[columnKey].setCacheData
           },
           displayData: String(value),
           readonly: column?.readonly || false,
@@ -127,28 +131,17 @@ function ToolTable({
         };
       }
 
-      if (columnKey === 'mustInput') {
+      if (columnKey === 'isIQC' ||
+        columnKey === 'isInterlock' ||
+        columnKey === 'isChangePDA' || 
+        columnKey === 'isCheckPeriod'
+      ) {
         const booleanValue = value === 1 || value === '1' ? true : value === 0 || value === '0' ? false : Boolean(value);
         return {
           kind: GridCellKind.Boolean,
           data: booleanValue,
           allowOverlay: true,
           hasMenu: column?.hasMenu || false
-        };
-      }
-
-      if (columnKey === 'promptValueName') {
-        return {
-          kind: GridCellKind.Custom,
-          allowOverlay: true,
-          copyData: String(value),
-          data: {
-            kind: 'dropdown-cell',
-            allowedValues: dataCategoryValue,
-            value: value
-          },
-          displayData: String(value),
-          readonly: column?.readonly || false
         };
       }
 
@@ -228,7 +221,7 @@ function ToolTable({
   const updateHiddenColumns = (newHiddenColumns) => {
     setHiddenColumns((prevHidden) => {
       const newHidden = [...new Set([...prevHidden, ...newHiddenColumns])];
-      saveToLocalStorageSheet('H_MACHINE_TOOL', newHidden);
+      saveToLocalStorageSheet('H_DETAIL_TOOL', newHidden);
       return newHidden;
     });
   };
@@ -237,7 +230,7 @@ function ToolTable({
     setCols((prevCols) => {
       const newCols = [...new Set([...prevCols, ...newVisibleColumns])];
       const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-      saveToLocalStorageSheet('S_MACHINE_TOOL', uniqueCols);
+      saveToLocalStorageSheet('S_DETAIL_TOOL', uniqueCols);
       return uniqueCols;
     });
   };
@@ -249,7 +242,7 @@ function ToolTable({
       setCols((prevCols) => {
         const newCols = prevCols.filter((_, idx) => idx !== colIndex);
         const uniqueCols = newCols.filter((col, index, self) => index === self.findIndex((c) => c.id === col.id));
-        saveToLocalStorageSheet('S_MACHINE_TOOL', uniqueCols);
+        saveToLocalStorageSheet('S_DETAIL_TOOL', uniqueCols);
         return uniqueCols;
       });
       setShowMenu(null);
@@ -260,8 +253,8 @@ function ToolTable({
   const handleReset = () => {
     setCols(defaultCols.filter((col) => col.visible));
     setHiddenColumns([]);
-    localStorage.removeItem('S_MACHINE_TOOL');
-    localStorage.removeItem('H_MACHINE_TOOL');
+    localStorage.removeItem('S_DETAIL_TOOL');
+    localStorage.removeItem('H_DETAIL_TOOL');
     setShowMenu(null);
   };
 
@@ -270,14 +263,14 @@ function ToolTable({
       const updatedCols = [...prevCols];
       const [movedColumn] = updatedCols.splice(startIndex, 1);
       updatedCols.splice(endIndex, 0, movedColumn);
-      saveToLocalStorageSheet('S_MACHINE_TOOL', updatedCols);
+      saveToLocalStorageSheet('S_DETAIL_TOOL', updatedCols);
       return updatedCols;
     });
   }, []);
 
   const showDrawer = () => {
     const invisibleCols = defaultCols.filter((col) => col.visible === false).map((col) => col.id);
-    const currentVisibleCols = loadFromLocalStorageSheet('S_MACHINE_TOOL', []).map((col) => col.id);
+    const currentVisibleCols = loadFromLocalStorageSheet('S_DETAIL_TOOL', []).map((col) => col.id);
     const newInvisibleCols = invisibleCols.filter((col) => !currentVisibleCols.includes(col));
     updateHiddenColumns(newInvisibleCols);
     updateVisibleColumns(defaultCols.filter((col) => col.visible && !hiddenColumns.includes(col.id)));
@@ -294,23 +287,23 @@ function ToolTable({
       const restoredColumn = defaultCols.find((col) => col.id === columnId);
       setCols((prevCols) => {
         const newCols = [...prevCols, restoredColumn];
-        saveToLocalStorageSheet('S_MACHINE_TOOL', newCols);
+        saveToLocalStorageSheet('S_DETAIL_TOOL', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = prevHidden.filter((id) => id !== columnId);
-        saveToLocalStorageSheet('H_MACHINE_TOOL', newHidden);
+        saveToLocalStorageSheet('H_DETAIL_TOOL', newHidden);
         return newHidden;
       });
     } else {
       setCols((prevCols) => {
         const newCols = prevCols.filter((col) => col.id !== columnId);
-        saveToLocalStorageSheet('S_MACHINE_TOOL', newCols);
+        saveToLocalStorageSheet('S_DETAIL_TOOL', newCols);
         return newCols;
       });
       setHiddenColumns((prevHidden) => {
         const newHidden = [...prevHidden, columnId];
-        saveToLocalStorageSheet('H_MACHINE_TOOL', newHidden);
+        saveToLocalStorageSheet('H_DETAIL_TOOL', newHidden);
         return newHidden;
       });
     }
@@ -340,7 +333,7 @@ function ToolTable({
       const [col, row] = cell;
       const key = indexes[col];
 
-      if (key === 'promptValueName') {
+      if (key === 'toolCode') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -349,12 +342,12 @@ function ToolTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
+              const selectedValue = dataTool.find((item) => item.toolCode === checkCopyData);
+              product['toolCode'] = selectedValue?.toolCode;
+              product['toolId'] = selectedValue?.id;
             } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
+              product['toolCode'] = '';
+              product['toolId'] = '';
             }
 
             product.isEdited = true;
@@ -370,7 +363,7 @@ function ToolTable({
         }
       }
 
-      if (key === 'promptValueName') {
+      if (key === 'modelCode') {
         if (newValue.kind === GridCellKind.Custom) {
           setGridData((prev) => {
             const newData = [...prev];
@@ -379,12 +372,12 @@ function ToolTable({
             let selectedName = newValue.data;
             const checkCopyData = newValue.copyData;
             if (selectedName) {
-              const selectedValue = dataCategoryValue.find((item) => item.Value === selectedName.value);
-              product['promptValueId'] = selectedValue.Value;
-              product['promptValueName'] = selectedValue.MinorName;
+              const selectedValue = dataModel.find((item) => item.value === checkCopyData);
+              product['modelId'] = selectedValue?.id;
+              product['modelCode'] = selectedValue?.value;
             } else {
-              product['promptValueId'] = '';
-              product['promptValueName'] = '';
+              product['modelId'] = '';
+              product['modelCode'] = '';
             }
 
             product.isEdited = true;
@@ -490,9 +483,9 @@ function ToolTable({
             onCellEdited={onCellEdited}
             onCellClicked={onCellClicked}
             onColumnResize={onColumnResize}
-            customRenderers={[DropdownRenderer]}
+            customRenderers={[DropdownRenderer, CellsCodeSys, CellsTool]}
             highlightRegions={highlightRegions}
-            // onHeaderMenuClick={onHeaderMenuClick}
+            onHeaderMenuClick={onHeaderMenuClick}
             // onColumnMoved={onColumnMoved}
             // onKeyUp={onKeyUp}
             // customRenderers={[
@@ -554,4 +547,4 @@ function ToolTable({
   );
 }
 
-export default ToolTable;
+export default ToolDetailsTable;

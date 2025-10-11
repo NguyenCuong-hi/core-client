@@ -1,6 +1,4 @@
 import { lazy } from "react";
-import ManageLanguage from "views/ManageLanguage";
-import ManageMachineEvent from "views/ManageMachineEvent";
 
 export const TabComponents = {
   AuthLogin: lazy(() => import("./views/Login")),
@@ -19,4 +17,6 @@ export const TabComponents = {
   ManageMenu: lazy(() => import("./views/ManageMenu")),
   ManageMachineEvent: lazy(() => import("./views/ManageMachineEvent")),
   ManageLanguage: lazy(() => import("./views/ManageLanguage")),
+  ManageMachineTool: lazy(() => import("./views/ManageMachineTool")),
+  ManageToolEquipment: lazy(() => import("./views/ManageToolEquipment")),
 };
