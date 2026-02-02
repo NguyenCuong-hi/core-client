@@ -30,7 +30,7 @@ const ModelRouteSet = ({
 }) => {
   
   return (
-      <div className="bg-slate-50 h-[calc(100vh-255px)]">
+      <div className="bg-slate-50 h-[calc(100vh-250px)]">
         <Splitter className="w-full h-full ">
           <SplitterPanel size={25} minSize={10}>
             <RouteTable

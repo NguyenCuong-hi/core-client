@@ -377,8 +377,8 @@ function InterlockCatTable({
   };
 
   return (
-    <div className="w-full h-full gap-1 flex items-center justify-center "> 
-      <div className="w-full h-full flex flex-col  overflow-hidden ">
+    <div className="w-full h-full gap-1 flex items-center justify-center pb-10"> 
+      <div className="w-full h-full flex flex-col  border bg-white overflow-hidden ">
         <ContextMenuWrapper
           menuItems={[
             { key: 'edit', label: 'Chỉnh sửa', icon: <EditOutlined /> },
@@ -400,7 +400,7 @@ function InterlockCatTable({
             height="100%"
             headerHeight={30}
             rowHeight={27}
-            rowSelect="multi"
+            rowSelect="single"
             gridSelection={selection}
             onGridSelectionChange={setSelection}
             getCellsForSelection={true}
@@ -430,7 +430,7 @@ function InterlockCatTable({
             fillHandle={true}
             // keybindings={keybindings}
             onRowAppended={() => handleRowAppend(1)}
-            // onCellEdited={onCellEdited}
+            onCellEdited={onCellEdited}
             onCellClicked={onCellClicked}
             onVisibleRegionChanged={onVisibleRegionChanged}
 

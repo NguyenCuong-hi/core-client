@@ -406,7 +406,7 @@ function InterlockTable({
   );
 
   return (
-      <div className="w-full h-full gap-1 flex items-center justify-center ">
+      <div className="w-full h-full gap-1 flex items-center justify-center">
         <div className="w-full h-full flex flex-col border bg-white overflow-auto ">
           <ContextMenuWrapper
             menuItems={[
@@ -428,7 +428,7 @@ function InterlockTable({
               width="100%"
               height="100%"
               headerHeight={32}
-              rowHeight={27}
+              rowHeight={25}
               rowSelect="multi"
               gridSelection={selection}
               onGridSelectionChange={setSelection}

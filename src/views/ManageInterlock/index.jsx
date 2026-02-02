@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // project import
-import {
-  LoadingOutlined,
-  SearchOutlined
-} from '@ant-design/icons';
+import { LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { CompactSelection, GridColumnIcon } from '@glideapps/glide-data-grid';
 import { Form, message, Spin } from 'antd';
-import AuDrAction from 'component/Actions/AuDrAction';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useNotify } from 'utils/hooks/onNotify';
@@ -17,18 +13,16 @@ import { onRowAppended } from 'utils/sheets/onRowAppended';
 
 import Splitter from 'antd/es/splitter/Splitter';
 import { SplitterPanel } from 'primereact/splitter';
-import { DeleteCategoryBy } from 'services/ModelManage/DeleteCategoryBy';
 
-import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
-
-import { deleteEventById } from 'services/EventManage/DeleteEventById';
-import { deleteEventRuleById } from 'services/EventManage/DeleteEventRuleBy';
-import { eventSearchBy } from 'services/EventManage/EventSearchBy';
 import { createInterlockBy } from 'services/InterlockManage/createInterlockBy';
+import { createInterlockListBy } from 'services/InterlockManage/createInterlockListBy';
+import { getInterlockById } from 'services/InterlockManage/getInterlockById';
 import { getInterlockByParentId } from 'services/InterlockManage/getInterlockByParentId';
 import { searchInterlock } from 'services/InterlockManage/searchInterlock';
-import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
+import { SearchCategoryByForm } from 'services/ManageCategorySys/SearchCategoryByForm';
+import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
 import { updateIndexNo } from 'utils/sheets/updateIndexNo';
+import AuDInterlockAction from './action/AuDInterlockAction';
 import InterlockQuery from './query/InterlockQuery';
 import InterlockCatTable from './table/InterlockCatTable';
 import InterlockTable from './table/InterlockTable';
@@ -57,33 +51,19 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
     rows: CompactSelection.empty()
   });
 
-  const [selectionEqpOp, setSelectionEqpOp] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty()
-  });
-
   const [selectionInterlock, setSelectionInterlock] = useState({
     columns: CompactSelection.empty(),
     rows: CompactSelection.empty()
   });
 
-  const [selectionRuleEvent, setSelectionRuleEvent] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty()
-  });
-
-  const [selectionOpProperties, setSelectionOpProperties] = useState({
-    columns: CompactSelection.empty(),
-    rows: CompactSelection.empty()
-  });
-
-  const [eventSelected, setEventSelected] = useState([]);
+  const [interlockCatSelected, setInterlockCatSelected] = useState([]);
   const [addedRows, setAddedRows] = useState([]);
   const [numRowsToAdd, setNumRowsToAdd] = useState(null);
   const [editedRows, setEditedRows] = useState([]);
   const [editedRowsCategory, setEditedRowsInterlock] = useState([]);
+  const [editedRowsInterlockCat, setEditedRowsInterlockCat] = useState([]);
 
-  const [eventRuleSelected, setEventRuleSelected] = useState([]);
+  const [interlockSelected, setInterlockSelected] = useState([]);
 
   const [categorySelected, setCategorySelected] = useState([]);
   const [routeOpSelected, setRouteOpSelected] = useState([]);
@@ -100,9 +80,6 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
   const [inParameterData, setInParameterData] = useState([]);
   const [outParameterData, setOutParameterData] = useState([]);
   const cellConfig = {};
-
-  const [gridDataOpProperties, setGridDataOpProperties] = useState([]);
-  const [numRowsOpProperties, setNumRowsOpProperties] = useState(0);
 
   const [gridData, setGridData] = useState([]);
   const [numRows, setNumRows] = useState(0);
@@ -134,41 +111,15 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         disabled: true
       }
     },
-    {
-      title: t('Mã phân loại Interlock'),
-      id: 'ruleTypeId',
-      kind: 'Text',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-    {
-      title: t('Mã phân loại Interlock'),
-      id: 'ruleTypeCode',
-      kind: 'Text',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
 
     {
-      title: t('Tên phân loại Interlock'),
-      id: 'ruleTypeName',
+      title: t('Mã interlock cha'),
+      id: 'parentId',
       kind: 'Text',
-      readonly: false,
+      readonly: true,
       width: 250,
       hasMenu: true,
-      visible: true,
+      visible: false,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
         disabled: true
@@ -342,6 +293,19 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
 
   const defaultColsInterlockCat = useMemo(() => [
     {
+      title: '',
+      id: 'Status',
+      kind: 'Text',
+      readonly: true,
+      width: 50,
+      hasMenu: true,
+      visible: true,
+      icon: GridColumnIcon.HeaderLookup,
+      trailingRowOptions: {
+        disabled: false
+      }
+    },
+    {
       title: t('Mã'),
       id: 'id',
       kind: 'Text',
@@ -364,7 +328,7 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
-        disabled: true
+        disabled: false
       }
     },
 
@@ -378,15 +342,10 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
       visible: true,
       icon: GridColumnIcon.HeaderRowID,
       trailingRowOptions: {
-        disabled: true
+        disabled: false
       }
     }
   ]);
-
-  const [gridDataOpEqp, setGridDataOpEqp] = useState([]);
-  const [numRowsOpEqp, setNumRowsOpEqp] = useState(0);
-  const [numRowsToAddOpProperties, setNumRowsToAddOpEqp] = useState(null);
-  const [addedRowsOpProperties, setAddedRowsOpProperties] = useState([]);
 
   const [colsInterlockCat, setColsInterlockCat] = useState(() =>
     loadFromLocalStorageSheet(
@@ -394,107 +353,11 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
       defaultColsInterlockCat.filter((col) => col.visible)
     )
   );
-  const [gridDataEvent, setGridDataEvent] = useState([]);
-  const [numRowsEvent, setNumRowsEvent] = useState(0);
 
-  const defaultColsRuleEvent = useMemo(() => [
-    {
-      title: '',
-      id: 'Status',
-      kind: 'Text',
-      readonly: true,
-      width: 50,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderLookup,
-      trailingRowOptions: {
-        disabled: false
-      }
-    },
-    {
-      title: t('Mã sự kiện'),
-      id: 'interlockId',
-      kind: 'Text',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Thứ tự'),
-      id: 'seq',
-      kind: 'Text',
-      readonly: false,
-      width: 100,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Mã sự kiện cho phép'),
-      id: 'eventNextId',
-      kind: 'Text',
-      readonly: true,
-      width: 250,
-      hasMenu: true,
-      visible: false,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Mã sự kiện cho phép'),
-      id: 'eventNextCode',
-      kind: 'Custom',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    },
-
-    {
-      title: t('Mô tả'),
-      id: 'description',
-      kind: 'Text',
-      readonly: false,
-      width: 250,
-      hasMenu: true,
-      visible: true,
-      icon: GridColumnIcon.HeaderRowID,
-      trailingRowOptions: {
-        disabled: true
-      }
-    }
-  ]);
-
-  const [colsRuleEvent, setColsRuleEvent] = useState(() =>
-    loadFromLocalStorageSheet(
-      'S_RULE_EVENT',
-      defaultColsRuleEvent.filter((col) => col.visible)
-    )
-  );
   const [gridDataRuleEvent, setGridDataRuleEvent] = useState([]);
   const [numRowsRuleEvent, setNumRowsRuleEvent] = useState(0);
-  const [numRowsToAddRuleEvent, setNumRowsToAddRuleEvent] = useState(null);
-  const [addedRowsRuleEvent, setAddedRowsRuleEvent] = useState([]);
-
-  const [ruleEventSelected, setRuleEventSelected] = useState([]);
-  const [editedRowsRuleEvent, setEditedRowsRuleEvent] = useState([]);
+  const [numRowsToAddInterlockCat, setnumRowsToAddInterlockCat] = useState(null);
+  const [addedRowsRuleEvent, setAddedRowsInterlockCat] = useState([]);
 
   const [isSent, setIsSent] = useState(false);
   const [count, setCount] = useState(0);
@@ -505,6 +368,17 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
   const [interlockId, setInterlockId] = useState(null);
   const [eventCode, setEventCode] = useState(null);
   const [eventName, setEventName] = useState(null);
+
+  const [sqlQuery, setSqlQuery] = useState('');
+  const [messageError, setMessageError] = useState('');
+  const [groupDeviceId, setGroupDeviceId] = useState(null);
+  const [transactionId, setTransactionId] = useState(null);
+  const [operationId, setOperationId] = useState(null);
+  const [operation, setOperation] = useState(null);
+  const [eqpId, setEqpId] = useState(null);
+  const [eqpName, setEqpName] = useState(null);
+  const [typeCheckId, setTypeCheckId] = useState(null);
+  const [workModeId, setWorkModeId] = useState(null);
 
   //  Data Input
   const [formBasic] = Form.useForm();
@@ -519,27 +393,6 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
   const [current, setCurrent] = useState('1');
 
   const onClickSave = useCallback(async () => {
-    const requiredColumns = ['eventNextCode', 'eventNextId'];
-
-    const columnRuleEvent = ['id', 'interlockId', 'seq', 'eventNextId', 'eventNextCode', 'description'];
-
-    const columnsCategory = [
-      'IdxNo',
-      'id',
-      'configProdNameId',
-      'interlockId',
-      'interlockId',
-      'operationId',
-      'promptId',
-      'promptName',
-      'description',
-      'mustInput',
-      'promptValueId',
-      'promptValueName',
-      'promptType',
-      'IDX_NO'
-    ];
-
     const validEntries = filterValidEntries();
     setCount(validEntries.length);
     const lastEntry = findLastEntry(validEntries);
@@ -579,33 +432,35 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
 
       controllers.current.onClickSave = controller;
       const data = await formBasic.getFieldValue();
+      if (interlockCatSelected.length === 0) {
+        notify({
+          type: 'warning',
+          message: 'Warning',
+          description: 'Lựa chọn Interlock!'
+        });
+        setIsSent(false);
+        return;
+      }
 
       const dto = {
-        event: {
-          id: interlockId || '',
-          ...data,
-          parentId: 0,
-          ruleType: 'string',
-          ruleTypeId: 0,
-          workMode: 'string',
-          transactionCode: 'string',
-          transactionId: 0,
-          groupDevice: 'string',
-          groupDeviceId: 0,
-          groupEqp: 'string',
-          operation: 'string',
-          operationId: 0,
-          eqpCode: 'string',
-          eqpId: 0,
-          mailGroup: 'string',
-          typeCheck: 'string',
-          ruleCode: 'string',
-          errorText: 'string',
-          isActive: true,
-          isMail: true,
-          isStopEqp: true
-        }
+        ...data,
+        id: interlockId,
+        parentId: interlockCatSelected[0]?.id || null,
+        transactionId: transactionId,
+        groupDeviceId: groupDeviceId,
+        operation: operation,
+        operationId: operationId,
+        typeCheckId: typeCheckId,
+        workModeId: workModeId,
+        eqpId: eqpId,
+        eqpCode: eqpName,
+        errorText: messageError,
+        isActive: true,
+        isMail: true,
+        isStopEqp: true,
+        textSQL: sqlQuery
       };
+
       try {
         const result = await createInterlockBy(dto);
 
@@ -658,7 +513,130 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
-  }, [formBasic, isAPISuccess, interlockId]);
+  }, [
+    formBasic,
+    isAPISuccess,
+    interlockId,
+    interlockCatSelected,
+    messageError,
+    sqlQuery,
+    transactionId,
+    groupDeviceId,
+    operationId,
+    typeCheckId,
+    workModeId,
+    eqpId,
+    editedRows
+  ]);
+
+  const onClickSaveNewId = useCallback(async () => {
+    const columnsInterlock = ['id', 'code', 'value'];
+
+    const validEntries = filterValidEntries();
+    setCount(validEntries.length);
+    const lastEntry = findLastEntry(validEntries);
+
+    if (lastWordEntryRef.current?.Id !== lastEntry?.Id) {
+      lastWordEntryRef.current = lastEntry;
+    }
+
+    const missingIds = findMissingIds(lastEntry);
+    if (missingIds.length > 0) {
+      message.warning('Vui lòng kiểm tra lại các mục được tạo phải theo đúng thứ tự tuần tự trước khi lưu!');
+      return;
+    }
+
+    if (isSent) return;
+    setIsSent(true);
+
+    try {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+
+      if (controllers.current && controllers.current.onClickSave) {
+        controllers.current.onClickSave.abort();
+        controllers.current.onClickSave = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      controllers.current.onClickSave = controller;
+
+      const dataInterlockA = filterAndSelectColumns(gridData, columnsInterlock, 'A').map((row) => ({
+        ...row,
+        Status: 'A',
+        id: row?.id
+      }));
+
+      const dataInterlockU = filterAndSelectColumns(gridData, columnsInterlock, 'U').map((row) => ({
+        ...row,
+        Status: 'U',
+        id: row?.id
+      }));
+
+      try {
+        const data = [...dataInterlockA, ...dataInterlockU];
+        const result = await createInterlockListBy(data);
+
+        if (result.success) {
+          const { data } = result;
+          notify({
+            type: 'success',
+            message: 'Thành công',
+            description: 'Cập nhật thành công!'
+          });
+
+          setGridData((prev) => {
+            const updated = prev.map((item) => {
+              const found = data.id === item.id ? data : null;
+
+              return found
+                ? {
+                    ...item,
+                    Status: '',
+                    id: found?.id
+                  }
+                : {
+                    ...item,
+                    Status: '',
+                    id: found?.id
+                  };
+            });
+            return updateIndexNo(updated);
+          });
+
+          setIsSent(false);
+          setEditedRows([]);
+        } else {
+          setIsSent(false);
+          notify({
+            type: 'error',
+            message: 'Lỗi',
+            description: 'Không thể lưu dữ liệu. Vui lòng thử lại sau.'
+          });
+        }
+      } catch (error) {
+        console.log('error', error);
+        setIsSent(false);
+        message.error(error.message || 'Có lỗi xảy ra khi lưu dữ liệu');
+      } finally {
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    } catch (errorInfo) {
+      console.log('Failed:', errorInfo);
+    }
+  }, [gridData, numRows, isAPISuccess, editedRowsInterlockCat, isSent]);
 
   const onVisibleRegionChanged = useCallback(
     ({ y, height }) => {
@@ -679,7 +657,7 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         PageSize: pageSize
       };
 
-      const response = eventSearchBy(data);
+      const response = searchInterlock(data);
       const fetchedData = response.data || [];
 
       setGridData((prev) => [...prev, ...fetchedData]);
@@ -741,7 +719,7 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         loadingBarRef.current.complete();
       }
     }
-  }, [gridData, numRows, keyword, pageIndex, pageSize, isAPISuccess]);
+  }, [gridData, ruleTypeData, numRows, keyword, pageIndex, pageSize, isAPISuccess]);
 
   const getSelectedRowsData = (selection, gridData) => {
     const selectedRows = selection.rows.items;
@@ -756,14 +734,6 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
 
     return selectedRows.flatMap(([start, end]) =>
       Array.from({ length: end - start }, (_, i) => gridDataInterlock[start + i]).filter((row) => row !== undefined)
-    );
-  };
-
-  const getSelectedRowsRouteDetailsData = () => {
-    const selectedRows = selectionOpProperties.rows.items;
-
-    return selectedRows.flatMap(([start, end]) =>
-      Array.from({ length: end - start }, (_, i) => gridDataOpProperties[start + i]).filter((row) => row !== undefined)
     );
   };
 
@@ -791,18 +761,18 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
           let newSelected;
           if (isSelected) {
             newSelected = selectionInterlockCat.rows.remove(rowIndex);
-            setEventSelected(getSelectedRowsData(selectionInterlockCat, gridData));
+            setInterlockCatSelected(getSelectedRowsData(selectionInterlockCat, gridData));
           } else {
             newSelected = selectionInterlockCat.rows.add(rowIndex);
-            setEventSelected([]);
+            setInterlockCatSelected([]);
           }
         }
       }
     },
-    [gridData, getSelectedRowsData, eventSelected]
+    [gridData, getSelectedRowsData, interlockCatSelected]
   );
 
-  const onCellRuleEventClicked = useCallback(
+  const onCellInterlockClicked = useCallback(
     (cell, event) => {
       let rowIndex;
 
@@ -820,21 +790,21 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         return;
       }
       if (cell[0] === -1) {
-        if (rowIndex >= 0 && rowIndex < gridDataRuleEvent.length) {
-          const isSelected = selectionRuleEvent.rows.hasIndex(rowIndex);
+        if (rowIndex >= 0 && rowIndex < gridDataInterlock.length) {
+          const isSelected = selectionInterlock.rows.hasIndex(rowIndex);
 
           let newSelected;
           if (isSelected) {
-            newSelected = selectionRuleEvent.rows.remove(rowIndex);
-            setEventRuleSelected(getSelectedRowsData(selectionRuleEvent, gridDataRuleEvent));
+            newSelected = selectionInterlock.rows.remove(rowIndex);
+            setInterlockSelected(getSelectedRowsData(selectionInterlock, gridDataInterlock));
           } else {
-            newSelected = selectionRuleEvent.rows.add(rowIndex);
-            setEventRuleSelected([]);
+            newSelected = selectionInterlock.rows.add(rowIndex);
+            setInterlockSelected([]);
           }
         }
       }
     },
-    [gridDataRuleEvent, getSelectedRowsData, eventRuleSelected]
+    [gridDataRuleEvent, getSelectedRowsData, interlockSelected]
   );
 
   const fetchDataInterlockByParent = useCallback(
@@ -865,20 +835,9 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
       try {
         const response = await getInterlockByParentId(id);
         const fetchedData = response.data || [];
-
-        setInterlockId(fetchedData.event.id);
-        setEventCode(fetchedData.event.eventCode);
-        setEventName(fetchedData.event.eventName);
-
-        setGridDataRuleEvent(fetchedData.rules || []);
-        setNumRowsRuleEvent(fetchedData.rules?.length || 0);
-
-        setGridDataInterlock(fetchedData.categories || []);
-        setNumRowsInterlock(fetchedData.categories?.length || 0);
+        setGridDataInterlock(fetchedData || []);
+        setNumRowsInterlock(fetchedData.length || 0);
       } catch (error) {
-        console.log(error);
-        setGridDataRuleEvent([]);
-        setNumRowsRuleEvent(0);
         setGridDataInterlock([]);
         setNumRowsInterlock(0);
         setIsAPISuccess(true);
@@ -889,13 +848,78 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         });
       } finally {
         setIsAPISuccess(true);
-        controllers.current.onFetchRoute = null;
+        controllers.current.fetchDataInterlockByParent = null;
         if (loadingBarRef.current) {
           loadingBarRef.current.complete();
         }
       }
     },
-    [formBasic, gridDataRuleEvent, gridDataInterlock, isAPISuccess, numRows, numRowsRuleEvent, numRowsInterlock]
+    [gridDataInterlock, isAPISuccess, numRowsInterlock, interlockCatSelected]
+  );
+
+  const fetchDataInterlockBy = useCallback(
+    async (id) => {
+      if (!isAPISuccess) {
+        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
+        return;
+      }
+
+      if (controllers.current && controllers.current.fetchDataInterlockBy) {
+        controllers.current.fetchDataInterlockBy.abort();
+        controllers.current.fetchDataInterlockBy = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.continuousStart();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (loadingBarRef.current) {
+        loadingBarRef.current.continuousStart();
+      }
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      controllers.current.fetchDataInterlockBy = controller;
+
+      setIsAPISuccess(false);
+
+      try {
+        const response = await getInterlockById(id);
+        const fetchedData = response.data || [];
+
+        setInterlockId(id);
+        setOperationId(fetchedData.operationId);
+        setOperation(fetchedData.operation);
+        setEqpId(fetchedData.eqpId);
+        setEqpName(fetchedData.eqpCode);
+        setTypeCheckId(fetchedData.typeCheckId);
+        setSqlQuery(fetchedData.textSQL);
+        setMessageError(fetchedData.errorText);
+        formBasic.setFieldsValue({
+          workMode: fetchedData.workMode,
+          description: fetchedData.description,
+          transactionCode: fetchedData.transactionCode,
+          groupDevice: fetchedData.groupDevice,
+          groupEqp: fetchedData.groupEqp,
+          typeCheck: fetchedData.typeCheck,
+          mailGroup: fetchedData.mailGroup
+        });
+      } catch (error) {
+        formBasic.resetFields();
+        setIsAPISuccess(true);
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: 'Không thể tải dữ liệu. Vui lòng thử lại sau.'
+        });
+      } finally {
+        setIsAPISuccess(true);
+        controllers.current.fetchDataInterlockBy = null;
+        if (loadingBarRef.current) {
+          loadingBarRef.current.complete();
+        }
+      }
+    },
+    [formBasic, isAPISuccess, interlockId]
   );
 
   const onCellCategoryClicked = useCallback(
@@ -958,27 +982,13 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
     setIsAPISuccess(false);
 
     try {
-      const [
-        ruleTypeData,
-        workModeData,
-        transactionData,
-        dataGroupDevice,
-        inParameterData,
-        outParameterData,
-        reworkParameterData,
-        bonusParameterData
-      ] = await Promise.all([
-        SearchCategory(1, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
-        SearchCategory(2, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
-        SearchCategory(3, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
-        SearchCategory(4, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
-      ]);
+      const [dropDownData] = await Promise.all([SearchCategoryByForm('', 'fmInterlock', pageIndex, pageSize, keyword)]);
 
-      setRuleTypeData(ruleTypeData.data);
-      setWorkModeData(workModeData.data);
-      setTransactionData(transactionData.data);
-      setDataGroupDevice(dataGroupDevice.data);
-      // setTypeCheckData(typeCheckData.data);
+      setRuleTypeData(dropDownData?.data?.RULE_TYPE || []);
+      setWorkModeData(dropDownData?.data?.WORK_MODE || []);
+      setTransactionData(dropDownData.data?.TRANSACTION || []);
+      setTypeCheckData(dropDownData.data?.TYPE_CHECK || []);
+      setDataGroupDevice(dropDownData.data?.GROUP_PROD || []);
       // setInParameterData(inParameterData.data.data.content);
       // setOutParameterData(outParameterData.data.data.content);
       // setDataReworkTable(reworkParameterData.data.data.content);
@@ -1022,93 +1032,19 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
   ]);
 
   useEffect(() => {
-    if (!eventSelected[0]?.id) return;
-    fetchDataInterlockByParent(eventSelected[0]?.id);
-  }, [eventSelected]);
+    if (!interlockCatSelected[0]?.id) return;
+    fetchDataInterlockByParent(interlockCatSelected[0]?.id);
+  }, [interlockCatSelected]);
+
+  useEffect(() => {
+    if (!interlockSelected[0]?.id) return;
+    fetchDataInterlockBy(interlockSelected[0]?.id);
+  }, [interlockSelected]);
 
   useEffect(() => {
     onFetchDropdownData();
     onFetchPageInterlock();
   }, []);
-
-  const removeRow = useCallback(
-    async (rowIndex) => {
-      if (!isAPISuccess) {
-        message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
-        return;
-      }
-
-      if (controllers.current && controllers.current.removeRow) {
-        controllers.current.removeRow.abort();
-        controllers.current.removeRow = null;
-        if (loadingBarRef.current) {
-          loadingBarRef.current.continuousStart();
-        }
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-      if (loadingBarRef.current) {
-        loadingBarRef.current.continuousStart();
-      }
-      const controller = new AbortController();
-      const signal = controller.signal;
-
-      controllers.current.removeRow = controller;
-
-      setIsAPISuccess(false);
-
-      try {
-        if (routeOpSelected.length === 0 && categorySelected.length === 0) {
-          message.warning('Vui lòng chọn ít nhất một dòng để xóa');
-          return;
-        }
-        let response;
-        if (routeOpSelected.length > 0) {
-          const ids = routeOpSelected.map((item) => item.id).filter((id) => id !== undefined);
-          response = await DeleteRouteOpBy(ids);
-        }
-        if (categorySelected.length > 0) {
-          const idCategory = categorySelected.map((item) => item.id).filter((id) => id !== undefined);
-          response = await DeleteCategoryBy(idCategory);
-        }
-        const fetchedData = response || [];
-
-        if (!fetchedData.success) {
-          notify({
-            type: 'error',
-            message: 'Lỗi',
-            description: 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
-          });
-          return;
-        } else {
-          notify({
-            type: 'success',
-            message: 'Thành công',
-            description: 'Xóa dữ liệu thành công!'
-          });
-        }
-        setIsAPISuccess(true);
-        controllers.current.onClickSearch = null;
-        if (loadingBarRef.current) {
-          loadingBarRef.current.complete();
-        }
-      } catch (error) {
-        console.log('error', error);
-        setIsAPISuccess(true);
-        notify({
-          type: 'error',
-          message: 'Lỗi',
-          description: error.message || 'Vui lòng thử lại sau.'
-        });
-      } finally {
-        setIsAPISuccess(true);
-        controllers.current.removeRow = null;
-        if (loadingBarRef.current) {
-          loadingBarRef.current.complete();
-        }
-      }
-    },
-    [gridDataOpProperties, gridDataInterlock, categorySelected, routeOpSelected]
-  );
 
   const handleRowAppendInterlock = useCallback(
     (numRowsToAdd) => {
@@ -1121,22 +1057,18 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
     [colsInterlock, setGridDataInterlock, setNumRowsInterlock, setAddedRowsCategory, numRowsToAddCategory]
   );
 
-  const handleRowAppendRuleEvent = useCallback(
+  const handleRowAppendInterlockCat = useCallback(
     (numRowsToAdd) => {
       if (canCreate === false) {
         message.warning('Bạn không có quyền thêm dữ liệu');
         return;
       }
-      onRowAppended(colsRuleEvent, setGridDataRuleEvent, setNumRowsRuleEvent, setAddedRowsRuleEvent, numRowsToAdd);
+      onRowAppended(colsInterlockCat, setGridData, setNumRows, setAddedRowsInterlockCat, numRowsToAdd);
     },
-    [colsRuleEvent, setGridDataRuleEvent, setNumRowsRuleEvent, setAddedRowsRuleEvent, numRowsToAddRuleEvent]
+    [colsInterlockCat, setGridData, setNumRows, setAddedRowsInterlockCat, numRowsToAddInterlockCat]
   );
 
   const onClickDelete = useCallback(async () => {
-    // if (!eventSelected || !eventSelected.data || !eventSelected.data.id) {
-    //   message.warning('Vui lòng chọn dữ liệu để xóa');
-    //   return;
-    // }
 
     if (!isAPISuccess) {
       message.warning('Không thể thực hiện, vui lòng kiểm tra trạng thái.');
@@ -1162,15 +1094,13 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
     setIsAPISuccess(false);
 
     try {
-      if (eventSelected.length !== 0 && eventRuleSelected.length === 0 && categorySelected.length === 0) {
-        deleteEvent(eventSelected[0]?.id);
+      if (interlockCatSelected.length !== 0) {
+        deleteInterlockCat(interlockCatSelected[0]?.id);
       }
-      if (eventRuleSelected.length > 0) {
-        deleteRuleEvent();
+      if (interlockSelected.length !== 0) {
+        deleteInterlock(interlockSelected[0]?.id);
       }
-      if (categorySelected.length > 0) {
-        deleteCategory();
-      }
+
       setIsAPISuccess(true);
       controllers.current.onClickDelete = null;
       if (loadingBarRef.current) {
@@ -1190,13 +1120,14 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         loadingBarRef.current.complete();
       }
     }
-  }, [eventSelected, gridDataRuleEvent, gridDataInterlock, formBasic, isAPISuccess]);
+  }, [interlockCatSelected, interlockSelected, gridData, gridDataInterlock, formBasic, isAPISuccess]);
 
-  const deleteEvent = useCallback(
+  const deleteInterlockCat = useCallback(
     async (id) => {
       let response = {};
-      if (eventSelected.length > 0) {
-        response = await deleteEventById(id);
+      if (interlockCatSelected.length > 0) {
+        const ids = interlockCatSelected.map((item) => item.id).filter((id) => id !== undefined);
+        response = await deleteInterlockCat(ids);
       }
 
       if (!response.success) {
@@ -1207,11 +1138,8 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         });
         return;
       } else {
-        setGridDataInterlock([]);
-        setNumRowsInterlock(0);
-
-        setGridDataRuleEvent([]);
-        setNumRowsRuleEvent(0);
+        setGridData([]);
+        setNumRows(0);
 
         const updatedData = gridData.filter((row) => id !== row.id);
         setGridData(updateIndexNo(updatedData));
@@ -1226,64 +1154,43 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         });
       }
     },
-    [eventSelected, gridDataInterlock, numRowsInterlock, gridDataRuleEvent, numRowsRuleEvent, gridData, formBasic, numRows]
+    [interlockCatSelected, gridData, numRows, formBasic, numRows]
   );
 
-  const deleteRuleEvent = useCallback(async () => {
-    let response = {};
-    if (eventRuleSelected.length > 0) {
-      const ids = eventRuleSelected.map((item) => item.id);
-      response = await deleteEventRuleById(ids);
-    }
+  const deleteInterlock = useCallback(
+    async (id) => {
+      let response = {};
+      if (interlockSelected.length > 0) {
+        const ids = interlockSelected.map((item) => item.id).filter((id) => id !== undefined);
+        response = await deleteInterlock(ids);
+      }
 
-    if (!response.success) {
-      notify({
-        type: 'error',
-        message: 'Lỗi',
-        description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
-      });
-      return;
-    } else {
-      const ids = eventRuleSelected.map((item) => item.id).filter((id) => id !== undefined);
-      const updatedData = gridDataRuleEvent.filter((row) => !ids.includes(row.id));
-      setGridDataRuleEvent(updateIndexNo(updatedData));
-      setNumRowsRuleEvent(updatedData.length);
+      if (!response.success) {
+        notify({
+          type: 'error',
+          message: 'Lỗi',
+          description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
+        });
+        return;
+      } else {
+        setGridDataInterlock([]);
+        setNumRowsInterlock(0);
 
-      notify({
-        type: 'success',
-        message: 'Thành công',
-        description: 'Xóa dữ liệu thành công!'
-      });
-    }
-  }, [gridDataRuleEvent, eventRuleSelected, numRowsRuleEvent]);
+        const updatedData = gridDataInterlock.filter((row) => id !== row.id);
+        setGridDataInterlock(updateIndexNo(updatedData));
+        setNumRowsInterlock(updatedData.length);
 
-  const deleteCategory = useCallback(async () => {
-    let response = {};
-    if (eventRuleSelected.length > 0) {
-      const ids = eventRuleSelected.map((item) => item.id);
-      response = await deleteEventRuleById(ids);
-    }
+        formBasic.resetFields();
 
-    if (!response.success) {
-      notify({
-        type: 'error',
-        message: 'Lỗi',
-        description: response.data.message || 'Không thể xóa dữ liệu. Vui lòng thử lại sau.'
-      });
-      return;
-    } else {
-      const ids = eventRuleSelected.map((item) => item.id).filter((id) => id !== undefined);
-      const updatedData = gridDataRuleEvent.filter((row) => !ids.includes(row.id));
-      setGridDataRuleEvent(updateIndexNo(updatedData));
-      setNumRowsRuleEvent(updatedData.length);
-
-      notify({
-        type: 'success',
-        message: 'Thành công',
-        description: 'Xóa dữ liệu thành công!'
-      });
-    }
-  }, [gridDataRuleEvent, eventRuleSelected, numRowsRuleEvent]);
+        notify({
+          type: 'success',
+          message: 'Thành công',
+          description: 'Xóa dữ liệu thành công!'
+        });
+      }
+    },
+    [interlockSelected, gridDataInterlock, numRowsInterlock, formBasic]
+  );
 
   const onSearch = (value) => {
     console.log('search:', value);
@@ -1313,14 +1220,15 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
   return (
     <>
       <div className="h-full mt-4">
-        <AuDrAction
+        <AuDInterlockAction
           titlePage={'Cấu hình khóa liên động'}
           onClickDelete={onClickDelete}
           onClickSave={onClickSave}
           onClickReset={onClickResetAll}
           onClickCopy={onClickCopy}
+          onClickSaveNewId={onClickSaveNewId}
         />
-        <Splitter className="w-full h-full border">
+        <Splitter className="w-full h-full">
           <SplitterPanel size={30} minSize={10}>
             <div className="w-full  h-full bg-white  overflow-x-hidden overflow-hidden  ">
               <div className="w-full h-[30px]  items-center border-b border-gray-200 ">
@@ -1348,10 +1256,12 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
                 onCellClicked={onCellInterlockCatClicked}
                 selection={selectionInterlockCat}
                 setSelection={setSelectionInterlockCat}
+                handleRowAppend={handleRowAppendInterlockCat}
+                setEditedRows={setEditedRowsInterlockCat}
               />
             </div>
           </SplitterPanel>
-          <SplitterPanel size={75} minSize={10}>
+          <SplitterPanel size={70} minSize={70}>
             <Splitter className="w-full h-full" layout="vertical">
               <SplitterPanel size={30} minSize={10}>
                 <div className="bg-slate-50  h-full">
@@ -1368,7 +1278,7 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
                     setEditedRows={setEditedRowsInterlock}
                     selection={selectionInterlock}
                     setSelection={setSelectionInterlock}
-                    onCellClicked={onCellCategoryClicked}
+                    onCellClicked={onCellInterlockClicked}
                     cellConfig={cellConfig}
                   />
                 </div>
@@ -1382,6 +1292,21 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
                     workModeData={workModeData}
                     transactionData={transactionData}
                     typeCheckData={typeCheckData}
+                    dataGroupDevice={dataGroupDevice}
+                    sql={sqlQuery}
+                    setSql={setSqlQuery}
+                    message={messageError}
+                    setMessage={setMessageError}
+                    setEqpId={setEqpId}
+                    setGroupDeviceId={setGroupDeviceId}
+                    setTransactionId={setTransactionId}
+                    setTypeCheckId={setTypeCheckId}
+                    operation={operation}
+                    setOperation={setOperation}
+                    setOperationId={setOperationId}
+                    setWorkModeId={setWorkModeId}
+                    eqpName={eqpName}
+                    setEqpName={setEqpName}
                   />
                 </div>
               </SplitterPanel>

@@ -1,38 +1,39 @@
 import axios from 'axios';
 import { HOST_API_SERVER } from 'services/config';
-import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
 import { accessToken } from 'utils/cookies/CookiesUtils';
+import qs from 'qs';
 
-export const getInterlockByParentId = async (id) => {
+export const DeleteInterlock = async (id) => {
+
   try {
     const token = accessToken()
-    const response = await axios.get(
-      `${HOST_API_SERVER}/mes-admin/api/v1/interlock/parent/${id}`,
-
-      { 
+    const response = await axios.delete(
+      `${HOST_API_SERVER}/nvc-core/api/v1/interlock/ids`,
+      {
+        params: { id },
+        paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
         headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-      },
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
     );
-    
+
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,
-        data: response.data.data,
+        data: response.data,
       };
     } else {
       return {
         success: false,
-        message: response.data.message || ERROR_MESSAGES ,
+        message: response.data.message || "ERROR_DATA",
       };
     }
-
   } catch (error) {
     console.error(error);
-
     return {
+      
       success: false,
       message: error.response
         ? error.response.data.message

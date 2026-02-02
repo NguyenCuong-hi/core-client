@@ -1,22 +1,30 @@
-import axios from 'axios';
-import { HOST_API_SERVER } from 'services/config';
-import { ERROR_MESSAGES } from 'utils/constans/sysConstans';
-import { accessToken } from 'utils/cookies/CookiesUtils';
+import axios from "axios";
+import { HOST_API_SERVER } from "services/config";
+import { accessToken } from "utils/cookies/CookiesUtils";
 
-export const getInterlockByParentId = async (id) => {
+export const SearchCategoryByForm = async (type, form, name, value, PageIndex, PageSize, Keyword) => {
   try {
-    const token = accessToken()
+    const data = {
+      type,
+      form,
+      name,
+      value,
+      PageIndex,
+      PageSize,
+      Keyword
+    }
+    const token = accessToken();
     const response = await axios.get(
-      `${HOST_API_SERVER}/mes-admin/api/v1/interlock/parent/${id}`,
+      `${HOST_API_SERVER}/mes-admin/api/v1/category-sys/form`,
 
-      { 
+      { params: data,
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         },
       },
     );
-    
+
     if (response.status === 200 || response.status === 201) {
       return {
         success: true,

@@ -1,78 +1,108 @@
 import { Editor } from '@monaco-editor/react';
 import { Col, Form, Input, Row, Select } from 'antd';
+import PopUpDeviceOnField from 'component/popup/popupDeviceOnField';
+import PopupOperationOnField from 'component/popup/popupOperationOnField';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData, typeCheckData, dataGroupDevice, dataGroupEqp, dataOperation }) => {
-  const { t } = useTranslation();
-  const [previewImage, setPreviewImage] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loading2, setLoading2] = useState(false);
-  const [file, setFile] = useState(null);
+const InterlockQuery = ({
+  formBasic,
+  ruleTypeData,
+  workModeData,
+  transactionData,
+  typeCheckData,
+  dataGroupDevice,
+  dataGroupEqp,
+  dataOperation,
+  sql,
+  setSql,
+  message,
+  setMessage,
+  setTransactionId,
+  setGroupDeviceId,
+  setGroupEqpId,
+  setOperationId,
+  setTypeCheckId,
+  setWorkModeId,
+  eqpName,
+  setEqpName,
+  setEqpId,
 
-  const onChangeRuleTypeCode = (value) => {
-    console.log(`selected ${value}`);
-  };
+  operation,
+  setOperation,
+  
+}) => {
+  const { t } = useTranslation();
+
+  const [dropdownDeviceVisible, setDropdownDeviceVisible] = useState(false);
+  const [dropdownOperationVisible, setDropdownOperationVisible] = useState(false);
+  const [selectionDevice, setSelectionDevice] = useState([]);
+  const [deviceSearchSh, setDeviceSearchSh] = useState('');
+
+  const [selectionOperation, setSelectionOperation] = useState([]);
+  const [opeationSearchSh, setOpeationSearchSh] = useState('');
 
   const onChangeWorkMode = (value) => {
-    console.log(`selected ${value}`);
+    const data = workModeData.find((item) => item.value === value);
+    formBasic.setFieldsValue({
+      workMode: data.value
+    });
+    setWorkModeId(data.id);
   };
 
   const onChangeTransactionCode = (value) => {
-    console.log(`selected ${value}`);
+    const data = transactionData.find((item) => item.value === value);
+    formBasic.setFieldsValue({
+      transactionCode: data.value
+    });
+    setTransactionId(data.id);
   };
 
   const onChangeGroupDevice = (value) => {
-    console.log(`selected ${value}`);
+    const data = dataGroupDevice.find((item) => item.value === value);
+    formBasic.setFieldsValue({
+      groupDevice: data.value,
+      groupDeviceId: data.id
+    });
+    setGroupDeviceId(data.id);
   };
 
   const onChangeGroupEqp = (value) => {
-    console.log(`selected ${value}`);
+    const data = dataGroupEqp.find((item) => item.value === value);
+    formBasic.setFieldsValue({
+      groupEqp: data.value
+    });
+    setGroupEqpId(data.id);
   };
 
   const onChangeOperation = (value) => {
-    console.log(`selected ${value}`);
+    const data = dataOperation.find((item) => item.value === value);
+    formBasic.setFieldsValue({
+      operation: data.value
+    });
+    setOperationId(data.id);
   };
 
   const onChangeTypeCheck = (value) => {
-    console.log(`selected ${value}`);
+    const data = typeCheckData.find((item) => item.value === value);
+    formBasic.setFieldsValue({
+      typeCheck: data.value
+    });
+    setTypeCheckId(data.id);
   };
 
-  const handleImageChange = (file) => {
-    setFile(file);
+  const onChangeMessageError = (value) => {
+    setMessage(value);
+  };
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewImage(e.target.result);
-    };
-    reader.readAsDataURL(file);
-
-    return false;
+  const onChangeSql = (value) => {
+    setSql(value);
   };
 
   return (
     <div className="bg-slate-50 ">
       <Form form={formBasic} layout="vertical">
         <Row gutter={[6, 6]} align={'middle'} className="m-2">
-          <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
-            <Form.Item
-              label={<span className="uppercase text-[9px] w-[150px]">Loại Interlock</span>}
-              style={{ marginBottom: 0 }}
-              labelCol={{ style: { marginBottom: 2, padding: 0 } }}
-              wrapperCol={{ style: { padding: 0 } }}
-              name={'ruleTypeCode'}
-            >
-              <Select
-                showSearch
-                placeholder="Loại Interlock"
-                optionFilterProp="label"
-                onChange={onChangeRuleTypeCode}
-                allowClear
-                options={ruleTypeData}
-              />
-            </Form.Item>
-          </Col>
-
           <Col xs={{ flex: '100%' }} sm={{ flex: '50%' }} md={{ flex: '40%' }} lg={{ flex: '20%' }} xl={{ flex: '10%' }}>
             <Form.Item
               label={<span className="uppercase text-[9px] w-[150px]">Loại thao tác</span>}
@@ -104,8 +134,6 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
                 placeholder=""
                 className="w-[150px]"
                 size="middle"
-                // value={ConfigProductName}
-                // onChange={(e) => setConfigProductName(e.target.value)}
               />
             </Form.Item>
           </Col>
@@ -173,16 +201,31 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'operation'}
             >
-              <Select
-                showSearch
+
+              <Input
                 placeholder="Công đoạn"
-                optionFilterProp="label"
-                onChange={onChangeOperation}
-                allowClear
-                options={dataOperation}
+                className="w-[250px]"
+                size="middle"
+                value={operation}
+                onFocus={() => setDropdownOperationVisible(true)}
+                style={{ backgroundColor: '#e8f0ff' }}
               />
+              {dropdownOperationVisible && (
+                <PopupOperationOnField
+                  data={dataGroupDevice}
+                  nameCodeHelp={'Công đoạn'}
+                  modalVisible={dropdownOperationVisible}
+                  setModalVisible={setDropdownOperationVisible}
+                  searchSh={opeationSearchSh}
+                  setDeviceSearchSh={setOpeationSearchSh}
+                  selectionData={selectionOperation}
+                  setSelectionData={setSelectionOperation}
+                  name={operation}
+                  setName={setOperation}
+                  setId={setOperationId}
+                />
+              )}
             </Form.Item>
           </Col>
 
@@ -192,16 +235,30 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
               style={{ marginBottom: 0 }}
               labelCol={{ style: { marginBottom: 2, padding: 0 } }}
               wrapperCol={{ style: { padding: 0 } }}
-              name={'eqpCode'}
             >
-              <Select
-                showSearch
+              <Input
                 placeholder="Thiết bị"
-                optionFilterProp="label"
-                onChange={onChangeTypeCheck}
-                allowClear
-                options={dataGroupEqp}
+                className="w-[250px]"
+                size="middle"
+                value={eqpName}
+                onFocus={() => setDropdownDeviceVisible(true)}
+                style={{ backgroundColor: '#e8f0ff' }}
               />
+              {dropdownDeviceVisible && (
+                <PopUpDeviceOnField
+                  data={dataGroupDevice}
+                  nameCodeHelp={'Thiết bị'}
+                  modalVisible={dropdownDeviceVisible}
+                  setModalVisible={setDropdownDeviceVisible}
+                  searchSh={deviceSearchSh}
+                  setDeviceSearchSh={setDeviceSearchSh}
+                  selectionData={selectionDevice}
+                  setSelectionData={setSelectionDevice}
+                  eqpName={eqpName}
+                  setEqpName={setEqpName}
+                  setId={setEqpId}
+                />
+              )}
             </Form.Item>
           </Col>
 
@@ -236,8 +293,6 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
                 placeholder=""
                 className="w-[150px]"
                 size="middle"
-                // value={ConfigProductName}
-                // onChange={(e) => setConfigProductName(e.target.value)}
               />
             </Form.Item>
           </Col>
@@ -263,6 +318,8 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
                     wordWrap: 'on',
                     scrollBeyondLastLine: false
                   }}
+                  value={sql}
+                  onChange={onChangeSql}
                 />
               </div>
             </Form.Item>
@@ -287,6 +344,8 @@ const InterlockQuery = ({ formBasic, ruleTypeData, workModeData, transactionData
                     wordWrap: 'on',
                     scrollBeyondLastLine: false
                   }}
+                  value={message}
+                  onChange={onChangeMessageError}
                 />
               </div>
             </Form.Item>
