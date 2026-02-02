@@ -1,51 +1,37 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // project import
-import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
-import { CompactSelection, GridColumnIcon } from '@glideapps/glide-data-grid';
-import { useTranslation } from 'react-i18next';
-import AuDrAction from 'component/Actions/AuDrAction';
-import { onRowAppended } from 'utils/sheets/onRowAppended';
-import { Button, Form, Menu, message, Spin, TreeSelect } from 'antd';
 import {
-  ApartmentOutlined,
-  ApiOutlined,
-  AppstoreAddOutlined,
-  CaretDownFilled,
-  CaretUpFilled,
-  ClusterOutlined,
-  DashboardOutlined,
   LoadingOutlined,
-  MinusCircleFilled,
-  PlusCircleFilled,
-  SearchOutlined,
-  SyncOutlined
+  SearchOutlined
 } from '@ant-design/icons';
-import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
-import { useNotify } from 'utils/hooks/onNotify';
+import { CompactSelection, GridColumnIcon } from '@glideapps/glide-data-grid';
+import { Form, message, Spin } from 'antd';
+import AuDrAction from 'component/Actions/AuDrAction';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
+import { useNotify } from 'utils/hooks/onNotify';
 import useDynamicFilter from 'utils/hooks/useDynamicFilter';
-import { filterAndSelectColumns } from 'utils/sheets/filterUorA';
+import { useFullscreenLoading } from 'utils/hooks/useFullscreenLoading';
+import { loadFromLocalStorageSheet } from 'utils/local-storage/column';
+import { onRowAppended } from 'utils/sheets/onRowAppended';
 
-import { DeleteCategoryBy } from 'services/ModelManage/DeleteCategoryBy';
 import Splitter from 'antd/es/splitter/Splitter';
 import { SplitterPanel } from 'primereact/splitter';
+import { DeleteCategoryBy } from 'services/ModelManage/DeleteCategoryBy';
 
 import { DeleteRouteOpBy } from 'services/RouteSetManage/DeleteRouteOpBy';
 
-import CategoryTable from 'component/Sheets/CategoryTable';
-import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
-import { eventSearchBy } from 'services/EventManage/EventSearchBy';
-import { getEventById } from 'services/EventManage/GetEventById';
-import { createEventBy } from 'services/EventManage/createEventBy';
 import { deleteEventById } from 'services/EventManage/DeleteEventById';
 import { deleteEventRuleById } from 'services/EventManage/DeleteEventRuleBy';
-import { updateIndexNo } from 'utils/sheets/updateIndexNo';
-import InterlockCatTable from './table/InterlockCatTable';
-import InterlockQuery from './query/InterlockQuery';
-import InterlockTable from './table/InterlockTable';
+import { eventSearchBy } from 'services/EventManage/EventSearchBy';
 import { createInterlockBy } from 'services/InterlockManage/createInterlockBy';
-import { searchInterlock } from 'services/InterlockManage/searchInterlock';
 import { getInterlockByParentId } from 'services/InterlockManage/getInterlockByParentId';
+import { searchInterlock } from 'services/InterlockManage/searchInterlock';
+import { SearchCategory } from 'services/ManageCategorySys/SearchCategory';
+import { updateIndexNo } from 'utils/sheets/updateIndexNo';
+import InterlockQuery from './query/InterlockQuery';
+import InterlockCatTable from './table/InterlockCatTable';
+import InterlockTable from './table/InterlockTable';
 
 // ==============================|| MODEL PRODUCT PAGE ||============================== //
 
@@ -108,6 +94,7 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
   const [typeCheckData, setTypeCheckData] = useState([]);
   const [workModeData, setWorkModeData] = useState([]);
   const [ruleTypeData, setRuleTypeData] = useState([]);
+  const [dataGroupDevice, setDataGroupDevice] = useState([]);
   const [dataReworkTable, setDataReworkTable] = useState([]);
   const [dataBonusTable, setDataBonusTable] = useState([]);
   const [inParameterData, setInParameterData] = useState([]);
@@ -975,7 +962,7 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         ruleTypeData,
         workModeData,
         transactionData,
-        typeCheckData,
+        dataGroupDevice,
         inParameterData,
         outParameterData,
         reworkParameterData,
@@ -984,11 +971,13 @@ const ManageInterlock = ({ canCreate, canEdit, canDelete, canView }) => {
         SearchCategory(1, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
         SearchCategory(2, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
         SearchCategory(3, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
+        SearchCategory(4, 'fmInterlock', '', '', pageIndex, pageSize, keyword),
       ]);
 
       setRuleTypeData(ruleTypeData.data);
-      // setWorkModeData(workModeData.data);
-      // setTransactionData(transactionData.data);
+      setWorkModeData(workModeData.data);
+      setTransactionData(transactionData.data);
+      setDataGroupDevice(dataGroupDevice.data);
       // setTypeCheckData(typeCheckData.data);
       // setInParameterData(inParameterData.data.data.content);
       // setOutParameterData(outParameterData.data.data.content);
