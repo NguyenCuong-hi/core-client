@@ -10,6 +10,8 @@ import { AuthLoginService } from 'services/Auth/GetTokenService';
 import Cookies from 'js-cookie'
 import { GetUserService } from 'services/Auth/GetUserService';
 import * as Icons from '@ant-design/icons';
+import token from '../../fakedata/token.json';
+import current  from '../../fakedata/current.json';
 
 
 const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
@@ -39,11 +41,16 @@ const AuthLogin = ({ setIsLoggedIn, ...rest }) => {
         password: values.password,
       }
 
-      const loginResponse = await AuthLoginService(data);
+      // const loginResponse = await AuthLoginService(data);
+      const loginResponse = {
+        success: true,
+        data: token
+      }
 
       if (loginResponse.success) {
         Cookies.set('token', loginResponse.data.access_token)
-        const user = await GetUserService();
+        // const user = await GetUserService();
+        const user = {success: true, data: current}
         localStorage.setItem('username', JSON.stringify(user.data.data.username))
         localStorage.setItem('role', JSON.stringify(user.data.data.roles))
         localStorage.setItem('menu-item', JSON.stringify(user.data.data.menuItems))

@@ -1,0 +1,288 @@
+{
+    "timestamp": "2026-03-18T15:28:30",
+    "code": 200,
+    "message": "Ok",
+    "data": [
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "1",
+            "word": "Save"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "2",
+            "word": "Update"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "3",
+            "word": "Delete"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "4",
+            "word": "Search"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "5",
+            "word": "Import"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "6",
+            "word": "Dictionary"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "7",
+            "word": "Dashboad"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "8",
+            "word": "Menu Setting"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "9",
+            "word": "Equipment Manager"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "11",
+            "word": "Equipment History"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "12",
+            "word": "Account Setting"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "34",
+            "word": "Coppy"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "55",
+            "word": "Code Language"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "33",
+            "word": "Account Name"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "16",
+            "word": "Password"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "22",
+            "word": "Create Date"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "18",
+            "word": "Create By"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "19",
+            "word": "Modify By"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "20",
+            "word": "Modify Date"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "21",
+            "word": "Experia Account"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "22",
+            "word": "Change password success"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "23",
+            "word": "An error occurred please try again."
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "24",
+            "word": "Setting System"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "25",
+            "word": "Production Model"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "26",
+            "word": "Dashboad Production Model"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "27",
+            "word": "Management Process"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "28",
+            "word": "Setting Process"
+        },
+        {
+            "createDate": null,
+            "createdBy": null,
+            "modifyDate": null,
+            "modifiedBy": null,
+            "id": null,
+            "lang": 0,
+            "langCode": "29",
+            "word": "Setting Operation"
+        }
+    ],
+    "total": 28
+}
